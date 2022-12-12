@@ -14,19 +14,19 @@ CFILES = bin/activations/activations.o \
 		 bin/mlp/mlp.o \
 		 bin/optimizers/sgd.o bin/optimizers/adam.o
 
-
-ifeq ($(TARGET),LOCAL)
-	CFLAGS += -D LOCAL -I ~/templates/templates
-endif
-
 bin/%.o : FJML/%.cpp $(HEADERS)
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) -fPIC $< -o $@
 
 all: $(CFILES)
-	echo "Done"
+	$(CC) -shared $(CFLAGS) $(CFILES) -o libFJML.so
+
+install: libFJML.so
+	cp -r FJML /usr/local/include
+	cp libFJML.so /usr/local/lib
+	ldconfig /usr/local/lib
 
 init:
 	mkdir -p bin/layers bin/activations bin/loss bin/util bin/mlp bin/optimizers
 
-clear:
+clean:
 	rm bin/*.o bin/**/*.o

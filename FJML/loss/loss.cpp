@@ -13,7 +13,7 @@ Loss huber(
 		if (abs(diff) > 1) {
 			return abs(diff);
 		}
-		return diff * diff / 2;
+		return diff * diff / 2 + 0.5;
 	},
 	[](double a, double b) -> double {
 		double diff = a - b;

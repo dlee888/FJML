@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+namespace FJML {
+
 void progress_bar(int curr, int tot, int bar_width = 69) {
 	float progress = (float)curr / tot;
 	std::cout << "[";
@@ -18,5 +20,7 @@ void progress_bar(int curr, int tot, int bar_width = 69) {
 	std::cout << "] " << int(progress * 100.0) << " %\r";
 	std::cout.flush();
 }
+
+} // namespace FJML
 
 #endif

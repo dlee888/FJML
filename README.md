@@ -13,6 +13,12 @@ A ML library in C++.
    - Includes high level abstractions
  - Flexible and easily extensible
 
+### Installation
+
+Run `make init`, then `make`, and then `sudo make install`.
+
+To compile programs with FJML, just use `g++ myfile.cpp -lFJML`
+
 ### Why Farmer John
 
 Elements of this library were inspired by USACO. The library is written with simple code, in the style that most programmers with little experience outside of USACO can understand.
