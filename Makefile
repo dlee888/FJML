@@ -21,7 +21,8 @@ all: $(CFILES)
 	$(CC) -shared $(CFLAGS) $(CFILES) -o libFJML.so
 
 install: libFJML.so
-	cp -r FJML /usr/local/include
+	cp -r FJML /usr/include
+	cp FJML.h /usr/include
 	cp libFJML.so /usr/local/lib
 	ldconfig /usr/local/lib
 
