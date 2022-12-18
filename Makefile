@@ -11,8 +11,7 @@ HEADERS = FJML/activations/activations.h \
 CFILES = bin/activations/activations.o \
 		 bin/layers/dense.o bin/layers/layers.o bin/layers/softmax.o \
 		 bin/loss/loss.o \
-		 bin/mlp/mlp.o \
-		 bin/optimizers/sgd.o bin/optimizers/adam.o
+		 bin/mlp/mlp.o
 
 bin/%.o : FJML/%.cpp $(HEADERS)
 	$(CC) -c $(CFLAGS) -fPIC $< -o $@
@@ -27,7 +26,7 @@ install: libFJML.so
 	ldconfig /usr/local/lib
 
 init:
-	mkdir -p bin/layers bin/activations bin/loss bin/util bin/mlp bin/optimizers
+	mkdir -p bin/layers bin/activations bin/loss bin/util bin/mlp
 
 clean:
-	rm bin/*.o bin/**/*.o
+	rm bin/*.o bin/**/*.o libFJML.so
