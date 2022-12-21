@@ -11,6 +11,16 @@ namespace FJML {
 
 namespace Optimizers {
 
+/**
+ * @brief Based class for all optimizers
+ *
+ * Optimizes an N dimensional tensor during gradient descent
+ *
+ * Each optimizer must implement the apply_grad method, which takes parameters and gradients, and updates the
+ * parameters.
+ *
+ * @tparam N The number of dimensions of the tensor to be optimized
+ */
 template <int N> class Optimizer {
   public:
 	std::string name;
@@ -22,6 +32,12 @@ template <int N> class Optimizer {
 	virtual void apply_grad(Tensor<N>& params, const Tensor<N>& grads) {}
 };
 
+/**
+ * @brief Stochastic Gradient Descent
+ * @details Optimizes an N dimensional tensor during gradient descent. The optimizer updates the parameters by
+ * subtracting the learning rate times the gradient from the parameters.
+ * @tparam N The number of dimensions of the tensor
+ */
 template <int N> class SGD : public Optimizer<N> {
   public:
 	double alpha;
@@ -32,6 +48,11 @@ template <int N> class SGD : public Optimizer<N> {
 	void apply_grad(Tensor<N>& params, const Tensor<N>& grads) { params -= grads * alpha; }
 };
 
+/**
+ * @brief Adam optimizer
+ * @details Optimizes an N dimensional tensor during gradient descent using the Adam algorithm.
+ * @tparam N The number of dimensions of the tensor
+ */
 template <int N> class Adam : public Optimizer<N> {
 	void init(Tensor<N> params) {
 		if (m.size() == 0) {
@@ -59,13 +80,19 @@ template <int N> class Adam : public Optimizer<N> {
 	}
 };
 
-template <int N> Optimizer<N>* get_optimizer(Optimizer<1>* x) {
-	if (x->name == "SGD") {
-		return new SGD<N>(((SGD<1>*)x)->alpha);
-	} else if (x->name == "Adam") {
-		return new Adam<N>(((Adam<1>*)x)->alpha, ((Adam<1>*)x)->beta1, ((Adam<1>*)x)->beta2);
+/**
+ * @brief Creates a new optimizer with the same hyperparameters as the given optimizer
+ * @tparam N The number of dimensions of the tensor
+ * @param opt The optimizer to copy
+ * @return A new optimizer with the same hyperparameters as the given optimizer
+ */
+template <int N> Optimizer<N>* get_optimizer(Optimizer<1>* opt) {
+	if (opt->name == "SGD") {
+		return new SGD<N>(((SGD<1>*)opt)->alpha);
+	} else if (opt->name == "Adam") {
+		return new Adam<N>(((Adam<1>*)opt)->alpha, ((Adam<1>*)opt)->beta1, ((Adam<1>*)opt)->beta2);
 	}
-	std::cout << "No optimizer found for name " << x->name << std::endl;
+	std::cout << "No optimizer found for name " << opt->name << std::endl;
 	return nullptr;
 }
 

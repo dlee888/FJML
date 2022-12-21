@@ -9,16 +9,38 @@
 
 namespace FJML {
 
+/**
+ * This class represents an N dimensional tensor.
+ * The tensor is stored as a vector, and also has a shape property.
+ * @tparam N The number of dimensions.
+ */
 template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
   public:
+	/**
+	 * The shape of the tensor, stored as an array with each of its dimensions.
+	 */
 	std::vector<int> shape;
 
+	/**
+	 * Default constructor.
+	 */
 	Tensor() {}
+
+	/**
+	 * Construct a tensor with the given shape.
+	 * @param _shape The shape of the tensor.
+	 * @param _val The value to fill the tensor with.
+	 */
 	Tensor(std::vector<int> _shape, double val = 0) : shape{_shape} {
 		std::vector<int> next_shape{_shape.begin() + 1, _shape.end()};
 		this->resize(_shape[0], Tensor<N - 1>(next_shape, val));
 	}
 
+	/**
+	 * Apply a function to each element of the tensor.
+	 * @param fn The function to apply.
+	 * @return The result of the function.
+	 */
 	Tensor<N> apply_fn(std::function<double(double)> fn) {
 		Tensor<N> res(this->shape);
 		for (int i = 0; i < (int)this->size(); i++) {
@@ -27,6 +49,12 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return res;
 	}
 
+	/**
+	 * Output the tensor to a stream.
+	 * @param os The stream to output to.
+	 * @param t The tensor to output.
+	 * @return The stream.
+	 */
 	friend std::ostream& operator<<(std::ostream& o, Tensor<N> t) {
 		o << "[";
 		bool first = true;
@@ -41,6 +69,11 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return o;
 	}
 
+	/**
+	 * Adds two tensors together.
+	 * @param b The tensor to add.
+	 * @return The result of the addition.
+	 */
 	Tensor<N> operator+(const Tensor<N>& b) const {
 		assert(this->size() == b.size());
 		Tensor<N> res(shape);
@@ -50,6 +83,11 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return res;
 	}
 
+	/**
+	 * Adds a tensor to this one.
+	 * @param b The tensor to add.
+	 * @return The result of the addition.
+	 */
 	Tensor<N> operator+=(const Tensor<N>& b) {
 		assert(this->size() == b.size());
 		for (int i = 0; i < (int)this->size(); i++) {
@@ -58,6 +96,11 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return *this;
 	}
 
+	/**
+	 * Subtracts two tensors.
+	 * @param b The tensor to subtract.
+	 * @return The result of the subtraction.
+	 */
 	Tensor<N> operator-(const Tensor<N>& b) const {
 		assert(this->size() == b.size());
 		Tensor<N> res(this->shape);
@@ -67,6 +110,11 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return res;
 	}
 
+	/**
+	 * Subtracts a tensor from this one.
+	 * @param b The tensor to subtract.
+	 * @return The result of the subtraction.
+	 */
 	Tensor<N> operator-=(const Tensor<N>& b) {
 		assert(this->size() == b.size());
 		for (int i = 0; i < (int)this->size(); i++) {
@@ -75,6 +123,11 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return *this;
 	}
 
+	/**
+	 * Multiplies a tensor by a scalar.
+	 * @param b The scalar to multiply by.
+	 * @return The result of the multiplication.
+	 */
 	Tensor<N> operator*(const double b) const {
 		Tensor<N> res(this->shape);
 		for (int i = 0; i < (int)this->size(); i++) {
@@ -83,6 +136,9 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return res;
 	}
 
+	/**
+	 * @see operator*(double)
+	 */
 	friend Tensor<N> operator*(const double b, const Tensor<N>& a) {
 		Tensor<N> res(a.shape);
 		for (int i = 0; i < (int)a.size(); i++) {
@@ -91,6 +147,11 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return res;
 	}
 
+	/**
+	 * Multiplies a tensor by a scalar.
+	 * @param b The scalar to multiply by.
+	 * @return The result of the multiplication.
+	 */
 	Tensor<N> operator*=(const double b) {
 		for (int i = 0; i < (int)this->size(); i++) {
 			this->at(i) *= b;
@@ -98,6 +159,11 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return *this;
 	}
 
+	/**
+	 * Divides a tensor by a scalar.
+	 * @param b The scalar to divide by.
+	 * @return The result of the division.
+	 */
 	Tensor<N> operator/(const double b) const {
 		Tensor<N> res(this->shape);
 		for (int i = 0; i < (int)this->size(); i++) {
@@ -106,6 +172,11 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return res;
 	}
 
+	/**
+	 * Divides a tensor by a scalar.
+	 * @param b The scalar to divide by.
+	 * @return The result of the division.
+	 */
 	Tensor<N> operator/=(const double b) {
 		for (int i = 0; i < (int)this->size(); i++) {
 			this->at(i) /= b;
@@ -113,7 +184,14 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return *this;
 	}
 
-	// Hadamard product
+	/**
+	 * Multiplies two tensors together. Computes the Hadamard product.
+	 *
+	 * Note: This is not matrix multiplication. This is element-wise.
+	 *
+	 * @param b The tensor to multiply.
+	 * @return The result of the multiplication.
+	 */
 	Tensor<N> operator*(const Tensor<N>& b) const {
 		assert(this->size() == b.size());
 		Tensor<N> res(this->shape);
@@ -123,6 +201,12 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return res;
 	}
 
+	/**
+	 * Multiplies a tensor by this one.
+	 * @param b The tensor to multiply.
+	 * @return The result of the multiplication.
+	 * @see operator*(Tensor<N>)
+	 */
 	Tensor<N> operator*=(const Tensor<N>& b) {
 		assert(this->size() == b.size());
 		for (int i = 0; i < (int)this->size(); i++) {
@@ -131,6 +215,11 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 		return *this;
 	}
 
+	/**
+	 * Divides two tensors. Computes the Hadamard quotient.
+	 * @param b The tensor to divide by.
+	 * @return The result of the division.
+	 */
 	Tensor<N> operator/(const Tensor<N>& b) const {
 		assert(this->size() == b.size());
 		Tensor<N> res(this->shape);
@@ -141,16 +230,39 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 	}
 };
 
+/**
+ * A tensor of rank 1.
+ *
+ * This is not a vector of tensors but a vector of doubles.
+ */
 template <> class Tensor<1> : public std::vector<double> {
   public:
+	/**
+	 * This tensor's shape.
+	 */
 	std::vector<int> shape;
 
+	/**
+	 * Default constructor.
+	 */
 	Tensor() {}
+
+	/**
+	 * Constructs a tensor of the given shape.
+	 * @param _shape The shape of the tensor.
+	 * @param _val The value to initialize the tensor with.
+	 */
 	Tensor(std::vector<int> _shape, double _val = 0) {
 		shape = _shape;
 		this->clear();
 		this->resize(shape[0], _val);
 	}
+
+	/**
+	 * Constructs a tensor of the given shape.
+	 * @param _shape The size of the tensor.
+	 * @param _val The value to initialize the tensor with.
+	 */
 	Tensor(int _shape, double _val = 0) {
 		shape = std::vector<int>{1};
 		shape[0] = _shape;

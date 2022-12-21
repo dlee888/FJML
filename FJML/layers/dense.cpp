@@ -13,14 +13,15 @@ Layers::Dense::Dense() {
 	name = "Dense";
 }
 
-Layers::Dense::Dense(int _input, int _output, Activations::Activation a, bool randomize, Optimizers::Optimizer<1>* o) {
+Layers::Dense::Dense(int _input, int _output, Activations::Activation _activ, Optimizers::Optimizer<1>* _opt,
+					 bool randomize) {
 	input_size = _input;
 	output_size = _output;
 	layer_weights = weights(std::vector<int>{input_size, output_size});
-	layer_bias = bias({output_size});
-	activ = a;
-	w_opt = Optimizers::get_optimizer<2>(o);
-	b_opt = Optimizers::get_optimizer<1>(o);
+	layer_bias = bias(output_size);
+	activ = _activ;
+	w_opt = Optimizers::get_optimizer<2>(_opt);
+	b_opt = Optimizers::get_optimizer<1>(_opt);
 	name = "Dense";
 	if (randomize) {
 		unsigned long long seed = std::chrono::system_clock::now().time_since_epoch().count();

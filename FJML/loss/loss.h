@@ -12,6 +12,12 @@ namespace Loss {
 
 const double CLIP = 1e9;
 
+/**
+ * @brief Loss function class
+ *
+ * The loss function class is a functor that takes two arguments, the function and its derivative.
+ * The functions should take two arguments, the first is the prediction and the second is the label.
+ */
 class Loss {
   public:
 	std::function<double(double, double)> loss_fn, grad;

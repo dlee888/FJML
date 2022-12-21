@@ -3,26 +3,6 @@
 
 namespace FJML {
 
-MLP::MLP(int input_size, int output_size, std::vector<int> hidden_sizes,
-		 std::vector<Activations::Activation> _activations, Loss::Loss _loss, Optimizers::Optimizer<1>* o) {
-	layers.clear();
-	if (_activations.size() != hidden_sizes.size() + 1) {
-		_activations = std::vector<Activations::Activation>(hidden_sizes.size() + 1, Activations::sigmoid);
-	}
-
-	if (hidden_sizes.size() == 0) {
-		layers.push_back(new Layers::Dense(input_size, output_size, _activations[0], o));
-	} else {
-		layers.push_back(new Layers::Dense(input_size, hidden_sizes[0], _activations[0], o));
-		for (int i = 0; i < (int)hidden_sizes.size() - 1; i++) {
-			layers.push_back(new Layers::Dense(hidden_sizes[i], hidden_sizes[i + 1], _activations[i + 1], o));
-		}
-		layers.push_back(new Layers::Dense(hidden_sizes[hidden_sizes.size() - 1], output_size,
-										   _activations[hidden_sizes.size()], o));
-	}
-	loss_fn = _loss;
-}
-
 void MLP::grad_descent(std::vector<layer_vals> x_train, std::vector<layer_vals> y_train,
 					   std::vector<std::vector<bool>>* mask) {
 	assert(x_train.size() == y_train.size());
