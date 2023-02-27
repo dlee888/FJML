@@ -14,12 +14,9 @@ TEST_CASE("Test layers", "[layers]") {
 
     SECTION("Test Dense layer") {
         Layers::Dense dense{3, 2, Activations::sigmoid, new Optimizers::SGD<1>{0.1}};
-        std::cerr << "Created dense layer" << std::endl;
 
         SECTION("Test apply") {
-            std::cerr << "Testing apply" << std::endl;
             layer_vals output = dense.apply(input);
-            std::cerr << "Applied dense layer" << std::endl;
             REQUIRE(output.size() == 2);
 
             std::vector<layer_vals> vector_input;
