@@ -7,10 +7,11 @@ namespace FJML {
 
 namespace Activations {
 
-template <> void Activation::apply(Tensor<1>& layer) {
-	for (auto& i : layer) {
-		i = func(i);
-	}
+template <> Tensor<1> Activation::apply(Tensor<1>& layer) {
+    for (auto& i : layer) {
+        i = func(i);
+    }
+    return layer;
 }
 
 /**
@@ -20,14 +21,14 @@ template <> void Activation::apply(Tensor<1>& layer) {
  * \f[\sigma(x) = \frac{1}{1 + e^{-x}}\f]
  */
 Activation sigmoid([](double x) { return 1 / (1 + exp(-x)); },
-				   [](double x) -> double {
-					   if (abs(x) > 100) {
-						   return 0;
-					   }
-					   double expx = exp(-x);
-					   return expx / (1 + expx) / (1 + expx);
-				   },
-				   "sigmoid");
+                   [](double x) -> double {
+                       if (abs(x) > 100) {
+                           return 0;
+                       }
+                       double expx = exp(-x);
+                       return expx / (1 + expx) / (1 + expx);
+                   },
+                   "sigmoid");
 
 /**
  * @brief The linear function
@@ -35,11 +36,11 @@ Activation sigmoid([](double x) { return 1 / (1 + exp(-x)); },
  * Simply returns the input.
  */
 Activation linear([](double x) { return x; },
-				  [](double x) {
-					  assert(x != NAN);
-					  return 1;
-				  },
-				  "linear");
+                  [](double x) {
+                      assert(x != NAN);
+                      return 1;
+                  },
+                  "linear");
 
 /**
  * @brief The swish function
@@ -48,12 +49,12 @@ Activation linear([](double x) { return x; },
  * \f[\sigma(x) = \frac{x}{1 + e^{-x}}\f]
  */
 Activation swish([](double x) { return x / (1 + exp(-x)); },
-				 [](double x) {
-					 double expx = exp(-x);
-					 double denom = 1 + expx;
-					 return (1 + expx + x * expx) / denom / denom;
-				 },
-				 "swish");
+                 [](double x) {
+                     double expx = exp(-x);
+                     double denom = 1 + expx;
+                     return (1 + expx + x * expx) / denom / denom;
+                 },
+                 "swish");
 
 /**
  * @brief The relu function
@@ -62,7 +63,7 @@ Activation swish([](double x) { return x / (1 + exp(-x)); },
  * \f[\sigma(x) = \max(0, x)\f]
  */
 Activation relu([](double x) -> double { return std::max(0.0, x); }, [](double x) -> double { return x > 0 ? 1 : 0; },
-				"relu");
+                "relu");
 
 /**
  * @brief The leaky relu function
@@ -71,7 +72,7 @@ Activation relu([](double x) -> double { return std::max(0.0, x); }, [](double x
  * \f[\sigma(x) = \max(0.01x, x)\f]
  */
 Activation leaky_relu([](double x) -> double { return x > 0 ? x : 0.01 * x; },
-					  [](double x) -> double { return x > 0 ? 1 : 0.01; }, "leaky_relu");
+                      [](double x) -> double { return x > 0 ? 1 : 0.01; }, "leaky_relu");
 
 /**
  * @brief The tanh function
@@ -79,7 +80,7 @@ Activation leaky_relu([](double x) -> double { return x > 0 ? x : 0.01 * x; },
  * \f[\sigma(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}\f]
  */
 Activation tanh([](double x) { return std::tanh(x); }, [](double x) { return 1 - std::tanh(x) * std::tanh(x); },
-				"tanh");
+                "tanh");
 
 /**
  * @brief A list of all the activations

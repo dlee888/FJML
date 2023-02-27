@@ -4,7 +4,7 @@
 #include <cmath>
 #include <functional>
 
-#include "../util/types.h"
+#include "../linalg/tensor.h"
 
 namespace FJML {
 
@@ -42,14 +42,15 @@ class Activation {
 	 * @brief apply the function to a layer
 	 * @param layer The layer to apply the function to
 	 */
-	template <int N> void apply(Tensor<N>& layer) {
+	template <int N> Tensor<N> apply(Tensor<N>& layer) {
 		for (auto& i : layer) {
 			i = apply(i);
 		}
+		return layer;
 	}
 };
 
-template <> void Activation::apply(Tensor<1>& layer);
+template <> Tensor<1> Activation::apply(Tensor<1>& layer);
 
 extern Activation linear, sigmoid, swish, relu, leaky_relu, tanh;
 
@@ -60,3 +61,4 @@ extern std::vector<Activation> all_activations;
 } // namespace FJML
 
 #endif
+

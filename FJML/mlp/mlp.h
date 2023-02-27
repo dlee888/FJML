@@ -13,8 +13,8 @@
 #include "../layers/layers.h"
 #include "../loss/loss.h"
 #include "../optimizers/optimizers.h"
-#include "../util/linalg.h"
-#include "../util/types.h"
+#include "../linalg/linalg.h"
+#include "../linalg/tensor.h"
 
 namespace FJML {
 

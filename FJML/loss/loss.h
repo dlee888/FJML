@@ -4,10 +4,13 @@
 #include <cassert>
 #include <functional>
 
-#include "../util/types.h"
+#include "../linalg/tensor.h"
 
 namespace FJML {
 
+/**
+ * @brief Namespace for loss functions
+ */
 namespace Loss {
 
 const double CLIP = 1e9;
@@ -20,36 +23,50 @@ const double CLIP = 1e9;
  */
 class Loss {
   public:
-	std::function<double(double, double)> loss_fn, grad;
+    std::function<double(double, double)> loss_fn, grad;
 
-	Loss() {}
-	Loss(std::function<double(double, double)> f, std::function<double(double, double)> g) {
-		loss_fn = f;
-		grad = g;
-	}
+    Loss() {}
+    Loss(std::function<double(double, double)> f, std::function<double(double, double)> g) {
+        loss_fn = f;
+        grad = g;
+    }
 
-	double calc_loss(const layer_vals& obs, const layer_vals& pred) {
-		assert(obs.size() == pred.size());
-		double tot = 0;
-		for (int i = 0; i < (int)obs.size(); i++) {
-			tot += loss_fn(obs[i], pred[i]);
-		}
-		return tot;
-	}
+    template <int N> double calc_loss(const Tensor<N>& obs, const Tensor<N>& pred) {
+        assert(obs.size() == pred.size());
+        double tot = 0;
+        for (int i = 0; i < (int)obs.size(); i++) {
+            tot += calc_loss(obs[i], pred[i]);
+        }
+        return tot;
+    }
 
-	layer_vals calc_grad(const layer_vals& obs, const layer_vals& pred, std::vector<bool>* mask = nullptr) {
-		assert(obs.size() == pred.size());
-		layer_vals res(obs.size());
-		for (int i = 0; i < (int)obs.size(); i++) {
-			if (mask != nullptr && !(mask->at(i))) {
-				res[i] = 0;
-			} else {
-				res[i] = std::max(std::min(grad(obs[i], pred[i]), CLIP), -CLIP);
-			}
-		}
-		return res;
-	}
+    template <int N> Tensor<N> calc_grad(const Tensor<N>& obs, const Tensor<N>& pred) {
+        assert(obs.size() == pred.size());
+        Tensor<N> res(obs.shape);
+        for (int i = 0; i < (int)obs.size(); i++) {
+            res[i] = calc_grad(obs[i], pred[i]);
+        }
+        return res;
+    }
 };
+
+template <> inline double Loss::calc_loss(const Tensor<1>& obs, const Tensor<1>& pred) {
+    assert(obs.size() == pred.size());
+    double tot = 0;
+    for (int i = 0; i < (int)obs.size(); i++) {
+        tot += loss_fn(obs[i], pred[i]);
+    }
+    return tot;
+}
+
+template <> inline Tensor<1> Loss::calc_grad(const Tensor<1>& obs, const Tensor<1>& pred) {
+    assert(obs.size() == pred.size());
+    Tensor<1> res(obs.size());
+    for (int i = 0; i < (int)obs.size(); i++) {
+        res[i] = std::max(std::min(grad(obs[i], pred[i]), CLIP), -CLIP);
+    }
+    return res;
+}
 
 extern Loss mse, huber, crossentropy;
 

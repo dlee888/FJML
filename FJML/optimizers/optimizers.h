@@ -4,11 +4,16 @@
 #include <cmath>
 #include <iostream>
 
-#include "../util/linalg.h"
-#include "../util/types.h"
+#include "../linalg/linalg.h"
+#include "../linalg/tensor.h"
 
 namespace FJML {
 
+/**
+ * @brief Namespace for optimizers
+ * 
+ * Optimizers are used to optimize the parameters of a neural network during gradient descent.
+*/
 namespace Optimizers {
 
 /**

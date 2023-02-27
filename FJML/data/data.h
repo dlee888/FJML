@@ -10,6 +10,9 @@
 
 namespace FJML {
 
+/**
+ * @brief Helper functions for loading data
+ */
 namespace Data {
 
 /**
@@ -21,34 +24,6 @@ layer_vals one_hot(int x, int n) {
 	layer_vals res(n);
 	res[x] = 1;
 	return res;
-}
-
-void load_mnist(int k, std::string filename, std::vector<layer_vals>& input_set, std::vector<layer_vals>& output_set,
-				int n = INT_MAX) {
-	std::string temp;
-	std::ifstream data_file(filename);
-	if (!data_file.is_open()) {
-		std::cout << filename << " failed to open." << std::endl;
-	}
-
-	std::string line;
-	while (std::getline(data_file, line)) {
-		std::stringstream ss(line);
-
-		layer_vals input_item;
-		for (int i = 0; i < k; i++) {
-			std::getline(ss, temp, ',');
-			input_item.push_back(std::stod(temp) / 255);
-		}
-		input_set.push_back(input_item);
-
-		std::getline(ss, temp, ',');
-		output_set.push_back(one_hot(std::stoi(temp), 10));
-
-		if ((int)input_set.size() >= n) {
-			break;
-		}
-	}
 }
 
 /**

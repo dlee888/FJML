@@ -10,11 +10,16 @@
 
 #include "../activations/activations.h"
 #include "../optimizers/optimizers.h"
-#include "../util/linalg.h"
-#include "../util/types.h"
+#include "../linalg/linalg.h"
+#include "../linalg/tensor.h"
 
 namespace FJML {
 
+/**
+ * @brief A namespace for all layers
+ *
+ * A layer is a function that takes an input and returns an output. A neural network is a composition of layers.
+ */
 namespace Layers {
 
 /**
