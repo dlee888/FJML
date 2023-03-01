@@ -14,9 +14,8 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - run: git clone https://github.com/catchorg/Catch2.git
-    - run: cd Catch2
-    - run: cmake -Bbuild -H. -DBUILD_TESTING=OFF
-    - run: sudo cmake --build build/ --target install
+    - run: cd Catch2 && cmake -Bbuild -H. -DBUILD_TESTING=OFF
+    - run: cd Catch2 && sudo cmake --build build/ --target install
       
     - name: make
       run: make init && make
