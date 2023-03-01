@@ -29,5 +29,8 @@ install: libFJML.so
 init:
 	mkdir -p bin/layers bin/activations bin/loss bin/util bin/mlp
 
+docs: FJML/**/*
+	doxygen doxygen.conf
+
 clean:
 	rm bin/*.o bin/**/*.o libFJML.so
