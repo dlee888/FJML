@@ -1,0 +1,23 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - run: git clone https://github.com/catchorg/Catch2.git
+    - run: cd Catch2 && cmake -Bbuild -H. -DBUILD_TESTING=OFF
+    - run: cd Catch2 && sudo cmake --build build/ --target install
+      
+    - name: make
+      run: make init && make && sudo make install
+    - name: make tests
+      run: cd tests && cmake -H. -Bbuild && cd build && make && ./tests
