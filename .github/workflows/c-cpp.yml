@@ -18,6 +18,6 @@ jobs:
     - run: cd Catch2 && sudo cmake --build build/ --target install
       
     - name: make
-      run: make init && make
+      run: make init && make && sudo make install
     - name: make tests
       run: cd tests && cmake -H. -Bbuild && cd build && make && ./tests
