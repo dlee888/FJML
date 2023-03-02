@@ -24,30 +24,30 @@ namespace Activations {
  */
 class Activation {
   public:
-	std::function<double(double)> func, grad;
-	std::string name;
+    std::function<double(double)> func, grad;
+    std::string name;
 
-	Activation() = default;
+    Activation() = default;
 
-	/**
-	 * @brief Construct a new Activation object
-	 * @param _func The function itself
-	 * @param _grad The derivative of the function
-	 * @param _name The name of the function
-	 */
-	Activation(std::function<double(double)> _func, std::function<double(double)> _grad, std::string _name)
-		: func{_func}, grad{_grad}, name{_name} {}
+    /**
+     * @brief Construct a new Activation object
+     * @param _func The function itself
+     * @param _grad The derivative of the function
+     * @param _name The name of the function
+     */
+    Activation(std::function<double(double)> _func, std::function<double(double)> _grad, std::string _name)
+        : func{_func}, grad{_grad}, name{_name} {}
 
-	/**
-	 * @brief apply the function to a layer
-	 * @param layer The layer to apply the function to
-	 */
-	template <int N> Tensor<N> apply(Tensor<N>& layer) {
-		for (auto& i : layer) {
-			i = apply(i);
-		}
-		return layer;
-	}
+    /**
+     * @brief apply the function to a layer
+     * @param layer The layer to apply the function to
+     */
+    template <int N> Tensor<N> apply(Tensor<N>& layer) {
+        for (auto& i : layer) {
+            i = apply(i);
+        }
+        return layer;
+    }
 };
 
 template <> Tensor<1> Activation::apply(Tensor<1>& layer);
@@ -61,4 +61,3 @@ extern std::vector<Activation> all_activations;
 } // namespace FJML
 
 #endif
-

@@ -262,4 +262,3 @@ TEST_CASE("Testing 2d tensor", "[tensor]") {
         BENCHMARK("Tensor division") { return t2 / t3; };
     }
 }
-

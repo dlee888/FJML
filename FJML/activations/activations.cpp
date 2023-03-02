@@ -22,7 +22,7 @@ template <> Tensor<1> Activation::apply(Tensor<1>& layer) {
  */
 Activation sigmoid([](double x) { return 1 / (1 + exp(-x)); },
                    [](double x) -> double {
-                       if (abs(x) > 100) {
+                       if (std::abs(x) > 100) {
                            return 0;
                        }
                        double expx = exp(-x);

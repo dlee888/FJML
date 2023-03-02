@@ -39,6 +39,21 @@ void MLP::grad_descent(std::vector<layer_vals> x_train, std::vector<layer_vals> 
     }
 }
 
+void MLP::backwards_pass(const std::vector<layer_vals>& input, const std::vector<layer_vals>& grads) {
+    int num_layers = layers.size();
+    std::vector<std::vector<layer_vals>> run_res(num_layers + 1);
+    run_res[0] = input;
+    for (int i = 0; i < num_layers; i++) {
+        run_res[i + 1] = layers[i]->apply(run_res[i]);
+    }
+
+    std::vector<layer_vals> out_grad = grads;
+
+    for (int i = num_layers - 1; i >= 0; i--) {
+        out_grad = layers[i]->apply_grad(run_res[i], out_grad);
+    }
+}
+
 layer_vals MLP::run(layer_vals input) {
     for (Layers::Layer* l : layers) {
         input = l->apply(input);
