@@ -67,4 +67,25 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
 
         REQUIRE(FJML::LinAlg::sum(b) == 10);
     }
+
+    SECTION("Benchmarks") {
+        FJML::layer_vals a{1000};
+        FJML::layer_vals b{1000};
+        for (int i = 0; i < 1000; i++) {
+            a[i] = i;
+            b[i] = i;
+        }
+
+        BENCHMARK("dot product") { return FJML::LinAlg::dotProduct(a, b); };
+
+        FJML::weights c{{1000, 1000}};
+        for (int i = 0; i < 1000; i++) {
+            for (int j = 0; j < 1000; j++) {
+                c[i][j] = i + j;
+            }
+        }
+
+        BENCHMARK("matrix multiply") { return FJML::LinAlg::matrixMultiply(a, c); };
+    }
 }
+

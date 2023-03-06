@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -O3 -std=c++17 -fsanitize=undefined $(FLAGS)
+CFLAGS = -O3 -std=c++17 -fsanitize=undefined -ffast-math -march=native -fopenmp $(FLAGS)
 
 HEADERS = FJML/activations/activations.h \
 		  FJML/data/data.h \

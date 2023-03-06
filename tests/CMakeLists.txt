@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_CXX_STANDARD 17)
 
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O3 -Wall")
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O3 -Wall -march=native -mtune=native -fopenmp -ffast-math")
 
 find_package(Catch2 3 REQUIRED)
 # These tests can use the Catch2-provided main
