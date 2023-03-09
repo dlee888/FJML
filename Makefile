@@ -1,5 +1,12 @@
 CC = g++
-CFLAGS = -O3 -std=c++17 -fsanitize=undefined -ffast-math -march=native -fopenmp $(FLAGS)
+CFLAGS = -O3 -std=c++17
+
+debug: CFLAGS += -g -fsanitize=undefined -pg
+debug: all
+
+release: CFLAGS += -DNDEBUG
+release: all libFJML.so
+	sudo make install
 
 HEADERS = FJML/activations/activations.h \
 		  FJML/data/data.h \
@@ -33,4 +40,4 @@ docs: FJML/**/*
 	doxygen doxygen.conf
 
 clean:
-	rm bin/*.o bin/**/*.o libFJML.so
+	-rm -f bin/**/*.o libFJML.so

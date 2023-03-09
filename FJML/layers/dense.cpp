@@ -73,9 +73,9 @@ std::vector<layer_vals> Layers::Dense::apply_grad(const std::vector<layer_vals>&
             out_grad2[i] = activ.grad(output_vals[i]) * output_grad[datapoint][i];
             if (std::isnan(out_grad2[i])) {
                 std::cerr << "Uh oh " << output_vals[i] << std::endl;
-                std::cerr << input_vals[datapoint] << std::endl
-                          << layer_weights << std::endl
-                          << layer_bias << std::endl;
+                // std::cerr << input_vals[datapoint] << std::endl
+                //           << layer_weights << std::endl
+                //           << layer_bias << std::endl;
             }
             assert(!std::isnan(out_grad2[i]));
         }
