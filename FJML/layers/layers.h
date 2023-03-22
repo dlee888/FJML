@@ -38,16 +38,16 @@ class Layer {
     Layer(std::string _name) : name{_name} {}
     virtual ~Layer() {}
 
-    virtual layer_vals apply(const layer_vals& input);
-    virtual std::vector<layer_vals> apply(const std::vector<layer_vals>& input);
+    virtual layer_vals apply(const layer_vals& input) const;
+    virtual std::vector<layer_vals> apply(const std::vector<layer_vals>& input) const;
 
     // Return the gradient w.r.t the input nodes of this layer
     virtual std::vector<layer_vals> apply_grad(const std::vector<layer_vals>& input_vals,
                                                const std::vector<layer_vals>& output_grad);
 
-    virtual void save(std::ofstream& file);
+    virtual void save(std::ofstream& file) const;
 
-    virtual void summary() {}
+    virtual void summary() const {}
 };
 
 /**
@@ -88,14 +88,14 @@ class Dense : public Layer {
      * @param input The input to apply the layer to
      * @return The output of the layer
      */
-    layer_vals apply(const layer_vals& input);
+    layer_vals apply(const layer_vals& input) const;
 
     /**
      * @brief Apply the layer to a batch of inputs
      * @param input The batch of inputs to apply the layer to
      * @return The batch of outputs of the layer
      */
-    std::vector<layer_vals> apply(const std::vector<layer_vals>& input);
+    std::vector<layer_vals> apply(const std::vector<layer_vals>& input) const;
 
     /**
      * @brief Apply the gradient of the layer to a batch of inputs
@@ -110,12 +110,12 @@ class Dense : public Layer {
      * @brief Save the layer to a file
      * @param file The file to save the layer to
      */
-    void save(std::ofstream& file);
+    void save(std::ofstream& file) const;
 
     /**
      * @brief Print a summary of the layer
      */
-    void summary();
+    void summary() const;
 };
 
 /**
@@ -127,7 +127,7 @@ class Dense : public Layer {
  * \[ \sigma(x_i) = \frac{e^{x_i}}{\sum_{j=1}^n e^{x_j}} \]
  */
 class Softmax : public Layer {
-    void norm(layer_vals& input);
+    layer_vals norm(const layer_vals& input) const;
 
   public:
     /**
@@ -143,7 +143,7 @@ class Softmax : public Layer {
      * @param input The input to apply the layer to
      * @return The output of the layer
      */
-    layer_vals apply(const layer_vals& input);
+    layer_vals apply(const layer_vals& input) const;
 
     /**
      * @brief Apply the layer to a batch of inputs
@@ -151,7 +151,7 @@ class Softmax : public Layer {
      * @return The batch of outputs of the layer
      * @see apply(const layer_vals& input)
      */
-    std::vector<layer_vals> apply(const std::vector<layer_vals>& input);
+    std::vector<layer_vals> apply(const std::vector<layer_vals>& input) const;
 
     /**
      * @brief Apply the gradient of the layer to a batch of inputs
@@ -160,18 +160,18 @@ class Softmax : public Layer {
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
     std::vector<layer_vals> apply_grad(const std::vector<layer_vals>& input_vals,
-                                       const std::vector<layer_vals>& output_grad);
+                                       const std::vector<layer_vals>& output_grad) const;
 
     /**
      * @brief Save the layer to a file
      * @param file The file to save the layer to
      */
-    void save(std::ofstream& file);
+    void save(std::ofstream& file) const;
 
     /**
      * @brief Print a summary of the layer
      */
-    void summary();
+    void summary() const;
 };
 
 /**

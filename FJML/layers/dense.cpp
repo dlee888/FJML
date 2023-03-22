@@ -28,23 +28,23 @@ Layers::Dense::Dense(int _input, int _output, Activations::Activation _activ, Op
         std::mt19937_64 rng = std::mt19937_64(seed);
         for (int i = 0; i < input_size; i++) {
             for (int j = 0; j < output_size; j++) {
-                layer_weights[i][j] = (double)rng() / ULLONG_MAX * 2 - 1;
+                layer_weights[i][j] = (double)rng() / (double)(rng.max() - rng.min()) * 2 - 1;
             }
         }
         for (int i = 0; i < output_size; i++) {
-            layer_bias[i] = (double)rng() / ULLONG_MAX * 2 - 1;
+            layer_bias[i] = (double)rng() / (double)(rng.max() - rng.min()) * 2 - 1;
         }
     }
 }
 
-layer_vals Layers::Dense::apply(const layer_vals& input) {
+layer_vals Layers::Dense::apply(const layer_vals& input) const {
     layer_vals res = LinAlg::matrixMultiply(input, layer_weights);
     res += layer_bias;
     activ.apply(res);
     return res;
 }
 
-std::vector<layer_vals> Layers::Dense::apply(const std::vector<layer_vals>& input) {
+std::vector<layer_vals> Layers::Dense::apply(const std::vector<layer_vals>& input) const {
     std::vector<layer_vals> res;
     for (const layer_vals& l : input) {
         res.push_back(apply(l));
@@ -61,18 +61,18 @@ std::vector<layer_vals> Layers::Dense::apply_grad(const std::vector<layer_vals>&
     int n = input_vals.size();
 
     weights w_grad = weights(std::vector<int>{input_size, output_size});
-    bias b_grad = bias({output_size});
-    std::vector<layer_vals> prev_grad(n, layer_vals{{input_size}});
+    bias b_grad = bias{output_size};
+    std::vector<layer_vals> prev_grad(n, layer_vals{input_size});
 
     for (int datapoint = 0; datapoint < n; datapoint++) {
         layer_vals output_vals = LinAlg::matrixMultiply(input_vals[datapoint], layer_weights);
         output_vals += layer_bias;
 
-        layer_vals out_grad2({output_size}); // Save results to speed up
+        layer_vals out_grad2{output_size}; // Save results to speed up
         for (int i = 0; i < output_size; i++) {
             out_grad2[i] = activ.grad(output_vals[i]) * output_grad[datapoint][i];
             if (std::isnan(out_grad2[i])) {
-                std::cerr << "Uh oh " << output_vals[i] << std::endl;
+                std::cerr << "Uh oh " << output_vals[i] << " " << activ.name << std::endl;
                 // std::cerr << input_vals[datapoint] << std::endl
                 //           << layer_weights << std::endl
                 //           << layer_bias << std::endl;
@@ -96,13 +96,16 @@ std::vector<layer_vals> Layers::Dense::apply_grad(const std::vector<layer_vals>&
 
     w_grad /= n;
     b_grad /= n;
+    for (auto& x : prev_grad) {
+        x /= n;
+    }
     w_opt->apply_grad(layer_weights, w_grad);
     b_opt->apply_grad(layer_bias, b_grad);
 
     return prev_grad;
 }
 
-void Layers::Dense::save(std::ofstream& file) {
+void Layers::Dense::save(std::ofstream& file) const {
     file << "Dense" << std::endl;
     file << activ.name << std::endl;
     file << input_size << " " << output_size << " ";
@@ -132,7 +135,7 @@ Layers::Dense::Dense(std::ifstream& file) {
     }
     file >> input_size >> output_size;
     layer_weights = weights(std::vector<int>{input_size, output_size});
-    layer_bias = bias({output_size});
+    layer_bias = bias{output_size};
     for (int i = 0; i < input_size; i++) {
         for (int j = 0; j < output_size; j++) {
             file >> layer_weights[i][j];
@@ -143,7 +146,7 @@ Layers::Dense::Dense(std::ifstream& file) {
     }
 }
 
-void Layers::Dense::summary() {
+void Layers::Dense::summary() const {
     std::cout << "Dense layer with " << input_size << " inputs and " << output_size << " outputs" << std::endl;
     std::cout << "Activation function: " << activ.name << std::endl;
 }

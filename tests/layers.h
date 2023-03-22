@@ -13,7 +13,7 @@ TEST_CASE("Test layers", "[layers]") {
     input[2] = -1;
 
     SECTION("Test Dense layer") {
-        Layers::Dense dense{3, 2, Activations::sigmoid, new Optimizers::SGD<1>{0.1}};
+        Layers::Dense dense{3, 2, Activations::linear, new Optimizers::SGD<1>{0.1}};
 
         SECTION("Test apply") {
             layer_vals output = dense.apply(input);

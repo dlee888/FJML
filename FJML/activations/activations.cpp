@@ -7,7 +7,7 @@ namespace FJML {
 
 namespace Activations {
 
-template <> Tensor<1> Activation::apply(Tensor<1>& layer) {
+template <> Tensor<1> Activation::apply(Tensor<1>& layer) const {
     for (auto& i : layer) {
         i = func(i);
     }
