@@ -42,7 +42,7 @@ class Activation {
      * @brief apply the function to a layer
      * @param layer The layer to apply the function to
      */
-    template <int N> Tensor<N> apply(Tensor<N>& layer) {
+    template <int N> Tensor<N> apply(Tensor<N>& layer) const {
         for (auto& i : layer) {
             i = apply(i);
         }
@@ -50,7 +50,7 @@ class Activation {
     }
 };
 
-template <> Tensor<1> Activation::apply(Tensor<1>& layer);
+template <> Tensor<1> Activation::apply(Tensor<1>& layer) const;
 
 extern Activation linear, sigmoid, swish, relu, leaky_relu, tanh;
 

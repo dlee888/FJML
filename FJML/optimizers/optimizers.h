@@ -91,7 +91,7 @@ template <int N> class Adam : public Optimizer<N> {
  * @param opt The optimizer to copy
  * @return A new optimizer with the same hyperparameters as the given optimizer
  */
-template <int N> Optimizer<N>* get_optimizer(Optimizer<1>* opt) {
+template <int N> Optimizer<N>* get_optimizer(const Optimizer<1>* opt) {
     if (opt->name == "SGD") {
         return new SGD<N>(((SGD<1>*)opt)->alpha);
     } else if (opt->name == "Adam") {

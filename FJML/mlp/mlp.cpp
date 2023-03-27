@@ -18,7 +18,7 @@ void progress_bar(int curr, int tot, int bar_width = 69) {
 
 namespace FJML {
 
-void MLP::grad_descent(std::vector<layer_vals> x_train, std::vector<layer_vals> y_train,
+void MLP::grad_descent(const std::vector<layer_vals>& x_train, const std::vector<layer_vals>& y_train,
                        std::vector<std::vector<bool>>* mask) {
     assert(x_train.size() == y_train.size());
     int num_inputs = x_train.size(), num_layers = layers.size();
@@ -54,14 +54,15 @@ void MLP::backwards_pass(const std::vector<layer_vals>& input, const std::vector
     }
 }
 
-layer_vals MLP::run(layer_vals input) {
+layer_vals MLP::run(const layer_vals& input) const {
+    layer_vals result = input;
     for (Layers::Layer* l : layers) {
-        input = l->apply(input);
+        result = l->apply(result);
     }
     return input;
 }
 
-double MLP::calc_loss(std::vector<layer_vals> x_test, std::vector<layer_vals> y_test) {
+double MLP::calc_loss(const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test) const {
     assert(x_test.size() == y_test.size());
     double total = 0;
     for (int i = 0; i < (int)x_test.size(); i++) {
@@ -71,7 +72,7 @@ double MLP::calc_loss(std::vector<layer_vals> x_test, std::vector<layer_vals> y_
     return total / x_test.size();
 }
 
-double MLP::calc_accuracy(std::vector<layer_vals> x_test, std::vector<layer_vals> y_test) {
+double MLP::calc_accuracy(const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test) const {
     assert(x_test.size() == y_test.size());
     int correct = 0;
     for (int i = 0; i < (int)x_test.size(); i++) {
@@ -83,9 +84,9 @@ double MLP::calc_accuracy(std::vector<layer_vals> x_test, std::vector<layer_vals
     return (double)correct / x_test.size();
 }
 
-void MLP::train(std::vector<layer_vals> x_train, std::vector<layer_vals> y_train, std::vector<layer_vals> x_test,
-                std::vector<layer_vals> y_test, int epochs, int batch_size, std::string save_file,
-                std::vector<std::vector<bool>>* mask) {
+void MLP::train(const std::vector<layer_vals>& x_train, const std::vector<layer_vals>& y_train,
+                const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test, int epochs,
+                int batch_size, const std::string& save_file, std::vector<std::vector<bool>>* mask) {
     assert(x_train.size() == y_train.size());
     assert(x_test.size() == y_test.size());
     int num_inputs = x_train.size();
@@ -119,7 +120,7 @@ void MLP::train(std::vector<layer_vals> x_train, std::vector<layer_vals> y_train
     }
 }
 
-void MLP::save(std::string filename) {
+void MLP::save(std::string filename) const {
     std::ofstream file(filename);
     file << layers.size() << std::endl;
     for (Layers::Layer* l : layers) {

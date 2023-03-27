@@ -7,7 +7,7 @@ namespace FJML {
 
 namespace Activations {
 
-template <> Tensor<1> Activation::apply(Tensor<1>& layer) {
+template <> Tensor<1> Activation::apply(Tensor<1>& layer) const {
     for (auto& i : layer) {
         i = func(i);
     }
@@ -49,7 +49,13 @@ Activation linear([](double x) { return x; },
  * \f[\sigma(x) = \frac{x}{1 + e^{-x}}\f]
  */
 Activation swish([](double x) { return x / (1 + exp(-x)); },
-                 [](double x) {
+                 [](double x) -> double {
+                     if (x < -100) {
+                         return 0;
+                     }
+                     if (x > 100) {
+                         return 1;
+                     }
                      double expx = exp(-x);
                      double denom = 1 + expx;
                      return (1 + expx + x * expx) / denom / denom;

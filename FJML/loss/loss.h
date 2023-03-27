@@ -31,7 +31,7 @@ class Loss {
         grad = g;
     }
 
-    template <int N> double calc_loss(const Tensor<N>& obs, const Tensor<N>& pred) {
+    template <int N> double calc_loss(const Tensor<N>& obs, const Tensor<N>& pred) const {
         assert(obs.size() == pred.size());
         double tot = 0;
         for (int i = 0; i < (int)obs.size(); i++) {
@@ -40,7 +40,7 @@ class Loss {
         return tot;
     }
 
-    template <int N> Tensor<N> calc_grad(const Tensor<N>& obs, const Tensor<N>& pred) {
+    template <int N> Tensor<N> calc_grad(const Tensor<N>& obs, const Tensor<N>& pred) const {
         assert(obs.size() == pred.size());
         Tensor<N> res(obs.shape);
         for (int i = 0; i < (int)obs.size(); i++) {
@@ -50,7 +50,7 @@ class Loss {
     }
 };
 
-template <> inline double Loss::calc_loss(const Tensor<1>& obs, const Tensor<1>& pred) {
+template <> inline double Loss::calc_loss(const Tensor<1>& obs, const Tensor<1>& pred) const {
     assert(obs.size() == pred.size());
     double tot = 0;
     for (int i = 0; i < (int)obs.size(); i++) {
@@ -59,7 +59,7 @@ template <> inline double Loss::calc_loss(const Tensor<1>& obs, const Tensor<1>&
     return tot;
 }
 
-template <> inline Tensor<1> Loss::calc_grad(const Tensor<1>& obs, const Tensor<1>& pred) {
+template <> inline Tensor<1> Loss::calc_grad(const Tensor<1>& obs, const Tensor<1>& pred) const {
     assert(obs.size() == pred.size());
     Tensor<1> res(obs.size());
     for (int i = 0; i < (int)obs.size(); i++) {
