@@ -88,14 +88,14 @@ class Dense : public Layer {
      * @param input The input to apply the layer to
      * @return The output of the layer
      */
-    layer_vals apply(const layer_vals& input) const;
+    layer_vals apply(const layer_vals& input) const override;
 
     /**
      * @brief Apply the layer to a batch of inputs
      * @param input The batch of inputs to apply the layer to
      * @return The batch of outputs of the layer
      */
-    std::vector<layer_vals> apply(const std::vector<layer_vals>& input) const;
+    std::vector<layer_vals> apply(const std::vector<layer_vals>& input) const override;
 
     /**
      * @brief Apply the gradient of the layer to a batch of inputs
@@ -104,18 +104,18 @@ class Dense : public Layer {
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
     std::vector<layer_vals> apply_grad(const std::vector<layer_vals>& input_vals,
-                                       const std::vector<layer_vals>& output_grad);
+                                       const std::vector<layer_vals>& output_grad) override;
 
     /**
      * @brief Save the layer to a file
      * @param file The file to save the layer to
      */
-    void save(std::ofstream& file) const;
+    void save(std::ofstream& file) const override;
 
     /**
      * @brief Print a summary of the layer
      */
-    void summary() const;
+    void summary() const override;
 };
 
 /**
@@ -143,7 +143,7 @@ class Softmax : public Layer {
      * @param input The input to apply the layer to
      * @return The output of the layer
      */
-    layer_vals apply(const layer_vals& input) const;
+    layer_vals apply(const layer_vals& input) const override;
 
     /**
      * @brief Apply the layer to a batch of inputs
@@ -151,7 +151,7 @@ class Softmax : public Layer {
      * @return The batch of outputs of the layer
      * @see apply(const layer_vals& input)
      */
-    std::vector<layer_vals> apply(const std::vector<layer_vals>& input) const;
+    std::vector<layer_vals> apply(const std::vector<layer_vals>& input) const override;
 
     /**
      * @brief Apply the gradient of the layer to a batch of inputs
@@ -160,18 +160,18 @@ class Softmax : public Layer {
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
     std::vector<layer_vals> apply_grad(const std::vector<layer_vals>& input_vals,
-                                       const std::vector<layer_vals>& output_grad) const;
+                                       const std::vector<layer_vals>& output_grad) override;
 
     /**
      * @brief Save the layer to a file
      * @param file The file to save the layer to
      */
-    void save(std::ofstream& file) const;
+    void save(std::ofstream& file) const override;
 
     /**
      * @brief Print a summary of the layer
      */
-    void summary() const;
+    void summary() const override;
 };
 
 /**
