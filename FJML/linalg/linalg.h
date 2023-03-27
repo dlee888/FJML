@@ -1,4 +1,5 @@
-#pragma once
+// Copyright (c) 2022 David Lee
+// This code is licensed under MIT license (see LICENSE for details)
 
 #ifndef LINALG_INCLUDED
 #define LINALG_INCLUDED

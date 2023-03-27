@@ -1,3 +1,8 @@
+// Copyright (c) 2022 David Lee
+// This code is licensed under MIT license (see LICENSE for details)
+
+#include <algorithm>
+
 #include "mlp.h"
 
 void progress_bar(int curr, int tot, int bar_width = 69) {

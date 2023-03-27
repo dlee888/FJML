@@ -1,5 +1,8 @@
-#ifndef TYPES_INCLUDED
-#define TYPES_INCLUDED
+// Copyright (c) 2022 David Lee
+// This code is licensed under MIT license (see LICENSE for details)
+
+#ifndef TENSOR_INCLUDED
+#define TENSOR_INCLUDED
 
 #include <cassert>
 #include <fstream>

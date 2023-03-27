@@ -1,3 +1,6 @@
+// Copyright (c) 2022 David Lee
+// This code is licensed under MIT license (see LICENSE for details)
+
 #ifndef LOSS_INCLUDED
 #define LOSS_INCLUDED
 
