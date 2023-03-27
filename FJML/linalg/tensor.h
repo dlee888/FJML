@@ -10,6 +10,9 @@
 #include <iostream>
 #include <vector>
 
+#pragma GCC target("avx2,fma")
+#pragma GCC optimize("O3,unroll-loops")
+
 namespace FJML {
 
 /**

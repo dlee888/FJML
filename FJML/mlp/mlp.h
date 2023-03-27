@@ -50,8 +50,8 @@ class MLP {
      * @param _loss The loss function to use
      * @param _optimizer The optimizer to use
      */
-    MLP(std::vector<Layers::Layer*> _layers, Loss::Loss _loss,
-        Optimizers::Optimizer<1>* _optimizer = new Optimizers::SGD<1>)
+    MLP(const std::vector<Layers::Layer*>& _layers, const Loss::Loss& _loss,
+        const Optimizers::Optimizer<1>* _optimizer = new Optimizers::SGD<1>)
         : layers{_layers}, loss_fn{_loss} {
         set_optimizer(_optimizer);
     }
@@ -66,13 +66,13 @@ class MLP {
      * @brief Set the loss function for the model
      * @param loss The loss function to use
      */
-    void set_loss(Loss::Loss loss) { loss_fn = loss; }
+    void set_loss(const Loss::Loss& loss) { loss_fn = loss; }
 
     /**
      * @brief Set the optimizer for the model
      * @param optimizer The optimizer to use
      */
-    void set_optimizer(Optimizers::Optimizer<1>* optimizer) {
+    void set_optimizer(const Optimizers::Optimizer<1>* optimizer) {
         for (Layers::Layer* l : layers) {
             if (l->name == "Dense") {
                 ((Layers::Dense*)l)->w_opt = Optimizers::get_optimizer<2>(optimizer);
@@ -100,7 +100,7 @@ class MLP {
      *
      * @param input The input to run the model on
      */
-    layer_vals run(layer_vals input);
+    layer_vals run(const layer_vals& input) const;
 
     /**
      * @brief Calculate the loss of the model on a batch of data
@@ -108,7 +108,7 @@ class MLP {
      * @param y_test The target data
      * @return The loss
      */
-    double calc_loss(std::vector<layer_vals> x_test, std::vector<layer_vals> y_test);
+    double calc_loss(const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test) const;
 
     /**
      * @brief Calculate the accuracy of the model on a batch of data
@@ -119,7 +119,7 @@ class MLP {
      * @param y_test The target data
      * @return The accuracy
      */
-    double calc_accuracy(std::vector<layer_vals> x_test, std::vector<layer_vals> y_test);
+    double calc_accuracy(const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test) const;
 
     /**
      * Applies gradients in a backwards pass
@@ -138,14 +138,14 @@ class MLP {
      * @param y_train The target data
      * @param mask A mask to apply to the data
      */
-    void grad_descent(std::vector<layer_vals> x_train, std::vector<layer_vals> y_train,
+    void grad_descent(const std::vector<layer_vals>& x_train, const std::vector<layer_vals>& y_train,
                       std::vector<std::vector<bool>>* mask = nullptr);
 
     /**
      * @brief Save the model to a file
      * @param filename The name of the file to save to
      */
-    void save(std::string filename);
+    void save(std::string filename) const;
 
     /**
      * @brief Load the model from a file
@@ -164,9 +164,9 @@ class MLP {
      * @param save_file The file to save the model to, or "" to not save
      * @param mask A mask to apply to the data
      */
-    void train(std::vector<layer_vals> x_train, std::vector<layer_vals> y_train, std::vector<layer_vals> x_test,
-               std::vector<layer_vals> y_test, int epochs, int batch_size, std::string save_file,
-               std::vector<std::vector<bool>>* mask = nullptr);
+    void train(const std::vector<layer_vals>& x_train, const std::vector<layer_vals>& y_train,
+               const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test, int epochs, int batch_size,
+               const std::string& save_file, std::vector<std::vector<bool>>* mask = nullptr);
 
     /**
      * @brief Print a summary of the model

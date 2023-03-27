@@ -5,6 +5,7 @@
 #define LINALG_INCLUDED
 
 #include <cassert>
+#include <random>
 
 #include "tensor.h"
 
@@ -36,8 +37,10 @@ inline double dotProduct(const layer_vals& a, const layer_vals& b) {
 inline layer_vals matrixMultiply(const layer_vals& a, const weights& w) {
     assert(a.size() == w.size());
     layer_vals res((int)w[0].size());
-    for (int i = 0; i < (int)w[0].size(); i++) {
-        for (int j = 0; j < (int)a.size(); j++) {
+    int i, j;
+#pragma omp parallel for private(i, j) shared(w, a)
+    for (i = 0; i < (int)w[0].size(); i++) {
+        for (j = 0; j < (int)a.size(); j++) {
             res[i] += w[j][i] * a[j];
         }
     }
@@ -53,8 +56,10 @@ inline layer_vals matrixMultiply(const layer_vals& a, const weights& w) {
 inline layer_vals matrixMultiply(const weights& w, const layer_vals& a) {
     assert(a.size() == w[0].size());
     layer_vals res((int)w.size());
-    for (int i = 0; i < (int)w.size(); i++) {
-        for (int j = 0; j < (int)a.size(); j++) {
+    int i, j;
+#pragma omp parallel for private(i, j) shared(w, a)
+    for (i = 0; i < (int)w.size(); i++) {
+        for (j = 0; j < (int)a.size(); j++) {
             res[i] += w[i][j] * a[j];
         }
     }
@@ -90,6 +95,17 @@ template <> inline double sum(const Tensor<1>& a) {
         res += a[i];
     }
     return res;
+}
+
+inline int random_choice(const Tensor<1>& a) {
+    double rand_num = (double)rand() / RAND_MAX;
+    for (int i = 0; i < a.size(); i++) {
+        if (rand_num < a[i]) {
+            return i;
+        }
+        rand_num -= a[i];
+    }
+    return a.size() - 1;
 }
 
 } // namespace LinAlg
