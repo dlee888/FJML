@@ -34,6 +34,8 @@ jobs:
         uses: actions/configure-pages@v3
       - name: Setup doxygen
         run: sudo apt install doxygen
+      - name: Clone css
+        run: cd doxygen-awesome-css && git checkout v2.2.0
       - name: Build docs
         run: make docs
       - name: Upload artifact
