@@ -1,26 +1,28 @@
 CC = g++
 CFLAGS = -O3 -std=c++17
 
-debug: CFLAGS += -g -fsanitize=undefined -pg
-debug: all
+debug: CFLAGS += -coverage -g -fsanitize=undefined -pg
+debug: all libFJML.so
+	sudo make install
 
 release: CFLAGS += -DNDEBUG
 release: all libFJML.so
 	sudo make install
 
-HEADERS = FJML/activations/activations.h \
-		  FJML/data/data.h \
-		  FJML/layers/layers.h \
-		  FJML/linalg/linalg.h FJML/linalg/tensor.h \
-		  FJML/loss/loss.h \
-		  FJML/mlp/mlp.h \
-		  FJML/optimizers/optimizers.h
+HEADERS = src/FJML/activations/activations.h \
+		  src/FJML/data/data.h \
+		  src/FJML/layers/layers.h \
+		  src/FJML/linalg/linalg.h src/FJML/linalg/tensor.h \
+		  src/FJML/loss/loss.h \
+		  src/FJML/mlp/mlp.h \
+		  src/FJML/optimizers/optimizers.h
 CFILES = bin/activations/activations.o \
 		 bin/layers/dense.o bin/layers/layers.o bin/layers/softmax.o \
 		 bin/loss/loss.o \
 		 bin/mlp/mlp.o
 
-bin/%.o: FJML/%.cpp $(HEADERS)
+bin/%.o: init
+bin/%.o: src/FJML/%.cpp $(HEADERS)
 	$(CC) -c $(CFLAGS) -fPIC $< -o $@
 
 all: $(CFILES)
@@ -28,15 +30,15 @@ all: $(CFILES)
 
 install: libFJML.so
 	rm -rf /usr/local/include/FJML
-	cp -r FJML /usr/include
-	cp FJML.h /usr/include
+	cp -r src/FJML /usr/include
+	cp src/FJML.h /usr/include
 	cp libFJML.so /usr/local/lib
 	ldconfig /usr/local/lib
 
 init:
 	mkdir -p bin/layers bin/activations bin/loss bin/util bin/mlp
 
-docs: FJML/**/*
+docs: src/FJML/**/*
 	doxygen doxygen.conf
 
 clean:

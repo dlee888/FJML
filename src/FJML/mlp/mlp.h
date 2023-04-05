@@ -125,7 +125,7 @@ class MLP {
      * Applies gradients in a backwards pass
      *
      * @param input the input
-     * #param grads the gradients of the output
+     * @param grads the gradients of the output
      */
     void backwards_pass(const std::vector<layer_vals>& input, const std::vector<layer_vals>& grads);
 

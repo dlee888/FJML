@@ -35,7 +35,7 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
     /**
      * Construct a tensor with the given shape.
      * @param _shape The shape of the tensor.
-     * @param _val The value to fill the tensor with.
+     * @param val The value to fill the tensor with.
      */
     Tensor(std::vector<int> _shape, double val = 0) : shape{_shape} {
         std::vector<int> next_shape{_shape.begin() + 1, _shape.end()};
@@ -57,11 +57,11 @@ template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
 
     /**
      * Output the tensor to a stream.
-     * @param os The stream to output to.
+     * @param o The stream to output to.
      * @param t The tensor to output.
      * @return The stream.
      */
-    friend std::ostream& operator<<(std::ostream& o, Tensor<N> t) {
+    friend std::ostream& operator<<(std::ostream& o, const Tensor<N>& t) {
         o << "[";
         bool first = true;
         for (Tensor<N - 1> i : t) {
@@ -289,6 +289,11 @@ template <> class Tensor<1> : public std::vector<double> {
         this->resize(_shape, _val);
     }
 
+    /**
+     * Apply a function to each element of the tensor.
+     * @param fn The function to apply.
+     * @return The result of the function.
+     */
     Tensor<1> apply_fn(std::function<double(double)> fn) {
         Tensor<1> res(this->shape);
         for (int i = 0; i < (int)this->size(); i++) {
@@ -297,6 +302,12 @@ template <> class Tensor<1> : public std::vector<double> {
         return res;
     }
 
+    /**
+     * Output the tensor to a stream.
+     * @param o The stream to output to.
+     * @param t The tensor to output.
+     * @return The stream.
+     */
     friend std::ostream& operator<<(std::ostream& o, Tensor<1> t) {
         o << "[";
         bool first = true;

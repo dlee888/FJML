@@ -70,8 +70,8 @@ class Dense : public Layer {
     Dense();
     /**
      * @brief Constructor for a fully connected layer
-     * @param _input_size The number of nodes in the previous layer
-     * @param _output_size The number of nodes in this layer
+     * @param _input The number of nodes in the previous layer
+     * @param _output The number of nodes in this layer
      * @param _activ The activation function to use
      * @param _opt The optimizer to use for the weights and bias
      * @param randomize Whether to randomize the weights and bias
