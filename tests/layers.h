@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include "FJML.h"
+#include <FJML.h>
 
 using namespace FJML;
 using namespace Catch;
@@ -15,9 +15,25 @@ TEST_CASE("Test layers", "[layers]") {
     SECTION("Test Dense layer") {
         Layers::Dense dense{3, 2, Activations::linear, new Optimizers::SGD<1>{0.1}};
 
+        REQUIRE(dense.layer_weights.size() == 3);
+        REQUIRE(dense.layer_weights[0].size() == 2);
+        REQUIRE(dense.layer_bias.size() == 2);
+
+        dense.layer_weights[0][0] = 1;
+        dense.layer_weights[0][1] = 2;
+        dense.layer_weights[1][0] = 3;
+        dense.layer_weights[1][1] = 4;
+        dense.layer_weights[2][0] = 5;
+        dense.layer_weights[2][1] = 6;
+
+        dense.layer_bias[0] = -4.20;
+        dense.layer_bias[1] = 6.9;
+
         SECTION("Test apply") {
             layer_vals output = dense.apply(input);
             REQUIRE(output.size() == 2);
+            REQUIRE(output[0] == Approx(-2.2).margin(0.00001));
+            REQUIRE(output[1] == Approx(10.9).margin(0.00001));
 
             std::vector<layer_vals> vector_input;
             vector_input.push_back(input);
@@ -40,6 +56,9 @@ TEST_CASE("Test layers", "[layers]") {
 
             std::vector<layer_vals> input_grad = dense.apply_grad({input}, grad);
             REQUIRE(input_grad[0].size() == 3);
+            REQUIRE(input_grad[0][0] == Approx(5));
+            REQUIRE(input_grad[0][1] == Approx(11));
+            REQUIRE(input_grad[0][2] == Approx(17));
 
             layer_vals new_output = dense.apply(input);
             REQUIRE(new_output[0] != output[0]);
@@ -59,9 +78,6 @@ TEST_CASE("Test layers", "[layers]") {
         }
 
         SECTION("Test apply_grad") {
-            layer_vals output = softmax.apply(input);
-            REQUIRE(output.size() == 3);
-
             std::vector<layer_vals> grad;
             grad.push_back(Tensor<1>{3});
             grad[0][0] = 1;
@@ -69,7 +85,11 @@ TEST_CASE("Test layers", "[layers]") {
             grad[0][2] = 3;
 
             std::vector<layer_vals> input_grad = softmax.apply_grad({input}, grad);
+            REQUIRE(input_grad.size() == 1);
             REQUIRE(input_grad[0].size() == 3);
+            REQUIRE(input_grad[0][0] == Approx(-0.2013).margin(0.001));
+            REQUIRE(input_grad[0][1] == Approx(0.1583).margin(0.001));
+            REQUIRE(input_grad[0][2] == Approx(0.0430).margin(0.001));
         }
     }
 }

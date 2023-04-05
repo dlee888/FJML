@@ -49,6 +49,9 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         a[2] = 3;
 
         REQUIRE(FJML::LinAlg::argmax(a) == 2);
+
+        a[2] = -1;
+        REQUIRE(FJML::LinAlg::argmax(a) == 1);
     }
 
     SECTION("Testing sum") {
