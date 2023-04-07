@@ -13,8 +13,8 @@ Loss mse([](double a, double b) { return (a - b) * (a - b); }, [](double a, doub
 Loss huber(
     [](double a, double b) -> double {
         double diff = a - b;
-        if (abs(diff) > 1) {
-            return abs(diff - 0.5);
+        if (std::abs(diff) > 1) {
+            return std::abs(diff) - 0.5;
         }
         return diff * diff / 2;
     },

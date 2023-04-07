@@ -1,12 +1,14 @@
 CC = g++
 CFLAGS = -O3 -std=c++17
 
-debug: CFLAGS += -coverage -g -fsanitize=undefined -pg
-debug: all libFJML.so
-	sudo make install
-
+release: init
 release: CFLAGS += -DNDEBUG
 release: all libFJML.so
+	sudo make install
+
+debug: init
+debug: CFLAGS += -coverage -g -fsanitize=undefined -pg
+debug: all libFJML.so
 	sudo make install
 
 HEADERS = src/FJML/activations/activations.h \
@@ -21,7 +23,6 @@ CFILES = bin/activations/activations.o \
 		 bin/loss/loss.o \
 		 bin/mlp/mlp.o
 
-bin/%.o: init
 bin/%.o: src/FJML/%.cpp $(HEADERS)
 	$(CC) -c $(CFLAGS) -fPIC $< -o $@
 
@@ -42,4 +43,4 @@ docs: src/FJML/**/*
 	doxygen doxygen.conf
 
 clean:
-	-rm -f bin/**/*.o libFJML.so
+	-rm -rf bin/ libFJML.so

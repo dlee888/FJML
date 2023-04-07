@@ -38,6 +38,10 @@ void MLP::grad_descent(const std::vector<layer_vals>& x_train, const std::vector
     for (int i = 0; i < num_inputs; i++) {
         out_grad[i] = loss_fn.calc_grad(y_train[i], run_res[num_layers][i]);
     }
+    // std::cerr << "out_grad\n";
+    // for (auto& x : out_grad) {
+    //     std::cerr << x << std::endl;
+    // }
 
     for (int i = num_layers - 1; i >= 0; i--) {
         out_grad = layers[i]->apply_grad(run_res[i], out_grad);
@@ -64,7 +68,7 @@ layer_vals MLP::run(const layer_vals& input) const {
     for (Layers::Layer* l : layers) {
         result = l->apply(result);
     }
-    return input;
+    return result;
 }
 
 double MLP::calc_loss(const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test) const {
