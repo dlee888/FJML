@@ -56,6 +56,7 @@ std::vector<layer_vals> Layers::Dense::apply(const std::vector<layer_vals>& inpu
 }
 
 std::vector<layer_vals> Layers::Dense::apply_grad(const std::vector<layer_vals>& input_vals,
+                                                  const std::vector<layer_vals>& output_vals,
                                                   const std::vector<layer_vals>& output_grad) {
     assert(input_vals.size() == output_grad.size());
     assert((int)input_vals[0].size() == input_size);
@@ -68,18 +69,9 @@ std::vector<layer_vals> Layers::Dense::apply_grad(const std::vector<layer_vals>&
     std::vector<layer_vals> prev_grad(n, layer_vals{input_size});
 
     for (int datapoint = 0; datapoint < n; datapoint++) {
-        layer_vals output_vals = LinAlg::matrixMultiply(input_vals[datapoint], layer_weights);
-        output_vals += layer_bias;
-
         layer_vals out_grad2{output_size}; // Save results to speed up
         for (int i = 0; i < output_size; i++) {
-            out_grad2[i] = activ.grad(output_vals[i]) * output_grad[datapoint][i];
-            if (std::isnan(out_grad2[i])) {
-                std::cerr << "Uh oh " << output_vals[i] << " " << activ.name << std::endl;
-                // std::cerr << input_vals[datapoint] << std::endl
-                //           << layer_weights << std::endl
-                //           << layer_bias << std::endl;
-            }
+            out_grad2[i] = activ.grad(output_vals[datapoint][i]) * output_grad[datapoint][i];
             assert(!std::isnan(out_grad2[i]));
         }
 
@@ -99,9 +91,6 @@ std::vector<layer_vals> Layers::Dense::apply_grad(const std::vector<layer_vals>&
 
     w_grad /= n;
     b_grad /= n;
-    for (auto& x : prev_grad) {
-        x /= n;
-    }
     w_opt->apply_grad(layer_weights, w_grad);
     b_opt->apply_grad(layer_bias, b_grad);
 

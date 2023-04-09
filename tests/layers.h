@@ -54,7 +54,7 @@ TEST_CASE("Test layers", "[layers]") {
             grad[0][0] = 1;
             grad[0][1] = 2;
 
-            std::vector<layer_vals> input_grad = dense.apply_grad({input}, grad);
+            std::vector<layer_vals> input_grad = dense.apply_grad({input}, {dense.apply(input)}, grad);
             REQUIRE(input_grad[0].size() == 3);
             REQUIRE(input_grad[0][0] == Approx(5));
             REQUIRE(input_grad[0][1] == Approx(11));
@@ -84,7 +84,7 @@ TEST_CASE("Test layers", "[layers]") {
             grad[0][1] = 2;
             grad[0][2] = 3;
 
-            std::vector<layer_vals> input_grad = softmax.apply_grad({input}, grad);
+            std::vector<layer_vals> input_grad = softmax.apply_grad({input}, {softmax.apply(input)}, grad);
             REQUIRE(input_grad.size() == 1);
             REQUIRE(input_grad[0].size() == 3);
             REQUIRE(input_grad[0][0] == Approx(-0.2013).margin(0.001));

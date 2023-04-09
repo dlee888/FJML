@@ -46,6 +46,7 @@ class Layer {
 
     // Return the gradient w.r.t the input nodes of this layer
     virtual std::vector<layer_vals> apply_grad(const std::vector<layer_vals>& input_vals,
+                                               const std::vector<layer_vals>& output_vals,
                                                const std::vector<layer_vals>& output_grad);
 
     virtual void save(std::ofstream& file) const;
@@ -107,6 +108,7 @@ class Dense : public Layer {
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
     std::vector<layer_vals> apply_grad(const std::vector<layer_vals>& input_vals,
+                                       const std::vector<layer_vals>& output_vals,
                                        const std::vector<layer_vals>& output_grad) override;
 
     /**
@@ -163,6 +165,7 @@ class Softmax : public Layer {
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
     std::vector<layer_vals> apply_grad(const std::vector<layer_vals>& input_vals,
+                                       const std::vector<layer_vals>& output_vals,
                                        const std::vector<layer_vals>& output_grad) override;
 
     /**

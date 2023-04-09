@@ -47,6 +47,7 @@ std::vector<layer_vals> Softmax::apply(const std::vector<layer_vals>& input) con
 }
 
 std::vector<layer_vals> Softmax::apply_grad(const std::vector<layer_vals>& input_vals,
+                                            const std::vector<layer_vals>& output_vals,
                                             const std::vector<layer_vals>& output_grad) {
     assert(input_vals.size() == output_grad.size());
     assert(input_vals[0].size() == output_grad[0].size());

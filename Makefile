@@ -42,5 +42,9 @@ init:
 docs: src/FJML/**/*
 	doxygen doxygen.conf
 
+coverage:
+	lcov --directory . --capture --output-file coverage.info
+	genhtml coverage.info --output-directory docs/html/coverage
+
 clean:
 	-rm -rf bin/ libFJML.so

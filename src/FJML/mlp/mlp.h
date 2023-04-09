@@ -138,8 +138,7 @@ class MLP {
      * @param y_train The target data
      * @param mask A mask to apply to the data
      */
-    void grad_descent(const std::vector<layer_vals>& x_train, const std::vector<layer_vals>& y_train,
-                      std::vector<std::vector<bool>>* mask = nullptr);
+    void grad_descent(const std::vector<layer_vals>& x_train, const std::vector<layer_vals>& y_train);
 
     /**
      * @brief Save the model to a file
@@ -166,7 +165,7 @@ class MLP {
      */
     void train(const std::vector<layer_vals>& x_train, const std::vector<layer_vals>& y_train,
                const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test, int epochs, int batch_size,
-               const std::string& save_file, std::vector<std::vector<bool>>* mask = nullptr);
+               const std::string& save_file);
 
     /**
      * @brief Print a summary of the model

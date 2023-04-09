@@ -12,6 +12,7 @@ layer_vals Layer::apply(const layer_vals& input) const { return input; }
 std::vector<layer_vals> Layer::apply(const std::vector<layer_vals>& input) const { return input; }
 
 std::vector<layer_vals> Layer::apply_grad(const std::vector<layer_vals>& input_vals,
+                                          const std::vector<layer_vals>& output_vals,
                                           const std::vector<layer_vals>& output_grad) {
     return output_grad;
 }
