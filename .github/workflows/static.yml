@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   tests:
-    uses: ./.github/workflows/tests.yml
+    uses: ./.github/workflows/c-cpp.yml
   deploy:
     name: deploy
     needs: [tests]
