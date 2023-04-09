@@ -18,6 +18,12 @@ jobs:
     - run: cd Catch2 && sudo cmake --build build/ --target install
       
     - name: make
-      run: make init && make && sudo make install
+      run: make init && make debug && sudo make install
     - name: make tests
       run: cd tests && cmake -H. -Bbuild && cd build && make && ./tests
+    - name: Make coverage report
+      run: mkdir -p docs/html make coverage
+    - uses: actions/upload-artifact@v2
+      with:
+        name: coverage-report
+        path: ./docs/html/coverage

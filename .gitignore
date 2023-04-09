@@ -7,3 +7,5 @@ tests/build/
 docs/
 
 .clang-format
+
+coverage.info
