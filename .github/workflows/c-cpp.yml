@@ -22,7 +22,7 @@ jobs:
     - name: make tests
       run: cd tests && cmake -H. -Bbuild && cd build && make && ./tests
     - name: Make coverage report
-      run: mkdir -p docs/html make coverage
+      run: mkdir -p docs/html && make coverage
     - uses: actions/upload-artifact@v2
       with:
         name: coverage-report
