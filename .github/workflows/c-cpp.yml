@@ -16,7 +16,7 @@ jobs:
     - run: git clone https://github.com/catchorg/Catch2.git
     - run: cd Catch2 && cmake -Bbuild -H. -DBUILD_TESTING=OFF
     - run: cd Catch2 && sudo cmake --build build/ --target install
-      
+    - run: sudo apt install lcov      
     - name: make
       run: make init && make debug && sudo make install
     - name: make tests
