@@ -5,9 +5,12 @@
 #define TENSOR_INCLUDED
 
 #include <cassert>
+#include <cstdarg>
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <memory>
+#include <numeric>
 #include <vector>
 
 #pragma GCC target("avx2,fma")
@@ -18,420 +21,281 @@ namespace FJML {
 /**
  * This class represents an N dimensional tensor.
  * The tensor is stored as a vector, and also has a shape property.
- * @tparam N The number of dimensions.
+ * @tparam T the type of the tensor elements
  */
-template <int N> class Tensor : public std::vector<Tensor<N - 1>> {
+template <typename T> class Tensor {
   public:
     /**
-     * The shape of the tensor, stored as an array with each of its dimensions.
+     * A linear array containing the data
+     */
+    std::unique_ptr<T[]> data;
+    /**
+     * The shape of the tensor
      */
     std::vector<int> shape;
+    /**
+     * Element i contains the number of elements in the ith dimension
+     */
+    std::vector<int> data_size;
 
     /**
-     * Default constructor.
+     * Creates a tensor with the given shape
+     * @param shape the shape of the tensor
+     * @param init the initial value of the tensor, default is 0 or whatever the default constructor of T is
      */
-    Tensor() {}
-
-    /**
-     * Construct a tensor with the given shape.
-     * @param _shape The shape of the tensor.
-     * @param val The value to fill the tensor with.
-     */
-    Tensor(std::vector<int> _shape, double val = 0) : shape{_shape} {
-        std::vector<int> next_shape{_shape.begin() + 1, _shape.end()};
-        this->resize(_shape[0], Tensor<N - 1>(next_shape, val));
-    }
-
-    /**
-     * Apply a function to each element of the tensor.
-     * @param fn The function to apply.
-     * @return The result of the function.
-     */
-    Tensor<N> apply_fn(std::function<double(double)> fn) {
-        Tensor<N> res(this->shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i).apply_fn(fn);
+    Tensor(const std::vector<int>& shape, const T& init = T()) {
+        this->shape = shape;
+        data_size = shape;
+        for (int i = shape.size() - 2; i >= 0; i--) {
+            data_size[i] *= data_size[i + 1];
         }
-        return res;
+        data_size.push_back(1);
+        data = std::unique_ptr<T[]>(new T[data_size[0]]);
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] = init;
+        }
     }
 
     /**
-     * Output the tensor to a stream.
-     * @param o The stream to output to.
-     * @param t The tensor to output.
-     * @return The stream.
+     * Copy constructor
+     * @param other the tensor to copy
      */
-    friend std::ostream& operator<<(std::ostream& o, const Tensor<N>& t) {
-        o << "[";
-        bool first = true;
-        for (Tensor<N - 1> i : t) {
-            if (!first) {
-                o << ", ";
+    Tensor(const Tensor<T>& other) {
+        shape = other.shape;
+        data_size = other.data_size;
+        data = std::unique_ptr<T[]>(new T[data_size[0]]);
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] = other.data[i];
+        }
+    }
+
+    /**
+     * Move constructor
+     * @param other the tensor to move
+     */
+    Tensor(Tensor<T>&& other) {
+        shape = other.shape;
+        data_size = other.data_size;
+        data = std::move(other.data);
+    }
+
+    /**
+     * Copy assignment operator
+     * @param other the tensor to copy
+     * @return a reference to this tensor
+     */
+    Tensor<T>& operator=(const Tensor<T>& other) {
+        shape = other.shape;
+        data_size = other.data_size;
+        data = std::unique_ptr<T[]>(new T[data_size[0]]);
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] = other.data[i];
+        }
+        return *this;
+    }
+
+    /**
+     * Creates a tensor with the given shape, filled with zeros (or whatever the default constructor of T is)
+     * @param shape the shape of the tensor
+     * @return a tensor with the given shape, filled with zeros (or whatever the default constructor of T is)
+     */
+    static Tensor<T> zeros(std::vector<int> shape) { return Tensor<T>(shape, T()); }
+
+    /**
+     * Creates a tensor with the given shape, filled with ones
+     * @param shape the shape of the tensor
+     * @return a tensor with the given shape, filled with ones
+     */
+    static Tensor<T> ones(std::vector<int> shape) { return Tensor<T>(shape, T(1)); }
+
+    /**
+     * Creates a tensor with the given shape, filled with random values
+     * @param shape the shape of the tensor
+     * @return a tensor with the given shape, filled with random values
+     */
+    static Tensor<T> rand(std::vector<int> shape) {
+        Tensor<T> tensor(shape);
+        for (int i = 0; i < tensor.data_size[0]; i++) {
+            tensor.data[i] = T(std::rand()) / T(RAND_MAX);
+        }
+        return tensor;
+    }
+
+    /**
+     * Create a tensor from a given vector
+     * @param vec the vector to create the tensor from
+     * @return a tensor with the given vector as its data
+     */
+    static Tensor<T> array(std::vector<T> vec) {
+        Tensor<T> tensor({(int)vec.size()});
+        for (int i = 0; i < (int)vec.size(); i++) {
+            tensor.data[i] = vec[i];
+        }
+        return tensor;
+    }
+
+    /**
+     * Create a tensor from a given vector
+     * @param vec the vector to create the tensor from
+     * @return a tensor with the given vector as its data
+     */
+    static Tensor<T> array(std::vector<std::vector<T>> vec) {
+        Tensor<T> tensor({(int)vec.size(), (int)vec[0].size()});
+        for (int i = 0; i < (int)vec.size(); i++) {
+            for (int j = 0; j < (int)vec[i].size(); j++) {
+                tensor.data[i * tensor.data_size[1] + j] = vec[i][j];
             }
-            o << i;
-            first = false;
         }
-        o << "]";
-        return o;
+        return tensor;
     }
 
     /**
-     * Adds two tensors together.
-     * @param b The tensor to add.
-     * @return The result of the addition.
+     * Returns the number of dimensions of the tensor
+     * @return the number of dimensions of the tensor
      */
-    Tensor<N> operator+(const Tensor<N>& b) const {
-        assert(this->size() == b.size());
-        Tensor<N> res(shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) + b[i];
+    int ndim() const { return shape.size(); }
+
+    /**
+     * Returns the size of the tensor
+     * @return the size of the tensor
+     */
+    int size() const { return data_size[0]; }
+
+    /**
+     * Reshapes the tensor
+     * @param shape the new shape of the tensor
+     */
+    void reshape(std::vector<int> shape) {
+        if (data_size[0] != std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>())) {
+            throw std::invalid_argument("Cannot reshape tensor with size " + std::to_string(data_size[0]) +
+                                        " to shape " + std::to_string(shape[0]));
         }
-        return res;
+        this->shape = shape;
+        data_size = shape;
+        for (int i = shape.size() - 2; i >= 0; i--) {
+            data_size[i] *= data_size[i + 1];
+        }
+        data_size.push_back(1);
     }
 
     /**
-     * Adds a tensor to this one.
-     * @param b The tensor to add.
-     * @return The result of the addition.
+     * Returns the element at the given index
+     * @param index the index of the element
+     * @return the element at the given index
      */
-    Tensor<N> operator+=(const Tensor<N>& b) {
-        assert(this->size() == b.size());
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) += b[i];
+    T& operator[](std::vector<int> index) {
+        assert(index.size() == shape.size());
+        int i = 0;
+        for (int j = 0; j < (int)index.size(); j++) {
+            if (index[j] >= shape[j]) {
+                throw std::out_of_range("Index " + std::to_string(index[j]) + " is out of range for dimension " +
+                                        std::to_string(j) + " with size " + std::to_string(shape[j]));
+            }
+            i += index[j] * data_size[j + 1];
         }
-        return *this;
+        return data[i];
     }
 
     /**
-     * Subtracts two tensors.
-     * @param b The tensor to subtract.
-     * @return The result of the subtraction.
+     * Returns the element at the given index
+     * @param index the index of the element
+     * @return the element at the given index
      */
-    Tensor<N> operator-(const Tensor<N>& b) const {
-        assert(this->size() == b.size());
-        Tensor<N> res(this->shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) - b[i];
+    const T& operator[](std::vector<int> index) const {
+        assert(index.size() == shape.size());
+        int i = 0;
+        for (int j = 0; j < (int)index.size(); j++) {
+            if (index[j] >= shape[j]) {
+                throw std::out_of_range("Index " + std::to_string(index[j]) + " is out of range for dimension " +
+                                        std::to_string(j) + " with size " + std::to_string(shape[j]));
+            }
+            i += index[j] * data_size[j + 1];
         }
-        return res;
+        return data[i];
     }
 
     /**
-     * Subtracts a tensor from this one.
-     * @param b The tensor to subtract.
-     * @return The result of the subtraction.
+     * Returns the element at the given index
+     * @param index the index of the element
+     * @return the element at the given index
      */
-    Tensor<N> operator-=(const Tensor<N>& b) {
-        assert(this->size() == b.size());
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) -= b[i];
+    T& at(std::vector<int> index) {
+        assert(index.size() == shape.size());
+        int i = 0;
+        for (int j = 0; j < (int)index.size(); j++) {
+            if (index[j] >= shape[j]) {
+                throw std::out_of_range("Index " + std::to_string(index[j]) + " is out of range for dimension " +
+                                        std::to_string(j) + " with size " + std::to_string(shape[j]));
+            }
+            i += index[j] * data_size[j + 1];
         }
-        return *this;
+        return data[i];
     }
 
     /**
-     * Multiplies a tensor by a scalar.
-     * @param b The scalar to multiply by.
-     * @return The result of the multiplication.
+     * Returns the element at the given index
+     * @param index the index of the element
+     * @return the element at the given index
      */
-    Tensor<N> operator*(const double b) const {
-        Tensor<N> res(this->shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) * b;
+    const T& at(std::vector<int> index) const {
+        assert(index.size() == shape.size());
+        int i = 0;
+        for (int j = 0; j < (int)index.size(); j++) {
+            if (index[j] >= shape[j]) {
+                throw std::out_of_range("Index " + std::to_string(index[j]) + " is out of range for dimension " +
+                                        std::to_string(j) + " with size " + std::to_string(shape[j]));
+            }
+            i += index[j] * data_size[j + 1];
         }
-        return res;
+        return data[i];
     }
 
     /**
-     * @see operator*(double)
+     * Returns the element at the given index
+     * @param index the index of the element
+     * @return the element at the given index
      */
-    friend Tensor<N> operator*(const double b, const Tensor<N>& a) {
-        Tensor<N> res(a.shape);
-        for (int i = 0; i < (int)a.size(); i++) {
-            res[i] = a[i] * b;
+    T& at(int index...) {
+        va_list args;
+        va_start(args, index);
+
+        int i = 0;
+        for (int j = 0; j < (int)shape.size(); j++) {
+            if (j) {
+                index = va_arg(args, int);
+            }
+            if (index >= shape[j]) {
+                throw std::out_of_range("Index " + std::to_string(index) + " is out of range for dimension " +
+                                        std::to_string(j) + " with size " + std::to_string(shape[j]));
+            }
+            i += index * data_size[j + 1];
         }
-        return res;
+        return data[i];
     }
 
     /**
-     * Multiplies a tensor by a scalar.
-     * @param b The scalar to multiply by.
-     * @return The result of the multiplication.
+     * Returns the element at the given index
+     * @param index the index of the element
+     * @return the element at the given index
      */
-    Tensor<N> operator*=(const double b) {
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) *= b;
-        }
-        return *this;
-    }
+    const T& at(int index...) const {
+        va_list args;
+        va_start(args, index);
 
-    /**
-     * Divides a tensor by a scalar.
-     * @param b The scalar to divide by.
-     * @return The result of the division.
-     */
-    Tensor<N> operator/(const double b) const {
-        Tensor<N> res(this->shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) / b;
+        int i = 0;
+        for (int j = 0; j < (int)shape.size(); j++) {
+            if (j) {
+                index = va_arg(args, int);
+            }
+            if (index >= shape[j]) {
+                throw std::out_of_range("Index " + std::to_string(index) + " is out of range for dimension " +
+                                        std::to_string(j) + " with size " + std::to_string(shape[j]));
+            }
+            i += index * data_size[j + 1];
         }
-        return res;
-    }
-
-    /**
-     * Divides a tensor by a scalar.
-     * @param b The scalar to divide by.
-     * @return The result of the division.
-     */
-    Tensor<N> operator/=(const double b) {
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) /= b;
-        }
-        return *this;
-    }
-
-    /**
-     * Multiplies two tensors together. Computes the Hadamard product.
-     *
-     * Note: This is not matrix multiplication. This is element-wise.
-     *
-     * @param b The tensor to multiply.
-     * @return The result of the multiplication.
-     */
-    Tensor<N> operator*(const Tensor<N>& b) const {
-        assert(this->size() == b.size());
-        Tensor<N> res(this->shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) * b[i];
-        }
-        return res;
-    }
-
-    /**
-     * Multiplies a tensor by this one.
-     * @param b The tensor to multiply.
-     * @return The result of the multiplication.
-     * @see operator*(Tensor<N>)
-     */
-    Tensor<N> operator*=(const Tensor<N>& b) {
-        assert(this->size() == b.size());
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) *= b[i];
-        }
-        return *this;
-    }
-
-    /**
-     * Divides two tensors. Computes the Hadamard quotient.
-     * @param b The tensor to divide by.
-     * @return The result of the division.
-     */
-    Tensor<N> operator/(const Tensor<N>& b) const {
-        assert(this->size() == b.size());
-        Tensor<N> res(this->shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) / b[i];
-        }
-        return res;
-    }
-
-    /**
-     * Divides two tensors. Computes the Hadamard quotient.
-     * @param b The tensor to divide by.
-     * @return The result of the division.
-     */
-    Tensor<N> operator/=(const Tensor<N>& b) {
-        assert(this->size() == b.size());
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) /= b[i];
-        }
-        return *this;
+        return data[i];
     }
 };
-
-/**
- * A tensor of rank 1.
- *
- * This is not a vector of tensors but a vector of doubles.
- */
-template <> class Tensor<1> : public std::vector<double> {
-  public:
-    /**
-     * This tensor's shape.
-     */
-    std::vector<int> shape;
-
-    /**
-     * Default constructor.
-     */
-    Tensor() {}
-
-    /**
-     * Constructs a tensor of the given shape.
-     * @param _shape The shape of the tensor.
-     * @param _val The value to initialize the tensor with.
-     */
-    Tensor(std::vector<int> _shape, double _val = 0) {
-        shape = _shape;
-        this->clear();
-        this->resize(shape[0], _val);
-    }
-
-    /**
-     * Constructs a tensor of the given shape.
-     * @param _shape The size of the tensor.
-     * @param _val The value to initialize the tensor with.
-     */
-    Tensor(int _shape, double _val = 0) {
-        shape = std::vector<int>{1};
-        shape[0] = _shape;
-        this->clear();
-        this->resize(_shape, _val);
-    }
-
-    /**
-     * Apply a function to each element of the tensor.
-     * @param fn The function to apply.
-     * @return The result of the function.
-     */
-    Tensor<1> apply_fn(std::function<double(double)> fn) {
-        Tensor<1> res(this->shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = fn(this->at(i));
-        }
-        return res;
-    }
-
-    /**
-     * Output the tensor to a stream.
-     * @param o The stream to output to.
-     * @param t The tensor to output.
-     * @return The stream.
-     */
-    friend std::ostream& operator<<(std::ostream& o, Tensor<1> t) {
-        o << "[";
-        bool first = true;
-        for (double i : t) {
-            if (!first) {
-                o << ", ";
-            }
-            o << i;
-            first = false;
-        }
-        o << "]";
-        return o;
-    }
-
-    Tensor<1> operator+(const Tensor<1>& b) const {
-        assert(this->size() == b.size());
-        Tensor<1> res(shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) + b[i];
-        }
-        return res;
-    }
-
-    Tensor<1> operator+=(const Tensor<1>& b) {
-        assert(this->size() == b.size());
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) += b[i];
-        }
-        return *this;
-    }
-
-    Tensor<1> operator-(const Tensor<1>& b) const {
-        assert(this->size() == b.size());
-        Tensor<1> res(shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) - b[i];
-        }
-        return res;
-    }
-
-    Tensor<1> operator-=(const Tensor<1>& b) {
-        assert(this->size() == b.size());
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) -= b[i];
-        }
-        return *this;
-    }
-
-    Tensor<1> operator*(const double b) const {
-        Tensor<1> res(this->shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) * b;
-        }
-        return res;
-    }
-
-    friend Tensor<1> operator*(const double b, const Tensor<1>& a) {
-        Tensor<1> res(a.shape);
-        for (int i = 0; i < (int)a.size(); i++) {
-            res[i] = a[i] * b;
-        }
-        return res;
-    }
-
-    Tensor<1> operator*=(const double b) {
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) *= b;
-        }
-        return *this;
-    }
-
-    Tensor<1> operator/(const double b) const {
-        Tensor<1> res(this->shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) / b;
-        }
-        return res;
-    }
-
-    Tensor<1> operator/=(const double b) {
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) /= b;
-        }
-        return *this;
-    }
-
-    Tensor<1> operator*(const Tensor<1>& b) const {
-        assert(this->size() == b.size());
-        Tensor<1> res(shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) * b[i];
-        }
-        return res;
-    }
-
-    Tensor<1> operator*=(const Tensor<1>& b) {
-        assert(this->size() == b.size());
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) *= b[i];
-        }
-        return *this;
-    }
-
-    Tensor<1> operator/(const Tensor<1>& b) const {
-        assert(this->size() == b.size());
-        Tensor<1> res(shape);
-        for (int i = 0; i < (int)this->size(); i++) {
-            res[i] = this->at(i) / b[i];
-        }
-        return res;
-    }
-
-    Tensor<1> operator/=(const Tensor<1>& b) {
-        assert(this->size() == b.size());
-        for (int i = 0; i < (int)this->size(); i++) {
-            this->at(i) /= b[i];
-        }
-        return *this;
-    }
-};
-
-using layer_vals = Tensor<1>;
-using weights = Tensor<2>;
-using bias = Tensor<1>;
 
 } // namespace FJML
 

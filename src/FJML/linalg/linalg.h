@@ -6,8 +6,25 @@
 
 #include <cassert>
 #include <random>
+#include <stdexcept>
 
 #include "tensor.h"
+
+/**
+ * @brief Helper method to print the shape of a tensor.
+ * @param a The tensor.
+ * @return The shape of the tensor.
+ */
+template <typename T> static std::string print_shape(const FJML::Tensor<T>& a) {
+    std::string res = "(";
+    for (int i = 0; i < a.dims(); i++) {
+        res += std::to_string(a.shape[i]) + ", ";
+    }
+    res.pop_back();
+    res.pop_back();
+    res += ")";
+    return res;
+}
 
 namespace FJML {
 
@@ -19,29 +36,50 @@ namespace LinAlg {
  * @param b The second vector.
  * @return The dot product of the two vectors.
  */
-inline double dotProduct(const layer_vals& a, const layer_vals& b) {
-    assert(a.size() == b.size());
+template <typename T> inline double dotProduct(const Tensor<T>& a, const Tensor<T>& b) {
+    if (a.data_size[0] != b.data_size[0]) {
+        throw std::invalid_argument("The two vectors must have the same size.");
+    }
     double res = 0;
     for (int i = 0; i < (int)a.size(); i++) {
-        res += a[i] * b[i];
+        res += a.data[i] * b.data[i];
     }
     return res;
 }
 
 /**
- * @brief Multiplies a vector by a matrix.
- * @param a The vector.
- * @param b The matrix.
- * @return The product of the vector and the matrix.
+ * @brief Multiplies two matrices.
+ * @param a The first matrix.
+ * @param b The second matrix.
+ * @return The product.
  */
-inline layer_vals matrixMultiply(const layer_vals& a, const weights& w) {
-    assert(a.size() == w.size());
-    layer_vals res((int)w[0].size());
-    int i, j;
-#pragma omp parallel for private(i, j) shared(w, a)
-    for (i = 0; i < (int)w[0].size(); i++) {
-        for (j = 0; j < (int)a.size(); j++) {
-            res[i] += w[j][i] * a[j];
+template <typename T> inline Tensor<T> matrixMultiply(const Tensor<T>& a, const Tensor<T>& b) {
+    if (a.dims() == 1 && b.dims() == 2) {
+        if (a.shape[0] != b.shape[0]) {
+            throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
+        }
+        a.reshape(1, a.shape[0]);
+    } else if (a.dims() == 2 && b.dims() == 1) {
+        if (a.shape[1] != b.shape[0]) {
+            throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
+        }
+        b.reshape(1, b.shape[0]);
+    } else if (a.dims() != b.dims() || a.dims() < 2 || a.shape[a.dims() - 1] != b.shape[b.dims() - 2]) {
+        throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
+    }
+    std::vector<int> result_shape;
+    for (int i = 0; i < a.dims() - 1; i++) {
+        result_shape.push_back(a.shape[i]);
+    }
+    result_shape.push_back(b.shape[b.dims() - 1]);
+    Tensor<T> res(result_shape);
+    int i, j, k;
+#pragma omp parallel for private(i, j, k) shared(a, b, res)
+    for (i = 0; i < (int)a.data_size[0]; i++) {
+        for (j = 0; j < (int)b.data_size[1]; j++) {
+            for (k = 0; k < (int)a.data_size[1]; k++) {
+                res.data[i * b.data_size[1] + j] += a.data[i * a.data_size[1] + k] * b.data[k * b.data_size[1] + j];
+            }
         }
     }
     return res;
@@ -53,9 +91,9 @@ inline layer_vals matrixMultiply(const layer_vals& a, const weights& w) {
  * @param b The vector.
  * @return The product of the matrix and the vector.
  */
-inline layer_vals matrixMultiply(const weights& w, const layer_vals& a) {
+inline Tensor<T> matrixMultiply(const weights& w, const Tensor<T>& a) {
     assert(a.size() == w[0].size());
-    layer_vals res((int)w.size());
+    Tensor<T> res((int)w.size());
     int i, j;
 #pragma omp parallel for private(i, j) shared(w, a)
     for (i = 0; i < (int)w.size(); i++) {
@@ -71,7 +109,7 @@ inline layer_vals matrixMultiply(const weights& w, const layer_vals& a) {
  * @param a The vector.
  * @return The index of the largest value in the vector.
  */
-inline int argmax(const layer_vals& a) {
+inline int argmax(const Tensor<T>& a) {
     int res = 0;
     for (int i = 1; i < (int)a.size(); i++) {
         if (a[i] > a[res]) {
