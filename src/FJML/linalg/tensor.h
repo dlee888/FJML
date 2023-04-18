@@ -156,12 +156,6 @@ template <typename T> class Tensor {
     int ndim() const { return shape.size(); }
 
     /**
-     * Returns the size of the tensor
-     * @return the size of the tensor
-     */
-    int size() const { return data_size[0]; }
-
-    /**
      * Reshapes the tensor
      * @param shape the new shape of the tensor
      */

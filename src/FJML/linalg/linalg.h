@@ -28,6 +28,9 @@ template <typename T> static std::string print_shape(const FJML::Tensor<T>& a) {
 
 namespace FJML {
 
+/**
+ * This namespace contains some linear algebra helper functions
+ */
 namespace LinAlg {
 
 /**
@@ -49,6 +52,9 @@ template <typename T> inline double dotProduct(const Tensor<T>& a, const Tensor<
 
 /**
  * @brief Multiplies two matrices.
+ *
+ * If more than two dimensions are given, the inputs will be treated as an array of matrices.
+ *
  * @param a The first matrix.
  * @param b The second matrix.
  * @return The product.
@@ -86,57 +92,27 @@ template <typename T> inline Tensor<T> matrixMultiply(const Tensor<T>& a, const 
 }
 
 /**
- * @brief Multiplies a matrix by a vector.
- * @param a The matrix.
- * @param b The vector.
- * @return The product of the matrix and the vector.
+ * Sums all the elements in a tensor.
+ *
+ * @param a The tensor.
+ * @return The sum of all the elements in the tensor.
  */
-inline Tensor<T> matrixMultiply(const weights& w, const Tensor<T>& a) {
-    assert(a.size() == w[0].size());
-    Tensor<T> res((int)w.size());
-    int i, j;
-#pragma omp parallel for private(i, j) shared(w, a)
-    for (i = 0; i < (int)w.size(); i++) {
-        for (j = 0; j < (int)a.size(); j++) {
-            res[i] += w[i][j] * a[j];
-        }
+template <typename T> inline T sum(const Tensor<T>& a) {
+    T res = 0;
+    for (int i = 0; i < a.data_size[0]; i++) {
+        res += a.data[i];
     }
     return res;
 }
 
 /**
- * @brief Takes the largest value in a vector.
- * @param a The vector.
- * @return The index of the largest value in the vector.
+ * Randomly chooses an index using tensor values as probabilities
+ *
+ * @param a the probabilities
+ * @return a randomly chosen index
  */
-inline int argmax(const Tensor<T>& a) {
-    int res = 0;
-    for (int i = 1; i < (int)a.size(); i++) {
-        if (a[i] > a[res]) {
-            res = i;
-        }
-    }
-    return res;
-}
-
-template <int N> inline double sum(const Tensor<N>& a) {
-    double res = 0;
-    for (int i = 0; i < a.size(); i++) {
-        res += sum(a[i]);
-    }
-    return res;
-}
-
-template <> inline double sum(const Tensor<1>& a) {
-    double res = 0;
-    for (int i = 0; i < a.size(); i++) {
-        res += a[i];
-    }
-    return res;
-}
-
-inline int random_choice(const Tensor<1>& a) {
-    double rand_num = (double)rand() / RAND_MAX;
+template <typename T> inline int random_choice(const Tensor<T>& a) {
+    T rand_num = (T)rand() / (T)RAND_MAX;
     for (int i = 0; i < a.size(); i++) {
         if (rand_num < a[i]) {
             return i;
