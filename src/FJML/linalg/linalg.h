@@ -17,7 +17,7 @@
  */
 template <typename T> static std::string print_shape(const FJML::Tensor<T>& a) {
     std::string res = "(";
-    for (int i = 0; i < a.dims(); i++) {
+    for (int i = 0; i < a.dim(); i++) {
         res += std::to_string(a.shape[i]) + ", ";
     }
     res.pop_back();
@@ -39,12 +39,12 @@ namespace LinAlg {
  * @param b The second vector.
  * @return The dot product of the two vectors.
  */
-template <typename T> inline double dotProduct(const Tensor<T>& a, const Tensor<T>& b) {
+template <typename T> inline double dot_product(const Tensor<T>& a, const Tensor<T>& b) {
     if (a.data_size[0] != b.data_size[0]) {
         throw std::invalid_argument("The two vectors must have the same size.");
     }
     double res = 0;
-    for (int i = 0; i < (int)a.size(); i++) {
+    for (int i = 0; i < (int)a.data_size[0]; i++) {
         res += a.data[i] * b.data[i];
     }
     return res;
@@ -59,36 +59,48 @@ template <typename T> inline double dotProduct(const Tensor<T>& a, const Tensor<
  * @param b The second matrix.
  * @return The product.
  */
-template <typename T> inline Tensor<T> matrixMultiply(const Tensor<T>& a, const Tensor<T>& b) {
-    if (a.dims() == 1 && b.dims() == 2) {
+template <typename T> inline Tensor<T> matrix_multiply(Tensor<T>& a, Tensor<T>& b) {
+    if (a.dim() == 1 && b.dim() == 2) {
         if (a.shape[0] != b.shape[0]) {
             throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
         }
-        a.reshape(1, a.shape[0]);
-    } else if (a.dims() == 2 && b.dims() == 1) {
+        a.reshape({1, a.shape[0]});
+    } else if (a.dim() == 2 && b.dim() == 1) {
         if (a.shape[1] != b.shape[0]) {
             throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
         }
-        b.reshape(1, b.shape[0]);
-    } else if (a.dims() != b.dims() || a.dims() < 2 || a.shape[a.dims() - 1] != b.shape[b.dims() - 2]) {
+        b.reshape({b.shape[0], 1});
+    } else if (a.dim() != b.dim() || a.dim() < 2 || a.shape[a.dim() - 1] != b.shape[b.dim() - 2]) {
         throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
     }
     std::vector<int> result_shape;
-    for (int i = 0; i < a.dims() - 1; i++) {
+    for (int i = 0; i < a.dim() - 2; i++) {
+        if (a.shape[i] != b.shape[i]) {
+            throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
+        }
         result_shape.push_back(a.shape[i]);
     }
-    result_shape.push_back(b.shape[b.dims() - 1]);
-    Tensor<T> res(result_shape);
-    int i, j, k;
-#pragma omp parallel for private(i, j, k) shared(a, b, res)
-    for (i = 0; i < (int)a.data_size[0]; i++) {
-        for (j = 0; j < (int)b.data_size[1]; j++) {
-            for (k = 0; k < (int)a.data_size[1]; k++) {
-                res.data[i * b.data_size[1] + j] += a.data[i * a.data_size[1] + k] * b.data[k * b.data_size[1] + j];
+    result_shape.push_back(a.shape[a.dim() - 2]);
+    result_shape.push_back(b.shape[b.dim() - 1]);
+    Tensor<T> result(result_shape);
+    int rows = a.shape[a.dim() - 2];
+    int cols = b.shape[b.dim() - 1];
+    int inner = a.shape[a.dim() - 1];
+    int stride = rows * cols;
+    int a_stride = rows * inner;
+    int b_stride = inner * cols;
+    int num_matrices = a.data_size[0] / (rows * inner);
+    for (int i = 0; i < num_matrices; i++) {
+        for (int j = 0; j < rows; j++) {
+            for (int l = 0; l < inner; l++) {
+                for (int k = 0; k < cols; k++) {
+                    result.data[i * stride + j * cols + k] += a.data[i * a_stride + j * inner + l] *
+                                                              b.data[i * b_stride + l * cols + k];
+                }
             }
         }
     }
-    return res;
+    return result;
 }
 
 /**
@@ -113,13 +125,13 @@ template <typename T> inline T sum(const Tensor<T>& a) {
  */
 template <typename T> inline int random_choice(const Tensor<T>& a) {
     T rand_num = (T)rand() / (T)RAND_MAX;
-    for (int i = 0; i < a.size(); i++) {
-        if (rand_num < a[i]) {
+    for (int i = 0; i < a.data_size[0]; i++) {
+        if (rand_num < a.data[i]) {
             return i;
         }
-        rand_num -= a[i];
+        rand_num -= a.data[i];
     }
-    return a.size() - 1;
+    return a.data_size[0] - 1;
 }
 
 } // namespace LinAlg

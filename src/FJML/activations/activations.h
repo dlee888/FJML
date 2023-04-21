@@ -48,7 +48,35 @@ class Activation {
      * @param layer The layer to apply the function to
      */
     template <typename T> Tensor<T> apply(const Tensor<T>& layer) const {
-        Tensor<T> result = Tensor<T>(layer.shape);
+        return layer;
+    }
+};
+
+/**
+ * @brief This class represents the sigmoid activation function
+ *
+ * @details This class represents the sigmoid activation function.
+ */
+class Sigmoid : public Activation {
+  public:
+    /**
+     * Default constructor
+     */
+    Sigmoid() : Activation{"Sigmoid"} {}
+    /**
+     * Virtual destructor
+     */
+    virtual ~Sigmoid() {}
+
+    /**
+     * @brief apply the function to a layer
+     * @param layer The layer to apply the function to
+     */
+    template <typename T> Tensor<T> apply(const Tensor<T>& layer) const {
+        Tensor<T> result = layer;
+        for (auto& x : result) {
+            x = 1 / (1 + std::exp(-x));
+        }
         return result;
     }
 };

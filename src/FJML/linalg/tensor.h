@@ -99,21 +99,21 @@ template <typename T> class Tensor {
      * @param shape the shape of the tensor
      * @return a tensor with the given shape, filled with zeros (or whatever the default constructor of T is)
      */
-    static Tensor<T> zeros(std::vector<int> shape) { return Tensor<T>(shape, T()); }
+    static Tensor<T> zeros(const std::vector<int>& shape) { return Tensor<T>(shape, T()); }
 
     /**
      * Creates a tensor with the given shape, filled with ones
      * @param shape the shape of the tensor
      * @return a tensor with the given shape, filled with ones
      */
-    static Tensor<T> ones(std::vector<int> shape) { return Tensor<T>(shape, T(1)); }
+    static Tensor<T> ones(const std::vector<int>& shape) { return Tensor<T>(shape, T(1)); }
 
     /**
      * Creates a tensor with the given shape, filled with random values
      * @param shape the shape of the tensor
      * @return a tensor with the given shape, filled with random values
      */
-    static Tensor<T> rand(std::vector<int> shape) {
+    static Tensor<T> rand(const std::vector<int>& shape) {
         Tensor<T> tensor(shape);
         for (int i = 0; i < tensor.data_size[0]; i++) {
             tensor.data[i] = T(std::rand()) / T(RAND_MAX);
@@ -126,7 +126,7 @@ template <typename T> class Tensor {
      * @param vec the vector to create the tensor from
      * @return a tensor with the given vector as its data
      */
-    static Tensor<T> array(std::vector<T> vec) {
+    static Tensor<T> array(const std::vector<T>& vec) {
         Tensor<T> tensor({(int)vec.size()});
         for (int i = 0; i < (int)vec.size(); i++) {
             tensor.data[i] = vec[i];
@@ -139,14 +139,29 @@ template <typename T> class Tensor {
      * @param vec the vector to create the tensor from
      * @return a tensor with the given vector as its data
      */
-    static Tensor<T> array(std::vector<std::vector<T>> vec) {
-        Tensor<T> tensor({(int)vec.size(), (int)vec[0].size()});
+    static Tensor<T> array(const std::vector<Tensor<T>>& vec) {
+        std::vector<int> shape = vec[0].shape;
+        shape.insert(shape.begin(), (int)vec.size());
+        Tensor<T> tensor(shape);
         for (int i = 0; i < (int)vec.size(); i++) {
-            for (int j = 0; j < (int)vec[i].size(); j++) {
-                tensor.data[i * tensor.data_size[1] + j] = vec[i][j];
+            for (int j = 0; j < vec[i].data_size[0]; j++) {
+                tensor.data[i * vec[i].data_size[0] + j] = vec[i].data[j];
             }
         }
         return tensor;
+    }
+
+    /**
+     * Create a tensor from a given vector
+     * @param vec the vector to create the tensor from
+     * @return a tensor with the given vector as its data
+     */
+    template <typename __elem> static Tensor<T> array(std::vector<__elem> vec) {
+        std::vector<Tensor<T>> tensors;
+        for (int i = 0; i < (int)vec.size(); i++) {
+            tensors.push_back(array(vec[i]));
+        }
+        return array(tensors);
     }
 
     /**
@@ -156,10 +171,16 @@ template <typename T> class Tensor {
     int ndim() const { return shape.size(); }
 
     /**
+     * Returns the number of dimensions of the tensor
+     * @return the number of dimensions of the tensor
+     */
+    int dim() const { return shape.size(); }
+
+    /**
      * Reshapes the tensor
      * @param shape the new shape of the tensor
      */
-    void reshape(std::vector<int> shape) {
+    void reshape(const std::vector<int>& shape) {
         if (data_size[0] != std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>())) {
             throw std::invalid_argument("Cannot reshape tensor with size " + std::to_string(data_size[0]) +
                                         " to shape " + std::to_string(shape[0]));
@@ -177,7 +198,7 @@ template <typename T> class Tensor {
      * @param index the index of the element
      * @return the element at the given index
      */
-    T& operator[](std::vector<int> index) {
+    T& operator[](const std::vector<int>& index) {
         assert(index.size() == shape.size());
         int i = 0;
         for (int j = 0; j < (int)index.size(); j++) {
@@ -195,7 +216,7 @@ template <typename T> class Tensor {
      * @param index the index of the element
      * @return the element at the given index
      */
-    const T& operator[](std::vector<int> index) const {
+    const T& operator[](const std::vector<int>& index) const {
         assert(index.size() == shape.size());
         int i = 0;
         for (int j = 0; j < (int)index.size(); j++) {
@@ -213,7 +234,7 @@ template <typename T> class Tensor {
      * @param index the index of the element
      * @return the element at the given index
      */
-    T& at(std::vector<int> index) {
+    T& at(const std::vector<int>& index) {
         assert(index.size() == shape.size());
         int i = 0;
         for (int j = 0; j < (int)index.size(); j++) {
@@ -231,7 +252,7 @@ template <typename T> class Tensor {
      * @param index the index of the element
      * @return the element at the given index
      */
-    const T& at(std::vector<int> index) const {
+    const T& at(const std::vector<int>& index) const {
         assert(index.size() == shape.size());
         int i = 0;
         for (int j = 0; j < (int)index.size(); j++) {

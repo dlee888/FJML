@@ -8,7 +8,6 @@ TEST_CASE("Testing tensor", "[tensor]") {
     SECTION("Testing tensor construction") {
         Tensor<int> tensor({2, 3});
         REQUIRE(tensor.shape == std::vector<int>({2, 3}));
-        REQUIRE(tensor.size() == 6);
         REQUIRE(tensor.ndim() == 2);
         REQUIRE(tensor.data_size == std::vector<int>({6, 3, 1}));
         REQUIRE(tensor.data != nullptr);
@@ -37,7 +36,6 @@ TEST_CASE("Testing tensor", "[tensor]") {
             SECTION("Testing reshape") {
                 tensor.reshape({3, 2});
                 REQUIRE(tensor.shape == std::vector<int>({3, 2}));
-                REQUIRE(tensor.size() == 6);
                 REQUIRE(tensor.ndim() == 2);
                 REQUIRE(tensor.data_size == std::vector<int>({6, 2, 1}));
                 REQUIRE(tensor.data != nullptr);
@@ -57,7 +55,6 @@ TEST_CASE("Testing tensor", "[tensor]") {
 
         const Tensor<int> const_tensor({2, 3});
         REQUIRE(const_tensor.shape == std::vector<int>({2, 3}));
-        REQUIRE(const_tensor.size() == 6);
         REQUIRE(const_tensor.ndim() == 2);
         REQUIRE(const_tensor.data_size == std::vector<int>({6, 3, 1}));
         REQUIRE(const_tensor.data != nullptr);
@@ -79,7 +76,6 @@ TEST_CASE("Testing tensor", "[tensor]") {
 
         Tensor<int> tensor2({2, 3}, 2);
         REQUIRE(tensor2.shape == std::vector<int>({2, 3}));
-        REQUIRE(tensor2.size() == 6);
         REQUIRE(tensor2.ndim() == 2);
         REQUIRE(tensor2.data_size == std::vector<int>({6, 3, 1}));
         REQUIRE(tensor2.data != nullptr);
@@ -96,7 +92,6 @@ TEST_CASE("Testing tensor", "[tensor]") {
         SECTION("Testing tensor copy constructor") {
             Tensor<int> tensor3(tensor2);
             REQUIRE(tensor3.shape == std::vector<int>({2, 3}));
-            REQUIRE(tensor3.size() == 6);
             REQUIRE(tensor3.ndim() == 2);
             REQUIRE(tensor3.data_size == std::vector<int>({6, 3, 1}));
             REQUIRE(tensor3.data != nullptr);
@@ -114,7 +109,6 @@ TEST_CASE("Testing tensor", "[tensor]") {
         SECTION("Testing zeros") {
             Tensor<int> tensor = Tensor<int>::zeros({2, 3});
             REQUIRE(tensor.shape == std::vector<int>({2, 3}));
-            REQUIRE(tensor.size() == 6);
             REQUIRE(tensor.ndim() == 2);
             REQUIRE(tensor.data_size == std::vector<int>({6, 3, 1}));
             REQUIRE(tensor.data != nullptr);
@@ -130,7 +124,6 @@ TEST_CASE("Testing tensor", "[tensor]") {
         SECTION("Testing ones") {
             Tensor<int> tensor = Tensor<int>::ones({2, 3});
             REQUIRE(tensor.shape == std::vector<int>({2, 3}));
-            REQUIRE(tensor.size() == 6);
             REQUIRE(tensor.ndim() == 2);
             REQUIRE(tensor.data_size == std::vector<int>({6, 3, 1}));
             REQUIRE(tensor.data != nullptr);
@@ -147,7 +140,6 @@ TEST_CASE("Testing tensor", "[tensor]") {
             Tensor<double> rand_tensor = Tensor<double>::rand({2, 3});
 
             REQUIRE(rand_tensor.shape == std::vector<int>({2, 3}));
-            REQUIRE(rand_tensor.size() == 6);
             REQUIRE(rand_tensor.ndim() == 2);
             REQUIRE(rand_tensor.data_size == std::vector<int>({6, 3, 1}));
             REQUIRE(rand_tensor.data != nullptr);
@@ -163,7 +155,6 @@ TEST_CASE("Testing tensor", "[tensor]") {
         SECTION("Testing array") {
             Tensor<int> tensor = Tensor<int>::array({1, 2, 3});
             REQUIRE(tensor.shape == std::vector<int>({3}));
-            REQUIRE(tensor.size() == 3);
             REQUIRE(tensor.ndim() == 1);
             REQUIRE(tensor.data_size == std::vector<int>({3, 1}));
             REQUIRE(tensor.data != nullptr);
@@ -172,9 +163,8 @@ TEST_CASE("Testing tensor", "[tensor]") {
             REQUIRE(tensor.at(1) == 2);
             REQUIRE(tensor.at(2) == 3);
 
-            tensor = Tensor<int>::array({{1, 3}, {1, 2}, {3, 4}});
+            tensor = Tensor<int>::array(std::vector<std::vector<int>>{{1, 3}, {1, 2}, {3, 4}});
             REQUIRE(tensor.shape == std::vector<int>({3, 2}));
-            REQUIRE(tensor.size() == 6);
             REQUIRE(tensor.ndim() == 2);
             REQUIRE(tensor.data_size == std::vector<int>({6, 2, 1}));
             REQUIRE(tensor.data != nullptr);
@@ -185,6 +175,21 @@ TEST_CASE("Testing tensor", "[tensor]") {
             REQUIRE(tensor.at({1, 1}) == 2);
             REQUIRE(tensor.at({2, 0}) == 3);
             REQUIRE(tensor.at({2, 1}) == 4);
+
+            tensor = Tensor<int>::array(std::vector<std::vector<std::vector<int>>>{{{1, 3}, {1, 2}}, {{3, 4}, {1, 2}}});
+            REQUIRE(tensor.shape == std::vector<int>({2, 2, 2}));
+            REQUIRE(tensor.ndim() == 3);
+            REQUIRE(tensor.data_size == std::vector<int>({8, 4, 2, 1}));
+            REQUIRE(tensor.data != nullptr);
+
+            REQUIRE(tensor.at({0, 0, 0}) == 1);
+            REQUIRE(tensor.at({0, 0, 1}) == 3);
+            REQUIRE(tensor.at({0, 1, 0}) == 1);
+            REQUIRE(tensor.at({0, 1, 1}) == 2);
+            REQUIRE(tensor.at({1, 0, 0}) == 3);
+            REQUIRE(tensor.at({1, 0, 1}) == 4);
+            REQUIRE(tensor.at({1, 1, 0}) == 1);
+            REQUIRE(tensor.at({1, 1, 1}) == 2);
         }
     }
 }

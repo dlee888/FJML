@@ -1,94 +1,147 @@
-#include <FJML/linalg/linalg.h>
 #include <catch2/catch_all.hpp>
 
-#include <FJML.h>
-#include <catch2/catch_test_macros.hpp>
+#include "linalg.h"
+
+using namespace FJML;
 
 TEST_CASE("Testing linalg functions", "[linalg]") {
     SECTION("Testing dot product") {
-        FJML::layer_vals a{3};
-        FJML::layer_vals b{3};
-        a[0] = 1;
-        a[1] = 2;
-        a[2] = 3;
-        b[0] = 4;
-        b[1] = 5;
-        b[2] = 6;
+        Tensor<int> a = Tensor<int>::array({1, 2, 3});
+        Tensor<int> b = Tensor<int>::array({4, 5, 6});
 
-        REQUIRE(FJML::LinAlg::dotProduct(a, b) == 32);
+        REQUIRE(LinAlg::dot_product(a, b) == 32);
+        
+        SECTION("Testing dot product with invalid shapes") {
+            Tensor<int> a = Tensor<int>::zeros({2});
+            Tensor<int> b = Tensor<int>::zeros({3});
+
+            REQUIRE_THROWS_AS(LinAlg::dot_product(a, b), std::invalid_argument);
+        }
     }
 
     SECTION("Testing matrix multiply") {
-        FJML::weights a{{3, 2}};
-        FJML::layer_vals b{3};
-        FJML::layer_vals c{2};
-        for (int i = 0; i < 3; i++) {
-            b[i] = i;
-            for (int j = 0; j < 2; j++) {
-                a[i][j] = i + j;
-                c[j] = j;
-            }
+        SECTION("Testing vector times matrix") {
+            Tensor<int> a = Tensor<int>::array({1, 2, 3});
+            Tensor<int> b = Tensor<int>::array(std::vector<std::vector<int>>{{4, 5}, {6, 7}, {8, 9}});
+
+            Tensor<int> c = LinAlg::matrix_multiply(a, b);
+            REQUIRE(c.shape == std::vector<int>({1, 2}));
+            REQUIRE(c.at({0, 0}) == 40);
+            REQUIRE(c.at({0, 1}) == 46);
         }
 
-        FJML::layer_vals d = FJML::LinAlg::matrixMultiply(b, a);
-        REQUIRE(d.size() == 2);
-        REQUIRE(d[0] == 5);
-        REQUIRE(d[1] == 8);
+        SECTION("Testing matrix times vector") {
+            Tensor<int> a = Tensor<int>::array(std::vector<std::vector<int>>{{1, 2}, {3, 4}, {5, 6}});
+            Tensor<int> b = Tensor<int>::array({7, 8});
 
-        FJML::layer_vals e = FJML::LinAlg::matrixMultiply(a, c);
-        REQUIRE(e.size() == 3);
-        REQUIRE(e[0] == 1);
-        REQUIRE(e[1] == 2);
-        REQUIRE(e[2] == 3);
-    }
+            Tensor<int> c = LinAlg::matrix_multiply(a, b);
+            REQUIRE(c.shape == std::vector<int>({3, 1}));
+            REQUIRE(c.at({0, 0}) == 23);
+            REQUIRE(c.at({1, 0}) == 53);
+            REQUIRE(c.at({2, 0}) == 83);
+        }
 
-    SECTION("Testing argmax") {
-        FJML::layer_vals a{3};
-        a[0] = 1;
-        a[1] = 2;
-        a[2] = 3;
+        SECTION("Testing matrix times matrix") {
+            Tensor<int> a = Tensor<int>::array(std::vector<std::vector<int>>{{1, 2}, {3, 4}, {5, 6}});
+            Tensor<int> b = Tensor<int>::array(std::vector<std::vector<int>>{{7, 8, 9}, {10, 11, 12}});
 
-        REQUIRE(FJML::LinAlg::argmax(a) == 2);
+            Tensor<int> c = LinAlg::matrix_multiply(a, b);
+            REQUIRE(c.shape == std::vector<int>({3, 3}));
+            REQUIRE(c.at({0, 0}) == 27);
+            REQUIRE(c.at({0, 1}) == 30);
+            REQUIRE(c.at({0, 2}) == 33);
+            REQUIRE(c.at({1, 0}) == 61);
+            REQUIRE(c.at({1, 1}) == 68);
+            REQUIRE(c.at({1, 2}) == 75);
+            REQUIRE(c.at({2, 0}) == 95);
+            REQUIRE(c.at({2, 1}) == 106);
+            REQUIRE(c.at({2, 2}) == 117);
+        }
 
-        a[2] = -1;
-        REQUIRE(FJML::LinAlg::argmax(a) == 1);
+        SECTION("Testing array of matrix multiplication") {
+            Tensor<int> a = Tensor<int>::array(std::vector<std::vector<std::vector<int>>>{{{1, 2}, {3, 4}, {5, 6}},
+                                                                                          {{7, 8}, {9, 10}, {11, 12}}});
+            Tensor<int> b = Tensor<int>::array(
+                std::vector<std::vector<std::vector<int>>>{{{13, 14, 15}, {16, 17, 18}}, {{19, 20, 21}, {22, 23, 24}}});
+
+            Tensor<int> c = LinAlg::matrix_multiply(a, b);
+            REQUIRE(c.shape == std::vector<int>({2, 3, 3}));
+            REQUIRE(c.at({0, 0, 0}) == 45);
+            REQUIRE(c.at({0, 0, 1}) == 48);
+            REQUIRE(c.at({0, 0, 2}) == 51);
+            REQUIRE(c.at({0, 1, 0}) == 103);
+            REQUIRE(c.at({0, 1, 1}) == 110);
+            REQUIRE(c.at({0, 1, 2}) == 117);
+            REQUIRE(c.at({0, 2, 0}) == 161);
+            REQUIRE(c.at({0, 2, 1}) == 172);
+            REQUIRE(c.at({0, 2, 2}) == 183);
+            REQUIRE(c.at({1, 0, 0}) == 309);
+            REQUIRE(c.at({1, 0, 1}) == 324);
+            REQUIRE(c.at({1, 0, 2}) == 339);
+            REQUIRE(c.at({1, 1, 0}) == 391);
+            REQUIRE(c.at({1, 1, 1}) == 410);
+            REQUIRE(c.at({1, 1, 2}) == 429);
+            REQUIRE(c.at({1, 2, 0}) == 473);
+            REQUIRE(c.at({1, 2, 1}) == 496);
+            REQUIRE(c.at({1, 2, 2}) == 519);
+        }
+
+        SECTION("Testing vector times matrix with invalid shapes") {
+            Tensor<int> a = Tensor<int>::zeros({2});
+            Tensor<int> b = Tensor<int>::zeros({3, 2});
+
+            REQUIRE_THROWS_AS(LinAlg::matrix_multiply(a, b), std::invalid_argument);
+        }
+
+        SECTION("Testing matrix times vector with invalid shapes") {
+            Tensor<int> a = Tensor<int>::zeros({2, 3});
+            Tensor<int> b = Tensor<int>::zeros({2});
+
+            REQUIRE_THROWS_AS(LinAlg::matrix_multiply(a, b), std::invalid_argument);
+        }
+
+        SECTION("Testing matrix times matrix with invalid shapes") {
+            Tensor<int> a = Tensor<int>::zeros({2, 3});
+            Tensor<int> b = Tensor<int>::zeros({4, 2});
+
+            REQUIRE_THROWS_AS(LinAlg::matrix_multiply(a, b), std::invalid_argument);
+        }
+
+        SECTION("Testing array of matrix multiplication with invalid shapes") {
+            Tensor<int> a = Tensor<int>::zeros({2, 3, 2});
+            Tensor<int> b = Tensor<int>::zeros({2, 4, 2});
+
+            REQUIRE_THROWS_AS(LinAlg::matrix_multiply(a, b), std::invalid_argument);
+
+            Tensor<int> c = Tensor<int>::zeros({3, 4, 5, 6, 9});
+            Tensor<int> d = Tensor<int>::zeros({3, 4, 6, 9, 6});
+
+            REQUIRE_THROWS_AS(LinAlg::matrix_multiply(c, d), std::invalid_argument);
+        }
     }
 
     SECTION("Testing sum") {
-        FJML::layer_vals a{3};
-        a[0] = 1;
-        a[1] = 2;
-        a[2] = 3;
+        SECTION("Testing sum of vector") {
+            Tensor<int> a = Tensor<int>::array({1, 2, 3, 4, 5});
+            REQUIRE(LinAlg::sum(a) == 15);
+        }
 
-        REQUIRE(FJML::LinAlg::sum(a) == 6);
+        SECTION("Testing sum of matrix") {
+            Tensor<int> a = Tensor<int>::array(std::vector<std::vector<int>>{{1, 2}, {3, 4}, {5, 6}});
+            REQUIRE(LinAlg::sum(a) == 21);
+        }
 
-        FJML::Tensor<2> b{{2, 2}};
-        b[0][0] = 1;
-        b[0][1] = 2;
-        b[1][0] = 3;
-        b[1][1] = 4;
-
-        REQUIRE(FJML::LinAlg::sum(b) == 10);
+        SECTION("Testing sum of array of matrices") {
+            Tensor<int> a = Tensor<int>::array(std::vector<std::vector<std::vector<int>>>{{{1, 2}, {3, 4}, {5, 6}},
+                                                                                          {{7, 8}, {9, 10}, {11, 12}}});
+            REQUIRE(LinAlg::sum(a) == 78);
+        }
     }
 
-    SECTION("Benchmarks") {
-        FJML::layer_vals a{1000};
-        FJML::layer_vals b{1000};
-        for (int i = 0; i < 1000; i++) {
-            a[i] = i;
-            b[i] = i;
-        }
-
-        BENCHMARK("dot product") { return FJML::LinAlg::dotProduct(a, b); };
-
-        FJML::weights c{{1000, 1000}};
-        for (int i = 0; i < 1000; i++) {
-            for (int j = 0; j < 1000; j++) {
-                c[i][j] = i + j;
-            }
-        }
-
-        BENCHMARK("matrix multiply") { return FJML::LinAlg::matrixMultiply(a, c); };
+    SECTION("Testing random_choice") {
+        Tensor<double> probs = Tensor<double>::array({0.1, 0.2, 0.3, 0.4});
+        int choice = LinAlg::random_choice(probs);
+        REQUIRE(choice >= 0);
+        REQUIRE(choice < 4);
     }
 }
-
