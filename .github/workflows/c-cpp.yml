@@ -1,6 +1,14 @@
 name: C/C++ CI
 
-on: [workflow_call]
+on:
+  push:
+    branches: ["*"]
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: "CI"
+  cancel-in-progress: true
 
 jobs:
   build:
