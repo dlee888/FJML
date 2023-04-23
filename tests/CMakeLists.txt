@@ -1,6 +1,6 @@
-project(Catch2Test)
-
 cmake_minimum_required(VERSION 3.16)
+
+project(Catch2Test)
 
 set(CMAKE_CXX_STANDARD 17)
 

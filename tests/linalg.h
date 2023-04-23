@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 
-#include "linalg.h"
+#include "../src/FJML/linalg/linalg.h"
 
 using namespace FJML;
 

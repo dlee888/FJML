@@ -18,7 +18,8 @@ HEADERS = src/FJML/activations/activations.h \
 		  src/FJML/loss/loss.h \
 		  src/FJML/mlp/mlp.h \
 		  src/FJML/optimizers/optimizers.h
-CFILES = bin/layers/dense.o bin/layers/layers.o bin/layers/softmax.o \
+CFILES = bin/activations/activations.o \
+		 bin/layers/dense.o bin/layers/layers.o bin/layers/softmax.o \
 		 bin/loss/loss.o \
 		 bin/mlp/mlp.o
 

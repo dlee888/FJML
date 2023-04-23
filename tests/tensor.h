@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 
-#include "tensor.h"
+#include "../src/FJML/linalg/tensor.h"
 
 using namespace FJML;
 
@@ -190,6 +190,57 @@ TEST_CASE("Testing tensor", "[tensor]") {
             REQUIRE(tensor.at({1, 0, 1}) == 4);
             REQUIRE(tensor.at({1, 1, 0}) == 1);
             REQUIRE(tensor.at({1, 1, 1}) == 2);
+        }
+    }
+
+    SECTION("Test iterators") {
+        Tensor<int> tensor = Tensor<int>::array(std::vector<std::vector<int>>{{1, 3}, {1, 2}, {3, 4}});
+
+        SECTION("Test begin()") {
+            REQUIRE(*tensor.begin() == 1);
+        }
+
+        SECTION("Test end()") {
+            REQUIRE(*(tensor.end() - 1) == 4);
+        }
+
+        SECTION("Test iterator constructor and operations") {
+            Tensor<int>::iterator it{tensor, 1};
+
+            REQUIRE(*it == 3);
+            it++;
+            REQUIRE(*it == 1);
+            ++it;
+            REQUIRE(*it == 2);
+            it += 2;
+            REQUIRE(*it == 4);
+            it -= 2;
+            REQUIRE(*it == 2);
+            it--;
+            REQUIRE(*it == 1);
+            --it;
+            REQUIRE(*it == 3);
+
+            REQUIRE(*(it + 1) == 1);
+            REQUIRE(*(it - 1) == 1);
+
+            *it = 5;
+            REQUIRE(*it == 5);
+            REQUIRE(tensor.at({0, 1}) == 5);
+
+            const Tensor<int>::iterator const_it{tensor, 1};
+            REQUIRE(*const_it == 5);
+
+            REQUIRE(const_it == it);
+            REQUIRE(const_it != it + 1);
+        }
+
+        SECTION("Test foreach") {
+            int sum = 0;
+            for (auto& x : tensor) {
+                sum += x;
+            }
+            REQUIRE(sum == 14);
         }
     }
 }

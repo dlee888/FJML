@@ -1,4 +1,4 @@
-// Copyright (c) 2022 David Lee
+// Copyright (c) 2023 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
 #ifndef LINALG_INCLUDED

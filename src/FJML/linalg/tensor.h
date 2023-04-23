@@ -1,4 +1,4 @@
-// Copyright (c) 2022 David Lee
+// Copyright (c) 2023 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
 #ifndef TENSOR_INCLUDED
@@ -310,6 +310,144 @@ template <typename T> class Tensor {
         }
         return data[i];
     }
+
+    /**
+     * This class is used to iterate over the elements of a tensor
+     */
+    class iterator {
+      public:
+        Tensor& tensor;
+        int index;
+        /**
+         * Constructs an iterator
+         * @param tensor the tensor to iterate over
+         * @param index the index of the first element
+         */
+        iterator(Tensor& tensor, int index) : tensor{tensor}, index{index} {}
+        /**
+         * Constructs an iterator
+         * @param itr the iterator to copy
+         */
+        iterator(const iterator& itr) : tensor{itr.tensor}, index{itr.index} {}
+
+        /**
+         * Returns the element at the current position
+         * @return the element at the current position
+         */
+        T& operator*() { return tensor.data[index]; }
+
+        /**
+         * Returns the element at the current position
+         * @return the element at the current position
+         */
+        const T& operator*() const { return tensor.data[index]; }
+
+        /**
+         * Increments the iterator
+         * @return the incremented iterator
+         */
+        iterator& operator++() {
+            index++;
+            return *this;
+        }
+
+        /**
+         * Increments the iterator
+         * @return the incremented iterator
+         */
+        iterator operator++(int) {
+            iterator itr = *this;
+            index++;
+            return itr;
+        }
+
+        /**
+         * Decrements the iterator
+         * @return the decremented iterator
+         */
+        iterator& operator--() {
+            index--;
+            return *this;
+        }
+
+        /**
+         * Decrements the iterator
+         * @return the decremented iterator
+         */
+        iterator operator--(int) {
+            iterator itr = *this;
+            index--;
+            return itr;
+        }
+
+        /**
+         * Increments the iterator by the given amount
+         * @param amount the amount to increment by
+         * @return the incremented iterator
+         */
+        iterator& operator+=(int amount) {
+            index += amount;
+            return *this;
+        }
+
+        /**
+         * Decrements the iterator by the given amount
+         * @param amount the amount to decrement by
+         * @return the decremented iterator
+         */
+        iterator& operator-=(int amount) {
+            index -= amount;
+            return *this;
+        }
+
+        /**
+         * Add the given amount to the iterator
+         * @param amount the amount to add
+         * @return the incremented iterator
+         */
+        iterator operator+(int amount) const {
+            iterator itr = *this;
+            itr += amount;
+            return itr;
+        }
+
+        /**
+         * Subtract the given amount from the iterator
+         * @param amount the amount to subtract
+         * @return the decremented iterator
+         */
+        iterator operator-(int amount) const {
+            iterator itr = *this;
+            itr -= amount;
+            return itr;
+        }
+
+        /**
+         * Checks if two iterators are equal
+         * @param other the other iterator
+         * @return true if the iterators are equal, false otherwise
+         */
+        bool operator==(const iterator& other) const { return index == other.index; }
+
+        /**
+         * Checks if two iterators are not equal
+         * @param other the other iterator
+         * @return true if the iterators are not equal, false otherwise
+         */
+        bool operator!=(const iterator& other) const { return index != other.index; }
+    };
+
+    /**
+     * Iterates over the elements of the tensor
+     * @return an iterator to the first element
+     */
+    iterator begin() { return iterator{*this, 0}; }
+
+    /**
+     * Iterates over the elements of the tensor
+     * @return an iterator to the last element
+     */
+    iterator end() { return iterator{*this, data_size[0]}; }
 };
 
 } // namespace FJML
