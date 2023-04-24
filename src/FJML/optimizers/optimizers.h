@@ -1,11 +1,11 @@
-// Copyright (c) 2022 David Lee
+// Copyright (c) 2023 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
 #ifndef OPTIMIZERS_INCLUDED
 #define OPTIMIZERS_INCLUDED
 
-#include <cmath>
 #include <iostream>
+#include <string>
 
 #include "../linalg/linalg.h"
 #include "../linalg/tensor.h"
@@ -22,87 +22,153 @@ namespace Optimizers {
 /**
  * @brief Based class for all optimizers
  *
- * Optimizes an N dimensional tensor during gradient descent
+ * Optimizes an tensor during gradient descent
  *
  * Each optimizer must implement the apply_grad method, which takes parameters and gradients, and updates the
  * parameters.
- *
- * @tparam N The number of dimensions of the tensor to be optimized
  */
-template <int N> class Optimizer {
+class Optimizer {
   public:
+    /**
+     * @brief The name of the optimizer
+     */
     std::string name;
 
-    Optimizer() {}
-    Optimizer(std::string _name) : name{_name} {}
+    /**
+     * @brief Default constructor
+     */
+    Optimizer() : name{"Optimizer"} {}
+    /**
+     * @brief Constructor
+     * @param name The name of the optimizer
+     */
+    Optimizer(std::string name) : name{name} {}
+    /**
+     * @brief Virtual destructor
+     */
     virtual ~Optimizer() {}
 
-    virtual void apply_grad(Tensor<N>& params, const Tensor<N>& grads) {}
+    /**
+     * @brief Applies the gradient to the parameters
+     * @param params The parameters to be updated
+     * @param grads The gradients to be applied
+     */
+    virtual void apply_grad(Tensor<double>& params, const Tensor<double>& grads) {
+        std::cerr << "Optimizer not implemented" << std::endl;
+    }
+
+    /**
+     * Clone the optimizer
+     * @return A pointer to a copy of the optimizer
+     */
+    virtual Optimizer* clone() const { return new Optimizer(*this); }
 };
 
 /**
  * @brief Stochastic Gradient Descent
  * @details Optimizes an N dimensional tensor during gradient descent. The optimizer updates the parameters by
  * subtracting the learning rate times the gradient from the parameters.
- * @tparam N The number of dimensions of the tensor
  */
-template <int N> class SGD : public Optimizer<N> {
+class SGD : public Optimizer {
   public:
+    /**
+     * @brief The learning rate
+     */
     double alpha;
 
-    SGD(double a = 0.01) : Optimizer<N>{"SGD"}, alpha{a} {}
+    /**
+     * @brief Default constructor
+     */
+    SGD(double learning_rate = 0.01) : Optimizer{"SGD"}, alpha{learning_rate} {}
+    /**
+     * @brief Destructor
+     */
     ~SGD() {}
 
-    void apply_grad(Tensor<N>& params, const Tensor<N>& grads) { params -= grads * alpha; }
+    /**
+     * @brief Applies the gradient to the parameters
+     * @param params The parameters to be updated
+     * @param grads The gradients to be applied
+     */
+    void apply_grad(Tensor<double>& params, const Tensor<double>& grads) override;
+
+    /**
+     * Clone the optimizer
+     * @return A pointer to a copy of the optimizer
+     */
+    Optimizer* clone() const override { return new SGD(*this); }
 };
 
 /**
  * @brief Adam optimizer
  * @details Optimizes an N dimensional tensor during gradient descent using the Adam algorithm.
- * @tparam N The number of dimensions of the tensor
  */
-template <int N> class Adam : public Optimizer<N> {
-    void init(Tensor<N> params) {
-        if (m.size() == 0) {
-            m = Tensor<N>(params.shape);
-            v = Tensor<N>(params.shape);
-        }
-    }
+class Adam : public Optimizer {
+    /**
+     * @brief The first momentum
+     */
+    Tensor<double> m;
+    /**
+     * @brief The second momentum
+     */
+    Tensor<double> v;
+    /**
+     * @brief The time step
+     */
+    int t = 1;
+
+    /**
+     * Helper function to initialize the first and second momentums
+     * @param params The parameters to be updated
+     */
+    void init(const Tensor<double>& params);
 
   public:
-    static constexpr double eps = 1e-8;
+    /**
+     * @brief The epsilon value
+     */
+    static constexpr double epsilon = 1e-8;
 
-    double alpha, beta1, beta2;
-    Tensor<N> m, v;
+    /**
+     * @brief The learning rate
+     */
+    double alpha;
+    /**
+     * @brief The first momentum
+     */
+    double beta1;
+    /**
+     * @brief The second momentum
+     */
+    double beta2;
 
-    Adam(double a = 0.001, double b1 = 0.9, double b2 = 0.999) : Optimizer<N>{"Adam"}, alpha{a}, beta1{b1}, beta2{b2} {}
+    /**
+     * Constructor
+     * @param a The learning rate
+     * @param b1 The first momentum
+     * @param b2 The second momentum
+     */
+    Adam(double a = 0.001, double b1 = 0.9, double b2 = 0.999)
+        : Optimizer{"Adam"}, m{{0}}, v{{0}}, t{1}, alpha{a}, beta1{b1}, beta2{b2} {}
+    /**
+     * @brief Destructor
+     */
     ~Adam() {}
 
-    void apply_grad(Tensor<N>& params, const Tensor<N>& grads) {
-        init(params);
-        m = beta1 * m + (1 - beta1) * grads;
-        v = beta2 * v + (1 - beta2) * grads * grads;
-        Tensor<N> m_hat = m / (1 - beta1);
-        Tensor<N> v_hat = v / (1 - beta2);
-        params -= alpha * m_hat / (v_hat.apply_fn([](double x) { return std::sqrt(x); }) + Tensor<N>(v_hat.shape, eps));
-    }
-};
+    /**
+     * @brief Applies the gradient to the parameters
+     *
+     * @param params The parameters to be updated
+     * @param grads The gradients to be applied
+     */
+    void apply_grad(Tensor<double>& params, const Tensor<double>& grads) override;
 
-/**
- * @brief Creates a new optimizer with the same hyperparameters as the given optimizer
- * @tparam N The number of dimensions of the tensor
- * @param opt The optimizer to copy
- * @return A new optimizer with the same hyperparameters as the given optimizer
- */
-template <int N> Optimizer<N>* get_optimizer(const Optimizer<1>* opt) {
-    if (opt->name == "SGD") {
-        return new SGD<N>(((SGD<1>*)opt)->alpha);
-    } else if (opt->name == "Adam") {
-        return new Adam<N>(((Adam<1>*)opt)->alpha, ((Adam<1>*)opt)->beta1, ((Adam<1>*)opt)->beta2);
-    }
-    std::cout << "No optimizer found for name " << opt->name << std::endl;
-    return nullptr;
-}
+    /**
+     * Clone the optimizer
+     * @return A pointer to a copy of the optimizer
+     */
+    Optimizer* clone() const override { return new Adam(*this); }
+};
 
 } // namespace Optimizers
 

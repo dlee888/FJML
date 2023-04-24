@@ -4,11 +4,9 @@
 #ifndef TENSOR_INCLUDED
 #define TENSOR_INCLUDED
 
-#include <cassert>
 #include <cstdarg>
 #include <fstream>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <numeric>
 #include <vector>
@@ -39,6 +37,11 @@ template <typename T> class Tensor {
     std::vector<int> data_size;
 
     /**
+     * Default constructor
+     */
+    Tensor() {}
+
+    /**
      * Creates a tensor with the given shape
      * @param shape the shape of the tensor
      * @param init the initial value of the tensor, default is 0 or whatever the default constructor of T is
@@ -46,7 +49,7 @@ template <typename T> class Tensor {
     Tensor(const std::vector<int>& shape, const T& init = T()) {
         this->shape = shape;
         data_size = shape;
-        for (int i = shape.size() - 2; i >= 0; i--) {
+        for (int i = (int)shape.size() - 2; i >= 0; i--) {
             data_size[i] *= data_size[i + 1];
         }
         data_size.push_back(1);
@@ -187,7 +190,7 @@ template <typename T> class Tensor {
         }
         this->shape = shape;
         data_size = shape;
-        for (int i = shape.size() - 2; i >= 0; i--) {
+        for (int i = (int)shape.size() - 2; i >= 0; i--) {
             data_size[i] *= data_size[i + 1];
         }
         data_size.push_back(1);
@@ -199,7 +202,10 @@ template <typename T> class Tensor {
      * @return the element at the given index
      */
     T& operator[](const std::vector<int>& index) {
-        assert(index.size() == shape.size());
+        if (index.size() != shape.size()) {
+            throw std::invalid_argument("Index has " + std::to_string(index.size()) + " dimensions, but tensor has " +
+                                        std::to_string(shape.size()));
+        }
         int i = 0;
         for (int j = 0; j < (int)index.size(); j++) {
             if (index[j] >= shape[j]) {
@@ -217,7 +223,10 @@ template <typename T> class Tensor {
      * @return the element at the given index
      */
     const T& operator[](const std::vector<int>& index) const {
-        assert(index.size() == shape.size());
+        if (index.size() != shape.size()) {
+            throw std::invalid_argument("Index has " + std::to_string(index.size()) + " dimensions, but tensor has " +
+                                        std::to_string(shape.size()));
+        }
         int i = 0;
         for (int j = 0; j < (int)index.size(); j++) {
             if (index[j] >= shape[j]) {
@@ -235,7 +244,10 @@ template <typename T> class Tensor {
      * @return the element at the given index
      */
     T& at(const std::vector<int>& index) {
-        assert(index.size() == shape.size());
+        if (index.size() != shape.size()) {
+            throw std::invalid_argument("Index has " + std::to_string(index.size()) + " dimensions, but tensor has " +
+                                        std::to_string(shape.size()));
+        }
         int i = 0;
         for (int j = 0; j < (int)index.size(); j++) {
             if (index[j] >= shape[j]) {
@@ -253,7 +265,10 @@ template <typename T> class Tensor {
      * @return the element at the given index
      */
     const T& at(const std::vector<int>& index) const {
-        assert(index.size() == shape.size());
+        if (index.size() != shape.size()) {
+            throw std::invalid_argument("Index has " + std::to_string(index.size()) + " dimensions, but tensor has " +
+                                        std::to_string(shape.size()));
+        }
         int i = 0;
         for (int j = 0; j < (int)index.size(); j++) {
             if (index[j] >= shape[j]) {
@@ -316,8 +331,15 @@ template <typename T> class Tensor {
      */
     class iterator {
       public:
+        /**
+         * The tensor being iterated over
+         */
         Tensor& tensor;
+        /**
+         * The index of the current element
+         */
         int index;
+
         /**
          * Constructs an iterator
          * @param tensor the tensor to iterate over
@@ -448,6 +470,433 @@ template <typename T> class Tensor {
      * @return an iterator to the last element
      */
     iterator end() { return iterator{*this, data_size[0]}; }
+
+    /**
+     * Overloads the + operator
+     * @param other the other tensor
+     * @return the sum of the two tensors
+     */
+    Tensor<T> operator+(const Tensor<T>& other) const {
+        if (shape != other.shape) {
+            throw std::invalid_argument("Cannot add tensors with different shapes");
+        }
+        Tensor<T> result(shape);
+        for (int i = 0; i < data_size[0]; i++) {
+            result.data[i] = data[i] + other.data[i];
+        }
+        return result;
+    }
+
+    /**
+     * Overloads the += operator
+     * @param other the other tensor
+     * @return the sum of the two tensors
+     */
+    Tensor<T>& operator+=(const Tensor<T>& other) {
+        if (shape != other.shape) {
+            throw std::invalid_argument("Cannot add tensors with different shapes");
+        }
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] += other.data[i];
+        }
+        return *this;
+    }
+
+    /**
+     * Overloads the - operator
+     * @param other the other tensor
+     * @return the difference of the two tensors
+     */
+    Tensor<T> operator-(const Tensor<T>& other) const {
+        if (shape != other.shape) {
+            throw std::invalid_argument("Cannot subtract tensors with different shapes");
+        }
+        Tensor<T> result(shape);
+        for (int i = 0; i < data_size[0]; i++) {
+            result.data[i] = data[i] - other.data[i];
+        }
+        return result;
+    }
+
+    /**
+     * Overloads the -= operator
+     * @param other the other tensor
+     * @return the difference of the two tensors
+     */
+    Tensor<T>& operator-=(const Tensor<T>& other) {
+        if (shape != other.shape) {
+            throw std::invalid_argument("Cannot subtract tensors with different shapes");
+        }
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] -= other.data[i];
+        }
+        return *this;
+    }
+
+    /**
+     * Overloads the * operator
+     *
+     * Note: this is element-wise multiplication, not matrix multiplication
+     *
+     * @param other the other tensor
+     * @return the product of the two tensors
+     */
+    Tensor<T> operator*(const Tensor<T>& other) const {
+        if (shape != other.shape) {
+            throw std::invalid_argument("Cannot multiply tensors with different shapes");
+        }
+        Tensor<T> result(shape);
+        for (int i = 0; i < data_size[0]; i++) {
+            result.data[i] = data[i] * other.data[i];
+        }
+        return result;
+    }
+
+    /**
+     * Overloads the *= operator
+     *
+     * Note: this is element-wise multiplication, not matrix multiplication
+     *
+     * @param other the other tensor
+     * @return the product of the two tensors
+     */
+    Tensor<T>& operator*=(const Tensor<T>& other) {
+        if (shape != other.shape) {
+            throw std::invalid_argument("Cannot multiply tensors with different shapes");
+        }
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] *= other.data[i];
+        }
+        return *this;
+    }
+
+    /**
+     * Overloads the / operator
+     *
+     * Note: this is element-wise division, not matrix division
+     *
+     * @param other the other tensor
+     * @return the quotient of the two tensors
+     */
+    Tensor<T> operator/(const Tensor<T>& other) const {
+        if (shape != other.shape) {
+            throw std::invalid_argument("Cannot divide tensors with different shapes");
+        }
+        Tensor<T> result(shape);
+        for (int i = 0; i < data_size[0]; i++) {
+            result.data[i] = data[i] / other.data[i];
+        }
+        return result;
+    }
+
+    /**
+     * Overloads the /= operator
+     *
+     * Note: this is element-wise division, not matrix division
+     *
+     * @param other the other tensor
+     * @return the quotient of the two tensors
+     */
+    Tensor<T>& operator/=(const Tensor<T>& other) {
+        if (shape != other.shape) {
+            throw std::invalid_argument("Cannot divide tensors with different shapes");
+        }
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] /= other.data[i];
+        }
+        return *this;
+    }
+
+    /**
+     * Addition of a scalar to the tensor
+     * @param other the scalar
+     * @return the sum of the tensor and the scalar
+     */
+    Tensor<T> operator+(double other) const {
+        Tensor<T> result(shape);
+        for (int i = 0; i < data_size[0]; i++) {
+            result.data[i] = data[i] + other;
+        }
+        return result;
+    }
+
+    /**
+     * Overloads the += operator
+     * @param other the scalar
+     * @return the sum of the tensor and the scalar
+     */
+    Tensor<T>& operator+=(double other) {
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] += other;
+        }
+        return *this;
+    }
+
+    /**
+     * Overloads the - operator
+     * @param other the scalar
+     * @return the difference of the tensor and the scalar
+     */
+    Tensor<T> operator-(double other) const {
+        Tensor<T> result(shape);
+        for (int i = 0; i < data_size[0]; i++) {
+            result.data[i] = data[i] - other;
+        }
+        return result;
+    }
+
+    /**
+     * Overloads the -= operator
+     * @param other the scalar
+     * @return the difference of the tensor and the scalar
+     */
+    Tensor<T>& operator-=(double other) {
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] -= other;
+        }
+        return *this;
+    }
+
+    /**
+     * Overloads the * operator
+     * @param other the scalar
+     * @return the product of the tensor and the scalar
+     */
+    Tensor<T> operator*(double other) const {
+        Tensor<T> result(shape);
+        for (int i = 0; i < data_size[0]; i++) {
+            result.data[i] = data[i] * other;
+        }
+        return result;
+    }
+
+    /**
+     * Overloads the *= operator
+     * @param other the scalar
+     * @return the product of the tensor and the scalar
+     */
+    Tensor<T>& operator*=(double other) {
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] *= other;
+        }
+        return *this;
+    }
+
+    /**
+     * Overloads the / operator
+     * @param other the scalar
+     * @return the quotient of the tensor and the scalar
+     */
+    Tensor<T> operator/(double other) const {
+        Tensor<T> result(shape);
+        for (int i = 0; i < data_size[0]; i++) {
+            result.data[i] = data[i] / other;
+        }
+        return result;
+    }
+
+    /**
+     * Overloads the /= operator
+     * @param other the scalar
+     * @return the quotient of the tensor and the scalar
+     */
+    Tensor<T>& operator/=(double other) {
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] /= other;
+        }
+        return *this;
+    }
+
+    /**
+     * Overloads the + operator
+     * @param other the scalar
+     * @param tensor the tensor
+     * @return the sum of the tensor and the scalar
+     */
+    friend Tensor<T> operator+(double other, const Tensor<T>& tensor) { return tensor + other; }
+
+    /**
+     * Overloads the - operator
+     * @param other the scalar
+     * @param tensor the tensor
+     * @return the difference of the tensor and the scalar
+     */
+    friend Tensor<T> operator-(double other, const Tensor<T>& tensor) {
+        Tensor<T> result(tensor.shape);
+        for (int i = 0; i < tensor.data_size[0]; i++) {
+            result.data[i] = other - tensor.data[i];
+        }
+        return result;
+    }
+
+    /**
+     * Scalar times the tensor
+     * @param other the scalar
+     * @param tensor the tensor
+     * @return the product of the tensor and the scalar
+     */
+    friend Tensor<T> operator*(double other, const Tensor<T>& tensor) { return tensor * other; }
+
+    /**
+     * Overloads the / operator
+     * @param other the scalar
+     * @param tensor the tensor
+     * @return the quotient of the tensor and the scalar
+     */
+    friend Tensor<T> operator/(double other, const Tensor<T>& tensor) {
+        Tensor<T> result(tensor.shape);
+        for (int i = 0; i < tensor.data_size[0]; i++) {
+            result.data[i] = other / tensor.data[i];
+        }
+        return result;
+    }
+
+    /**
+     * Negation of the tensor
+     * @return the negation of the tensor
+     */
+    Tensor<T> operator-() const {
+        Tensor<T> result(shape);
+        for (int i = 0; i < data_size[0]; i++) {
+            result.data[i] = -data[i];
+        }
+        return result;
+    }
+
+    /**
+     * Overloads the << operator
+     * @param os the output stream
+     * @param tensor the tensor
+     * @return the output stream
+     */
+    friend std::ostream& operator<<(std::ostream& os, const Tensor<T>& tensor) {
+        tensor.print(os, 0, 0);
+        return os;
+    }
+
+  private:
+    /**
+     * Helper method to print the tensor
+     * @param os the output stream
+     * @param dim the current dimension
+     * @param index the current index
+     */
+    void print(std::ostream& os, int dim, int index) const {
+        if (dim == (int)shape.size() - 1) {
+            os << "[";
+            for (int i = 0; i < shape[dim]; i++) {
+                os << data[index + i];
+                if (i != shape[dim] - 1) {
+                    os << ", ";
+                }
+            }
+            os << "]";
+        } else {
+            os << "[";
+            for (int i = 0; i < shape[dim]; i++) {
+                print(os, dim + 1, index + i * data_size[dim + 1]);
+                if (i != shape[dim] - 1) {
+                    os << ", ";
+                }
+            }
+            os << "]";
+        }
+    }
+
+  public:
+    /**
+     * Overloads the == operator
+     * @param other the other tensor
+     * @return true if the two tensors are equal, false otherwise
+     */
+    bool operator==(const Tensor<T>& other) const {
+        if (shape != other.shape) {
+            return false;
+        }
+        for (int i = 0; i < data_size[0]; i++) {
+            if (data[i] != other.data[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Overloads the != operator
+     * @param other the other tensor
+     * @return true if the two tensors are not equal, false otherwise
+     */
+    bool operator!=(const Tensor<T>& other) const { return !(*this == other); }
+
+    /**
+     * Applies a function to each element of the tensor
+     *
+     * Note: modifies the tensor in place
+     *
+     * @param f the function
+     * @return the tensor with the function applied to each element
+     */
+    Tensor<T> apply_function(std::function<T(T)> f) const {
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] = f(data[i]);
+        }
+        return *this;
+    }
+
+    /**
+     * Applies a function to each element of the tensor
+     *
+     * Note: does not modify the tensor in place
+     *
+     * @param f the function
+     * @return the tensor with the function applied to each element
+     */
+    Tensor<T> calc_function(std::function<T(T)> f) const {
+        Tensor<T> result(shape);
+        for (int i = 0; i < data_size[0]; i++) {
+            result.data[i] = f(data[i]);
+        }
+        return result;
+    }
+
+    /**
+     * Applies a function to each element of two tensors
+     *
+     * Note: modifies the tensor in place
+     *
+     * @param f the function
+     * @param other the other tensor
+     * @return the tensor with the function applied to each element
+     */
+    Tensor<T> apply_function(std::function<T(T, T)> f, const Tensor<T>& other) const {
+        if (shape != other.shape) {
+            throw std::invalid_argument("Tensors must have the same shape");
+        }
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] = f(data[i], other.data[i]);
+        }
+        return *this;
+    }
+
+    /**
+     * Applies a function to each element of two tensors
+     *
+     * Note: does not modify the tensor in place
+     *
+     * @param f the function
+     * @param other the other tensor
+     * @return the tensor with the function applied to each element
+     */
+    Tensor<T> calc_function(std::function<T(T, T)> f, const Tensor<T>& other) const {
+        if (shape != other.shape) {
+            throw std::invalid_argument("Tensors must have the same shape");
+        }
+        Tensor<T> result(shape);
+        for (int i = 0; i < data_size[0]; i++) {
+            result.data[i] = f(data[i], other.data[i]);
+        }
+        return result;
+    }
 };
 
 } // namespace FJML

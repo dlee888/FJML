@@ -111,6 +111,8 @@ class Activation {
 
 extern const Activation sigmoid, tanh, relu, leaky_relu, linear, swish;
 
+extern const std::vector<Activation> activations;
+
 } // namespace Activations
 
 } // namespace FJML

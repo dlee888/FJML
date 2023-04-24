@@ -25,9 +25,9 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
             Tensor<int> b = Tensor<int>::array(std::vector<std::vector<int>>{{4, 5}, {6, 7}, {8, 9}});
 
             Tensor<int> c = LinAlg::matrix_multiply(a, b);
-            REQUIRE(c.shape == std::vector<int>({1, 2}));
-            REQUIRE(c.at({0, 0}) == 40);
-            REQUIRE(c.at({0, 1}) == 46);
+            REQUIRE(c.shape == std::vector<int>({2}));
+            REQUIRE(c.at(0) == 40);
+            REQUIRE(c.at(1) == 46);
         }
 
         SECTION("Testing matrix times vector") {
@@ -35,10 +35,10 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
             Tensor<int> b = Tensor<int>::array({7, 8});
 
             Tensor<int> c = LinAlg::matrix_multiply(a, b);
-            REQUIRE(c.shape == std::vector<int>({3, 1}));
-            REQUIRE(c.at({0, 0}) == 23);
-            REQUIRE(c.at({1, 0}) == 53);
-            REQUIRE(c.at({2, 0}) == 83);
+            REQUIRE(c.shape == std::vector<int>({3}));
+            REQUIRE(c.at(0) == 23);
+            REQUIRE(c.at(1) == 53);
+            REQUIRE(c.at(2) == 83);
         }
 
         SECTION("Testing matrix times matrix") {

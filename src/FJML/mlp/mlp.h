@@ -1,16 +1,12 @@
-// Copyright (c) 2022 David Lee
+// Copyright (c) 2023 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
 #ifndef MLP_INCLUDED
 #define MLP_INCLUDED
 
-#include <cassert>
-#include <chrono>
 #include <climits>
 #include <cmath>
 #include <functional>
-#include <iostream>
-#include <random>
 #include <vector>
 
 #include "../layers/layers.h"
@@ -38,24 +34,20 @@ class MLP {
     Loss::Loss loss_fn;
 
     /**
-     * @brief No args constructor
-     *
-     * This constructor creates an empty MLP with no set loss function.
-     */
-    MLP() {}
-
-    /**
      * @brief Constructor for MLP
-     * @param _layers A vector of layers
-     * @param _loss The loss function to use
-     * @param _optimizer The optimizer to use
+     * @param layers A vector of layers
+     * @param loss The loss function to use
+     * @param optimizer The optimizer to use
      */
-    MLP(const std::vector<Layers::Layer*>& _layers, const Loss::Loss& _loss,
-        const Optimizers::Optimizer<1>* _optimizer = new Optimizers::SGD<1>)
-        : layers{_layers}, loss_fn{_loss} {
-        set_optimizer(_optimizer);
+    MLP(const std::vector<Layers::Layer*>& layers, const Loss::Loss& loss,
+        const Optimizers::Optimizer* optimizer = new Optimizers::SGD())
+        : layers{layers}, loss_fn{loss} {
+        set_optimizer(optimizer);
     }
 
+    /**
+     * Destructor for MLP
+     */
     ~MLP() {
         for (Layers::Layer* l : layers) {
             delete l;
@@ -72,11 +64,10 @@ class MLP {
      * @brief Set the optimizer for the model
      * @param optimizer The optimizer to use
      */
-    void set_optimizer(const Optimizers::Optimizer<1>* optimizer) {
+    void set_optimizer(const Optimizers::Optimizer* optimizer) {
         for (Layers::Layer* l : layers) {
             if (l->name == "Dense") {
-                ((Layers::Dense*)l)->w_opt = Optimizers::get_optimizer<2>(optimizer);
-                ((Layers::Dense*)l)->b_opt = Optimizers::get_optimizer<1>(optimizer);
+                ((Layers::Dense*)l)->set_optimizer(optimizer);
             }
         }
     }
@@ -100,7 +91,7 @@ class MLP {
      *
      * @param input The input to run the model on
      */
-    layer_vals run(const layer_vals& input) const;
+    Tensor<double> run(const Tensor<double>& input) const;
 
     /**
      * @brief Calculate the loss of the model on a batch of data
@@ -108,7 +99,7 @@ class MLP {
      * @param y_test The target data
      * @return The loss
      */
-    double calc_loss(const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test) const;
+    double calc_loss(const std::vector<Tensor<double>>& x_test, const std::vector<Tensor<double>>& y_test) const;
 
     /**
      * @brief Calculate the accuracy of the model on a batch of data
@@ -119,7 +110,7 @@ class MLP {
      * @param y_test The target data
      * @return The accuracy
      */
-    double calc_accuracy(const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test) const;
+    double calc_accuracy(const std::vector<Tensor<double>>& x_test, const std::vector<Tensor<double>>& y_test) const;
 
     /**
      * Applies gradients in a backwards pass
@@ -127,7 +118,7 @@ class MLP {
      * @param input the input
      * @param grads the gradients of the output
      */
-    void backwards_pass(const std::vector<layer_vals>& input, const std::vector<layer_vals>& grads);
+    void backwards_pass(const std::vector<Tensor<double>>& input, const std::vector<Tensor<double>>& grads);
 
     /**
      * @brief Train the model on a batch of data
@@ -136,9 +127,8 @@ class MLP {
      *
      * @param x_train The input data
      * @param y_train The target data
-     * @param mask A mask to apply to the data
      */
-    void grad_descent(const std::vector<layer_vals>& x_train, const std::vector<layer_vals>& y_train);
+    void grad_descent(const std::vector<Tensor<double>>& x_train, const std::vector<Tensor<double>>& y_train);
 
     /**
      * @brief Save the model to a file
@@ -161,11 +151,10 @@ class MLP {
      * @param epochs The number of epochs to train for
      * @param batch_size The size of the batches to train on
      * @param save_file The file to save the model to, or "" to not save
-     * @param mask A mask to apply to the data
      */
-    void train(const std::vector<layer_vals>& x_train, const std::vector<layer_vals>& y_train,
-               const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test, int epochs, int batch_size,
-               const std::string& save_file);
+    void train(const std::vector<Tensor<double>>& x_train, const std::vector<Tensor<double>>& y_train,
+               const std::vector<Tensor<double>>& x_test, const std::vector<Tensor<double>>& y_test, int epochs,
+               int batch_size, const std::string& save_file);
 
     /**
      * @brief Print a summary of the model

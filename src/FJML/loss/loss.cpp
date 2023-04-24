@@ -9,8 +9,16 @@ namespace FJML {
 
 namespace Loss {
 
-Loss mse([](double a, double b) { return (a - b) * (a - b); }, [](double a, double b) { return 2 * (b - a); });
-Loss huber(
+/**
+ * @brief The mean squared error loss function
+ */
+const Loss mse(
+    "mse", [](double a, double b) { return (a - b) * (a - b); }, [](double a, double b) { return 2 * (b - a); });
+/**
+ * @brief The huber loss function
+ */
+const Loss huber(
+    "huber",
     [](double a, double b) -> double {
         double diff = a - b;
         if (std::abs(diff) > 1) {
@@ -28,7 +36,11 @@ Loss huber(
         }
         return (b - a);
     });
-Loss crossentropy(
+/**
+ * @brief The cross entropy loss function
+ */
+const Loss crossentropy(
+    "crossentropy",
     [](double a, double b) -> double {
         if (a == 0) {
             return -log(1 - b);

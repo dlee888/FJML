@@ -196,13 +196,9 @@ TEST_CASE("Testing tensor", "[tensor]") {
     SECTION("Test iterators") {
         Tensor<int> tensor = Tensor<int>::array(std::vector<std::vector<int>>{{1, 3}, {1, 2}, {3, 4}});
 
-        SECTION("Test begin()") {
-            REQUIRE(*tensor.begin() == 1);
-        }
+        SECTION("Test begin()") { REQUIRE(*tensor.begin() == 1); }
 
-        SECTION("Test end()") {
-            REQUIRE(*(tensor.end() - 1) == 4);
-        }
+        SECTION("Test end()") { REQUIRE(*(tensor.end() - 1) == 4); }
 
         SECTION("Test iterator constructor and operations") {
             Tensor<int>::iterator it{tensor, 1};
@@ -242,5 +238,150 @@ TEST_CASE("Testing tensor", "[tensor]") {
             }
             REQUIRE(sum == 14);
         }
+    }
+
+    SECTION("Test operators") {
+        Tensor<int> tensor = Tensor<int>::array(std::vector<std::vector<int>>{{1, 3}, {1, 2}, {3, 4}});
+        Tensor<int> tensor2 = Tensor<int>::array(std::vector<std::vector<int>>{{1, 3}, {1, 2}, {3, 4}});
+
+        SECTION("Test operator==") { REQUIRE(tensor == tensor2); }
+
+        SECTION("Test operator!=") { REQUIRE(!(tensor != tensor2)); }
+
+        SECTION("Test operator+") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{2, 6}, {2, 4}, {6, 8}});
+            REQUIRE(tensor + tensor2 == tensor3);
+        }
+
+        SECTION("Test operator-") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{0, 0}, {0, 0}, {0, 0}});
+            REQUIRE(tensor - tensor2 == tensor3);
+        }
+
+        SECTION("Test operator*") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{1, 9}, {1, 4}, {9, 16}});
+            REQUIRE(tensor * tensor2 == tensor3);
+        }
+
+        SECTION("Test operator/") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{1, 1}, {1, 1}, {1, 1}});
+            REQUIRE(tensor / tensor2 == tensor3);
+        }
+
+        SECTION("Test operator+=") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{2, 6}, {2, 4}, {6, 8}});
+            tensor += tensor2;
+            REQUIRE(tensor == tensor3);
+        }
+
+        SECTION("Test operator-=") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{0, 0}, {0, 0}, {0, 0}});
+            tensor -= tensor2;
+            REQUIRE(tensor == tensor3);
+        }
+
+        SECTION("Test operator*=") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{1, 9}, {1, 4}, {9, 16}});
+            tensor *= tensor2;
+            REQUIRE(tensor == tensor3);
+        }
+
+        SECTION("Test operator/=") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{1, 1}, {1, 1}, {1, 1}});
+            tensor /= tensor2;
+            REQUIRE(tensor == tensor3);
+        }
+
+        SECTION("Test operator+ (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{2, 4}, {2, 3}, {4, 5}});
+            REQUIRE(tensor + 1 == tensor3);
+        }
+
+        SECTION("Test operator- (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{0, 2}, {0, 1}, {2, 3}});
+            REQUIRE(tensor - 1 == tensor3);
+        }
+
+        SECTION("Test operator* (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{2, 6}, {2, 4}, {6, 8}});
+            REQUIRE(tensor * 2 == tensor3);
+        }
+
+        SECTION("Test operator/ (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{0, 1}, {0, 1}, {1, 2}});
+            REQUIRE(tensor / 2 == tensor3);
+        }
+
+        SECTION("Test operator+= (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{2, 4}, {2, 3}, {4, 5}});
+            tensor += 1;
+            REQUIRE(tensor == tensor3);
+        }
+
+        SECTION("Test operator-= (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{0, 2}, {0, 1}, {2, 3}});
+            tensor -= 1;
+            REQUIRE(tensor == tensor3);
+        }
+
+        SECTION("Test operator*= (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{2, 6}, {2, 4}, {6, 8}});
+            tensor *= 2;
+            REQUIRE(tensor == tensor3);
+        }
+
+        SECTION("Test operator/= (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{0, 1}, {0, 1}, {1, 2}});
+            tensor /= 2;
+            REQUIRE(tensor == tensor3);
+        }
+
+        SECTION("Test operator+ (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{2, 4}, {2, 3}, {4, 5}});
+            REQUIRE(1 + tensor == tensor3);
+        }
+
+        SECTION("Test operator- (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{2, 0}, {2, 1}, {0, -1}});
+            REQUIRE(3 - tensor == tensor3);
+        }
+
+        SECTION("Test operator* (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{2, 6}, {2, 4}, {6, 8}});
+            REQUIRE(2 * tensor == tensor3);
+        }
+
+        SECTION("Test operator/ (scalar)") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{4, 1}, {4, 2}, {1, 1}});
+            REQUIRE(4 / tensor == tensor3);
+        }
+
+        SECTION("Test negation") {
+            Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{-1, -3}, {-1, -2}, {-3, -4}});
+            REQUIRE(-tensor == tensor3);
+        }
+    }
+
+    SECTION("Test tensor output") {
+        Tensor<int> tensor = Tensor<int>::array(std::vector<std::vector<int>>{{1, 2}, {1, 2}, {2, 3}});
+        std::stringstream ss;
+        ss << tensor;
+        REQUIRE(ss.str() == "[[1, 2], [1, 2], [2, 3]]");
+    }
+
+    SECTION("Test apply_fn") {
+        Tensor<int> tensor = Tensor<int>::array(std::vector<std::vector<int>>{{1, 2}, {1, 2}, {2, 3}});
+        Tensor<int> tensor2 = Tensor<int>::array(std::vector<std::vector<int>>{{2, 4}, {2, 4}, {4, 6}});
+
+        REQUIRE(tensor.calc_function([](int x) { return x * 2; }) == tensor2);
+        tensor.apply_function([](int x) { return x * 2; });
+        REQUIRE(tensor == tensor2);
+
+        Tensor<int> tensor3 = Tensor<int>::array(std::vector<std::vector<int>>{{1, 2}, {1, 2}, {2, 3}});
+        Tensor<int> tensor4 = tensor2.calc_function([](int a, int b) { return a - b; }, tensor3);
+        Tensor<int> tensor5 = Tensor<int>::array(std::vector<std::vector<int>>{{1, 2}, {1, 2}, {2, 3}});
+        REQUIRE(tensor4 == tensor5);
+        tensor2.apply_function([](int a, int b) { return a - b; }, tensor3);
+        REQUIRE(tensor2 == tensor5);
     }
 }

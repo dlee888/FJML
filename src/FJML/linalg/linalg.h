@@ -4,7 +4,6 @@
 #ifndef LINALG_INCLUDED
 #define LINALG_INCLUDED
 
-#include <cassert>
 #include <random>
 #include <stdexcept>
 
@@ -59,17 +58,29 @@ template <typename T> inline double dot_product(const Tensor<T>& a, const Tensor
  * @param b The second matrix.
  * @return The product.
  */
-template <typename T> inline Tensor<T> matrix_multiply(Tensor<T>& a, Tensor<T>& b) {
+template <typename T> inline Tensor<T> matrix_multiply(const Tensor<T>& a, const Tensor<T>& b) {
     if (a.dim() == 1 && b.dim() == 2) {
         if (a.shape[0] != b.shape[0]) {
             throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
         }
-        a.reshape({1, a.shape[0]});
+        Tensor<T> result({b.shape[1]});
+        for (int i = 0; i < b.shape[1]; i++) {
+            for (int j = 0; j < b.shape[0]; j++) {
+                result.data[i] += a.data[j] * b.data[j * b.shape[1] + i];
+            }
+        }
+        return result;
     } else if (a.dim() == 2 && b.dim() == 1) {
         if (a.shape[1] != b.shape[0]) {
             throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
         }
-        b.reshape({b.shape[0], 1});
+        Tensor<T> result({a.shape[0]});
+        for (int i = 0; i < a.shape[0]; i++) {
+            for (int j = 0; j < a.shape[1]; j++) {
+                result.data[i] += a.data[i * a.shape[1] + j] * b.data[j];
+            }
+        }
+        return result;
     } else if (a.dim() != b.dim() || a.dim() < 2 || a.shape[a.dim() - 1] != b.shape[b.dim() - 2]) {
         throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
     }
@@ -132,6 +143,22 @@ template <typename T> inline int random_choice(const Tensor<T>& a) {
         rand_num -= a.data[i];
     }
     return a.data_size[0] - 1;
+}
+
+/**
+ * Computes the index of the maximum value in a tensor.
+ *
+ * @param a The tensor.
+ * @return The index of the maximum value in the tensor.
+ */
+template <typename T> inline int argmax(const Tensor<T>& a) {
+    int res = 0;
+    for (int i = 1; i < a.data_size[0]; i++) {
+        if (a.data[i] > a.data[res]) {
+            res = i;
+        }
+    }
+    return res;
 }
 
 } // namespace LinAlg
