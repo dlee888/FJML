@@ -384,4 +384,20 @@ TEST_CASE("Testing tensor", "[tensor]") {
         tensor2.apply_function([](int a, int b) { return a - b; }, tensor3);
         REQUIRE(tensor2 == tensor5);
     }
+
+    SECTION("Benchmarking") {
+        Tensor<double> t2 = Tensor<double>(std::vector<int>{1000000});
+        Tensor<double> t3 = Tensor<double>(std::vector<int>{1000000});
+        for (int i = 0; i < 1000000; i++) {
+            t2.at(i) = i;
+            t3.at(i) = i;
+        }
+
+        BENCHMARK("Tensor addition") { return t2 + t3; };
+        BENCHMARK("Tensor subtraction") { return t2 - t3; };
+        BENCHMARK("Tensor scalar multiplication") { return t2 * 2; };
+        BENCHMARK("Tensor scalar division") { return t2 / 2; };
+        BENCHMARK("Tensor hammard product") { return t2 * t3; };
+        BENCHMARK("Tensor division") { return t2 / t3; };
+    }
 }
