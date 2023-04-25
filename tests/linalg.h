@@ -10,7 +10,7 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         Tensor<int> b = Tensor<int>::array({4, 5, 6});
 
         REQUIRE(LinAlg::dot_product(a, b) == 32);
-        
+
         SECTION("Testing dot product with invalid shapes") {
             Tensor<int> a = Tensor<int>::zeros({2});
             Tensor<int> b = Tensor<int>::zeros({3});
@@ -143,5 +143,30 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         int choice = LinAlg::random_choice(probs);
         REQUIRE(choice >= 0);
         REQUIRE(choice < 4);
+    }
+
+    SECTION("Testing argmax") {
+        Tensor<double> a = Tensor<double>::array({0.1, 0.2, 0.3, 0.4});
+        REQUIRE(LinAlg::argmax(a) == 3);
+    }
+
+    SECTION("Benchmarks") {
+        Tensor<double> a{{1000}};
+        Tensor<double> b{{1000}};
+        for (int i = 0; i < 1000; i++) {
+            a.at(i) = i;
+            b.at(i) = i;
+        }
+
+        BENCHMARK("dot product") { return FJML::LinAlg::dot_product(a, b); };
+
+        Tensor<double> c{{1000, 1000}};
+        for (int i = 0; i < 1000; i++) {
+            for (int j = 0; j < 1000; j++) {
+                c.at(i, j) = i + j;
+            }
+        }
+
+        BENCHMARK("matrix multiply") { return FJML::LinAlg::matrix_multiply(a, c); };
     }
 }

@@ -106,9 +106,6 @@ void MLP::train(const std::vector<Tensor<double>>& x_train, const std::vector<Te
     assert(x_test.size() == y_test.size());
     int num_inputs = x_train.size(), num_layers = layers.size();
     for (int i = 0; i < epochs; i++) {
-        std::vector<int> indices(num_inputs);
-        std::iota(indices.begin(), indices.end(), 0);
-        std::random_shuffle(indices.begin(), indices.end());
         std::chrono::time_point<std::chrono::system_clock> start_time = std::chrono::system_clock::now();
         for (int j = 0; j < num_inputs; j += batch_size) {
             progress_bar(j, num_inputs, 69,
@@ -116,23 +113,10 @@ void MLP::train(const std::vector<Tensor<double>>& x_train, const std::vector<Te
                                                                                start_time)
                                  .count() /
                              1000.0);
-            int curr_inputs = std::min(num_inputs, j + batch_size) - j;
-            std::vector<std::vector<Tensor<double>>> run_res(num_layers + 1);
-            for (int k = 0; k < curr_inputs; k++) {
-                run_res[0].push_back(x_train[indices[j + k]]);
-            }
-            for (int k = 0; k < num_layers; k++) {
-                run_res[k + 1] = layers[k]->apply(run_res[k]);
-            }
-
-            std::vector<Tensor<double>> out_grad(curr_inputs);
-            for (int k = 0; k < curr_inputs; k++) {
-                out_grad[k] = loss_fn.calc_derivative(y_train[indices[j + k]], run_res[num_layers][k]);
-            }
-
-            for (int k = num_layers - 1; k >= 0; k--) {
-                out_grad = layers[k]->backward(run_res[k], run_res[k + 1], out_grad);
-            }
+            grad_descent(std::vector<Tensor<double>>(x_train.begin() + j,
+                                                     x_train.begin() + std::min(j + batch_size, num_inputs)),
+                         std::vector<Tensor<double>>(y_train.begin() + j,
+                                                     y_train.begin() + std::min(j + batch_size, num_inputs)));
         }
         progress_bar(num_inputs, num_inputs, 69,
                      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() -

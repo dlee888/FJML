@@ -76,12 +76,6 @@ class MLP {
      * @brief Add a layer to the model
      * @param layer The layer to add
      */
-    void add(Layers::Layer layer) { layers.push_back(&layer); }
-
-    /**
-     * @brief Add a layer to the model
-     * @param layer The layer to add
-     */
     void add(Layers::Layer* layer) { layers.push_back(layer); }
 
     /**

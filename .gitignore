@@ -9,3 +9,7 @@ docs/
 .clang-format
 
 coverage.info
+
+*.csv
+*.fjml
+examples/mnist/main
