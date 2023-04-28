@@ -180,7 +180,5 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         }
 
         BENCHMARK("matrix multiply matrix") { return FJML::LinAlg::matrix_multiply(d, e); };
-
-        BENCHMARK("fast matrix multiply matrix") { return FJML::LinAlg::fast_matrix_multiply(d, e); };
     }
 }
