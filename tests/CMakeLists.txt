@@ -4,7 +4,7 @@ project(Catch2Test)
 
 set(CMAKE_CXX_STANDARD 17)
 
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O3 -Wall -pg -g --coverage")
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O3 -Wall -g --coverage -march=native")
 
 find_package(Catch2 3 REQUIRED)
 # These tests can use the Catch2-provided main

@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -O3 -std=c++17
+CFLAGS = -O3 -std=c++17 -march=native
 
 release: init
 release: CFLAGS += -DNDEBUG
@@ -7,7 +7,7 @@ release: all libFJML.so
 	sudo make install
 
 debug: init
-debug: CFLAGS += -coverage -g -fsanitize=undefined -pg
+debug: CFLAGS += -coverage -g -fsanitize=undefined
 debug: all libFJML.so
 	sudo make install
 

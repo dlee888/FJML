@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <random>
 
 #include "layers.h"
 
@@ -16,15 +17,13 @@ Layers::Dense::Dense(int input, int output, Activations::Activation activ, Optim
     : Layer{"Dense"}, input_size{input}, output_size{output}, activ{activ}, w_opt{opt->clone()}, b_opt{opt->clone()},
       weights{Tensor<double>(std::vector<int>{input, output})}, bias{Tensor<double>(std::vector<int>{output})} {
     if (randomize) {
-        unsigned long long seed = std::chrono::system_clock::now().time_since_epoch().count();
-        std::mt19937_64 rng = std::mt19937_64(seed);
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::normal_distribution<double> d(0, std::sqrt(2.0 / input));
         for (int i = 0; i < input_size; i++) {
             for (int j = 0; j < output_size; j++) {
-                weights.at(i, j) = (double)rng() / (double)(rng.max() - rng.min()) * 2 - 1;
+                weights.at(i, j) = d(gen);
             }
-        }
-        for (int i = 0; i < output_size; i++) {
-            bias.at(i) = (double)rng() / (double)(rng.max() - rng.min()) * 2 - 1;
         }
     }
 }
