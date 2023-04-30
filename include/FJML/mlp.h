@@ -4,16 +4,13 @@
 #ifndef MLP_INCLUDED
 #define MLP_INCLUDED
 
-#include <climits>
-#include <cmath>
-#include <functional>
 #include <vector>
 
-#include "../layers/layers.h"
-#include "../linalg/linalg.h"
-#include "../linalg/tensor.h"
-#include "../loss/loss.h"
-#include "../optimizers/optimizers.h"
+#include "layers.h"
+#include "linalg.h"
+#include "loss.h"
+#include "optimizers.h"
+#include "tensor.h"
 
 namespace FJML {
 

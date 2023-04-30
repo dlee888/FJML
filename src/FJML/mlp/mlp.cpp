@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include "mlp.h"
+#include "../../../include/FJML/mlp.h"
 
 // TODO: Refactor everything
 

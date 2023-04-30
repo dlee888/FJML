@@ -7,15 +7,15 @@
 #include <iostream>
 #include <random>
 
-#include "layers.h"
+#include "../../../include/FJML/layers.h"
 
 namespace FJML {
 
 namespace Layers {
 
 Layers::Dense::Dense(int input, int output, Activations::Activation activ, Optimizers::Optimizer* opt, bool randomize)
-    : Layer{"Dense"}, input_size{input}, output_size{output}, activ{activ}, w_opt{opt->clone()}, b_opt{opt->clone()},
-      weights{Tensor<double>(std::vector<int>{input, output})}, bias{Tensor<double>(std::vector<int>{output})} {
+    : Layer{"Dense"}, input_size{input}, output_size{output}, weights{Tensor<double>(std::vector<int>{input, output})},
+      bias{Tensor<double>(std::vector<int>{output})}, activ{activ}, w_opt{opt->clone()}, b_opt{opt->clone()} {
     if (randomize) {
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -86,9 +86,8 @@ void Layers::Dense::save(std::ofstream& file) const {
 }
 
 Layers::Dense::Dense(std::ifstream& file)
-    : Layer{"Dense"}, activ{Activations::Activation(
-                          "", [](double x) { return x; }, [](double x) { return 1; })},
-      bias{{0}}, weights{{0}} {
+    : Layer{"Dense"}, weights{{0}}, bias{{0}}, activ{Activations::Activation(
+                                                   "", [](double x) { return x; }, [](double x) { return 1; })} {
     std::string activation;
     file >> activation;
     for (Activations::Activation a : Activations::activations) {

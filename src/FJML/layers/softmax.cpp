@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "layers.h"
+#include "../../../include/FJML/layers.h"
 
 namespace FJML {
 

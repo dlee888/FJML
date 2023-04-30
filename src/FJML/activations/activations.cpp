@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "activations.h"
+#include "../../../include/FJML/activations.h"
 
 namespace FJML {
 

@@ -1,7 +1,7 @@
 // Copyright (c) 2023 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
-#include "optimizers.h"
+#include "../../../include/FJML/optimizers.h"
 
 namespace FJML {
 

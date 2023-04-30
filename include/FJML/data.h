@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-#include "../linalg/tensor.h"
+#include "tensor.h"
 
 namespace FJML {
 
@@ -21,11 +21,7 @@ namespace Data {
  * @param n The total number of possible values
  * @return The one hot encoding of x
  */
-inline Tensor<double> one_hot(int x, int n) {
-    Tensor<double> res({n});
-    res.at(x) = 1;
-    return res;
-}
+inline Tensor<double> one_hot(int x, int n);
 
 /**
  * @brief Split data into training and testing sets

@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "optimizers.h"
+#include "../../../include/FJML/optimizers.h"
 
 namespace FJML {
 

@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 
-#include "../src/FJML/mlp/mlp.h"
+#include "../include/FJML/mlp.h"
 
 using namespace Catch;
 using namespace FJML;

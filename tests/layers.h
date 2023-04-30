@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 
-#include "../src/FJML/layers/layers.h"
+#include "../include/FJML/layers.h"
 
 using namespace FJML;
 using namespace Catch;

@@ -7,8 +7,8 @@
 #include <iostream>
 #include <string>
 
-#include "../linalg/linalg.h"
-#include "../linalg/tensor.h"
+#include "linalg.h"
+#include "tensor.h"
 
 namespace FJML {
 

@@ -1,9 +1,9 @@
-// Copyright (c) 2022 David Lee
+// Copyright (c) 2023 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <cmath>
 
-#include "loss.h"
+#include "../../../include/FJML/loss.h"
 
 namespace FJML {
 

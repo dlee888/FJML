@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 
-#include "../src/FJML/linalg/linalg.h"
+#include "../include/FJML/linalg.h"
 
 using namespace FJML;
 
@@ -170,6 +170,7 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         }
 
         BENCHMARK("matrix multiply vector") { return FJML::LinAlg::matrix_multiply(a, c); };
+        BENCHMARK("vector multiply matrix") { return FJML::LinAlg::matrix_multiply(c, a); };
 
         Tensor<double> d{{500, 500}}, e{{500, 500}};
         for (int i = 0; i < 500; i++) {

@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 
-#include "../src/FJML/activations/activations.h"
+#include "../include/FJML/activations.h"
 
 using namespace Catch;
 using namespace FJML;

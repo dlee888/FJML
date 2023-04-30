@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 
-#include "../src/FJML/linalg/tensor.h"
+#include "../include/FJML/tensor.h"
 
 using namespace FJML;
 

@@ -7,10 +7,10 @@
 #include <fstream>
 #include <string>
 
-#include "../activations/activations.h"
-#include "../linalg/linalg.h"
-#include "../linalg/tensor.h"
-#include "../optimizers/optimizers.h"
+#include "activations.h"
+#include "linalg.h"
+#include "tensor.h"
+#include "optimizers.h"
 
 namespace FJML {
 

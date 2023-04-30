@@ -7,7 +7,7 @@
 #include <functional>
 #include <string>
 
-#include "../linalg/tensor.h"
+#include "tensor.h"
 
 namespace FJML {
 

@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 
-#include "../src/FJML/loss/loss.h"
-#include "../src/FJML/optimizers/optimizers.h"
+#include "../include/FJML/loss.h"
+#include "../include/FJML/optimizers.h"
 
 using namespace FJML;
 using namespace Catch;

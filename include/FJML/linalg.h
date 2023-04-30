@@ -5,10 +5,7 @@
 #define LINALG_INCLUDED
 
 #include <cstdlib>
-#include <cstring>
-#include <immintrin.h>
 #include <random>
-#include <stdexcept>
 
 #pragma GCC target("avx2,fma")
 #pragma GCC optimize("O3,unroll-loops")
@@ -104,8 +101,11 @@ template <typename T> inline Tensor<T> matrix_multiply(const Tensor<T>& a, const
  * @param a The matrix.
  * @return The transpose of the matrix.
  */
-inline Tensor<double> transpose(const Tensor<double>& a) {
-    Tensor<double> result({a.shape[1], a.shape[0]});
+template <typename T> inline Tensor<T> transpose(const Tensor<T>& a) {
+    if (a.dim() != 2) {
+        throw std::invalid_argument("Argument must be a matrix");
+    }
+    Tensor<T> result({a.shape[1], a.shape[0]});
     for (int i = 0; i < a.shape[0]; i++) {
         for (int j = 0; j < a.shape[1]; j++) {
             result.data[j * a.shape[0] + i] = a.data[i * a.shape[1] + j];
