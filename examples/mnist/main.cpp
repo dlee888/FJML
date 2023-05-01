@@ -44,7 +44,7 @@ void load_data(std::vector<FJML::Tensor<double>>& x, std::vector<FJML::Tensor<do
         y.push_back(FJML::Data::one_hot(label, 10));
 
         // Stop if we have enough data
-        if (limit != -1 && x.size() >= limit) {
+        if (limit != -1 && (int)x.size() >= limit) {
             break;
         }
     }
@@ -74,12 +74,12 @@ int main() {
     // 1. A vector of layers
     // 2. A loss function
     // 3. An optimizer
-    FJML::MLP model({new FJML::Layers::Dense(28 * 28, 64, FJML::Activations::relu),
-                     new FJML::Layers::Dense(64, 10, FJML::Activations::linear), new FJML::Layers::Softmax()},
+    FJML::MLP model({new FJML::Layers::Dense(28 * 28, 128, FJML::Activations::relu),
+                     new FJML::Layers::Dense(128, 10, FJML::Activations::linear), new FJML::Layers::Softmax()},
                     FJML::Loss::crossentropy, new FJML::Optimizers::Adam());
 
     // Train the model
-    model.train(x_train, y_train, x_test, y_test, 1, 32, "mnist.fjml");
+    model.train(x_train, y_train, x_test, y_test, 6, 128, "mnist.fjml");
 
     // Evaluate the model
     std::cout << "Training accuracy: " << model.calc_accuracy(x_train, y_train) << std::endl;

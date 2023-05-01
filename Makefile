@@ -19,6 +19,7 @@ HEADERS = include/FJML/activations.h \
 		  include/FJML/mlp.h \
 		  include/FJML/optimizers.h
 CFILES = bin/activations/activations.o \
+		 bin/data/data.o \
 		 bin/layers/dense.o bin/layers/layers.o bin/layers/softmax.o \
 		 bin/loss/loss.o \
 		 bin/mlp/mlp.o \
@@ -37,7 +38,7 @@ install: libFJML.so
 	ldconfig /usr/local/lib
 
 init:
-	mkdir -p bin/layers bin/activations bin/loss bin/util bin/mlp bin/optimizers
+	mkdir -p bin/activations bin/data bin/layers bin/loss bin/mlp bin/optimizers
 
 docs: src/**/* include/**/* doxygen.conf
 	doxygen doxygen.conf
@@ -47,4 +48,4 @@ coverage:
 	genhtml coverage.info --output-directory docs/html/coverage
 
 clean:
-	-rm -rf bin/ libFJML.so
+	rm -rf bin/* bin/**/* libFJML.so

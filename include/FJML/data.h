@@ -21,7 +21,7 @@ namespace Data {
  * @param n The total number of possible values
  * @return The one hot encoding of x
  */
-inline Tensor<double> one_hot(int x, int n);
+Tensor<double> one_hot(int x, int n);
 
 /**
  * @brief Split data into training and testing sets
