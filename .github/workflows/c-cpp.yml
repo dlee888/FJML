@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: git clone https://github.com/catchorg/Catch2.git
-    - run: git checkout 46539b6 # Most recent version has bugs
+    - run: cd Catch2 && git checkout 46539b6 # Most recent version has bugs
     - run: cd Catch2 && cmake -Bbuild -H. -DBUILD_TESTING=OFF
     - run: cd Catch2 && sudo cmake --build build/ --target install
     - run: sudo apt install lcov      
