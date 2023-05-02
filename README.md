@@ -15,10 +15,10 @@ A ML library in C++.
 
 ### Installation
 
-Run `make init` and then `make` to install the library. To build the library
-with debug info, use `make debug` instead of `make`.
+Simply run `make` to install the library. To build the library
+with debug info, use `make debug` instead.
 
-To compile programs with FJML, just use `g++ myfile.cpp -lFJML`.
+To compile programs with FJML, just add the flag `-lFJML` to the end of each compile command.
 
 ### Why Farmer John
 
@@ -47,6 +47,8 @@ int main() {
   mlp.train(x_train, y_train, x_test, y_test, epochs, batch_size);
 }
 ```
+
+For more examples, see the `examples/` folder.
 
 ### Features
 

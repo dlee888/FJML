@@ -1,12 +1,12 @@
+.PHONY: all init install docs clean coverage
+
 CC = g++
 CFLAGS = -O3 -std=c++17 -march=native
 
-release: init
 release: CFLAGS += -DNDEBUG
 release: all libFJML.so
 	sudo make install
 
-debug: init
 debug: CFLAGS += -coverage -g -fsanitize=undefined
 debug: all libFJML.so
 	sudo make install
@@ -25,7 +25,7 @@ CFILES = bin/activations/activations.o \
 		 bin/mlp/mlp.o \
 		 bin/optimizers/SGD.o bin/optimizers/adam.o 
 
-bin/%.o: src/FJML/%.cpp $(HEADERS)
+bin/%.o: src/FJML/%.cpp $(HEADERS) init
 	$(CC) -c $(CFLAGS) -fPIC $< -o $@
 
 all: $(CFILES)

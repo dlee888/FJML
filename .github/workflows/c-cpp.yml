@@ -14,13 +14,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: git clone https://github.com/catchorg/Catch2.git
+    - run: git checkout 46539b6 # Most recent version has bugs
     - run: cd Catch2 && cmake -Bbuild -H. -DBUILD_TESTING=OFF
     - run: cd Catch2 && sudo cmake --build build/ --target install
     - run: sudo apt install lcov      
-    - name: make
-      run: make init && make debug && sudo make install
-    - name: make tests
-      run: cd tests && cmake -H. -Bbuild && cd build && make && ./tests
+    - name: Build 
+      run: make debug && sudo make install
+    - name: Build tests
+      run: cd tests && cmake -H. -Bbuild && cd build && make
+    - name: Run tests
+      run: cd tests/build && ./tests
     - name: Make coverage report
       run: mkdir -p docs/html && make coverage
     - uses: actions/upload-artifact@v2
