@@ -6,10 +6,6 @@ on:
   workflow_dispatch:
   workflow_call:
 
-concurrency:
-  group: "CI"
-  cancel-in-progress: true
-
 jobs:
   build:
 
