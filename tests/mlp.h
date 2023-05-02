@@ -88,7 +88,7 @@ TEST_CASE("Test mlp", "[mlp]") {
     }
 
     SECTION("Test logistic regression") {
-        MLP mlp2({new Layers::Dense(1, 2), new Layers::Softmax()}, Loss::crossentropy, new Optimizers::SGD(0.003));
+        MLP mlp2({new Layers::Dense(1, 2), new Layers::Softmax()}, Loss::crossentropy, new Optimizers::Adam());
 
         std::vector<Tensor<double>> x_train, y_train;
         for (int i = -32; i < 33; i++) {
