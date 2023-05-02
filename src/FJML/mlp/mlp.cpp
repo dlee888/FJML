@@ -1,13 +1,17 @@
-// Copyright (c) 2022 David Lee
+// Copyright (c) 2023 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <iomanip>
+#include <iostream>
 
-#include "mlp.h"
+#include "../../../include/FJML/mlp.h"
 
-void progress_bar(int curr, int tot, int bar_width = 69, double time_elapsed = -1) {
+// TODO: Refactor everything
+
+static void progress_bar(int curr, int tot, int bar_width = 69, double time_elapsed = -1) {
     float progress = (float)curr / tot;
     std::cout << "[";
     int pos = bar_width * progress;
@@ -30,64 +34,64 @@ void progress_bar(int curr, int tot, int bar_width = 69, double time_elapsed = -
 
 namespace FJML {
 
-void MLP::grad_descent(const std::vector<layer_vals>& x_train, const std::vector<layer_vals>& y_train) {
+void MLP::grad_descent(const std::vector<Tensor<double>>& x_train, const std::vector<Tensor<double>>& y_train) {
     assert(x_train.size() == y_train.size());
     int num_inputs = x_train.size(), num_layers = layers.size();
 
-    std::vector<std::vector<layer_vals>> run_res(num_layers + 1);
+    std::vector<std::vector<Tensor<double>>> run_res(num_layers + 1);
     run_res[0] = x_train;
     for (int i = 0; i < num_layers; i++) {
         run_res[i + 1] = layers[i]->apply(run_res[i]);
     }
 
-    std::vector<layer_vals> out_grad(num_inputs);
+    std::vector<Tensor<double>> out_grad(num_inputs);
     for (int i = 0; i < num_inputs; i++) {
-        out_grad[i] = loss_fn.calc_grad(y_train[i], run_res[num_layers][i]);
+        out_grad[i] = loss_fn.calc_derivative(y_train[i], run_res[num_layers][i]);
     }
 
     for (int i = num_layers - 1; i >= 0; i--) {
-        out_grad = layers[i]->apply_grad(run_res[i], run_res[i + 1], out_grad);
+        out_grad = layers[i]->backward(run_res[i], run_res[i + 1], out_grad);
     }
 }
 
-void MLP::backwards_pass(const std::vector<layer_vals>& input, const std::vector<layer_vals>& grads) {
+void MLP::backwards_pass(const std::vector<Tensor<double>>& input, const std::vector<Tensor<double>>& grads) {
     int num_layers = layers.size();
-    std::vector<std::vector<layer_vals>> run_res(num_layers + 1);
+    std::vector<std::vector<Tensor<double>>> run_res(num_layers + 1);
     run_res[0] = input;
     for (int i = 0; i < num_layers; i++) {
         run_res[i + 1] = layers[i]->apply(run_res[i]);
     }
 
-    std::vector<layer_vals> out_grad = grads;
+    std::vector<Tensor<double>> out_grad = grads;
 
     for (int i = num_layers - 1; i >= 0; i--) {
-        out_grad = layers[i]->apply_grad(run_res[i], run_res[i + 1], out_grad);
+        out_grad = layers[i]->backward(run_res[i], run_res[i + 1], out_grad);
     }
 }
 
-layer_vals MLP::run(const layer_vals& input) const {
-    layer_vals result = input;
+Tensor<double> MLP::run(const Tensor<double>& input) const {
+    Tensor<double> result = input;
     for (Layers::Layer* l : layers) {
         result = l->apply(result);
     }
     return result;
 }
 
-double MLP::calc_loss(const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test) const {
+double MLP::calc_loss(const std::vector<Tensor<double>>& x_test, const std::vector<Tensor<double>>& y_test) const {
     assert(x_test.size() == y_test.size());
     double total = 0;
     for (int i = 0; i < (int)x_test.size(); i++) {
-        layer_vals y_pred = run(x_test[i]);
+        Tensor<double> y_pred = run(x_test[i]);
         total += loss_fn.calc_loss(y_test[i], y_pred);
     }
     return total / x_test.size();
 }
 
-double MLP::calc_accuracy(const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test) const {
+double MLP::calc_accuracy(const std::vector<Tensor<double>>& x_test, const std::vector<Tensor<double>>& y_test) const {
     assert(x_test.size() == y_test.size());
     int correct = 0;
     for (int i = 0; i < (int)x_test.size(); i++) {
-        layer_vals y_pred = run(x_test[i]);
+        Tensor<double> y_pred = run(x_test[i]);
         if (LinAlg::argmax(y_pred) == LinAlg::argmax(y_test[i])) {
             correct++;
         }
@@ -95,16 +99,13 @@ double MLP::calc_accuracy(const std::vector<layer_vals>& x_test, const std::vect
     return (double)correct / x_test.size();
 }
 
-void MLP::train(const std::vector<layer_vals>& x_train, const std::vector<layer_vals>& y_train,
-                const std::vector<layer_vals>& x_test, const std::vector<layer_vals>& y_test, int epochs,
+void MLP::train(const std::vector<Tensor<double>>& x_train, const std::vector<Tensor<double>>& y_train,
+                const std::vector<Tensor<double>>& x_test, const std::vector<Tensor<double>>& y_test, int epochs,
                 int batch_size, const std::string& save_file) {
     assert(x_train.size() == y_train.size());
     assert(x_test.size() == y_test.size());
     int num_inputs = x_train.size(), num_layers = layers.size();
     for (int i = 0; i < epochs; i++) {
-        std::vector<int> indices(num_inputs);
-        std::iota(indices.begin(), indices.end(), 0);
-        std::random_shuffle(indices.begin(), indices.end());
         std::chrono::time_point<std::chrono::system_clock> start_time = std::chrono::system_clock::now();
         for (int j = 0; j < num_inputs; j += batch_size) {
             progress_bar(j, num_inputs, 69,
@@ -112,23 +113,10 @@ void MLP::train(const std::vector<layer_vals>& x_train, const std::vector<layer_
                                                                                start_time)
                                  .count() /
                              1000.0);
-            int curr_inputs = std::min(num_inputs, j + batch_size) - j;
-            std::vector<std::vector<layer_vals>> run_res(num_layers + 1);
-            for (int k = 0; k < curr_inputs; k++) {
-                run_res[0].push_back(x_train[indices[j + k]]);
-            }
-            for (int k = 0; k < num_layers; k++) {
-                run_res[k + 1] = layers[k]->apply(run_res[k]);
-            }
-
-            std::vector<layer_vals> out_grad(curr_inputs);
-            for (int k = 0; k < curr_inputs; k++) {
-                out_grad[k] = loss_fn.calc_grad(y_train[indices[j + k]], run_res[num_layers][k]);
-            }
-
-            for (int k = num_layers - 1; k >= 0; k--) {
-                out_grad = layers[k]->apply_grad(run_res[k], run_res[k + 1], out_grad);
-            }
+            grad_descent(std::vector<Tensor<double>>(x_train.begin() + j,
+                                                     x_train.begin() + std::min(j + batch_size, num_inputs)),
+                         std::vector<Tensor<double>>(y_train.begin() + j,
+                                                     y_train.begin() + std::min(j + batch_size, num_inputs)));
         }
         progress_bar(num_inputs, num_inputs, 69,
                      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() -

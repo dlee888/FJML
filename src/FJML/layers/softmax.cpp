@@ -1,30 +1,29 @@
-// Copyright (c) 2022 David Lee
+// Copyright (c) 2023 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <cmath>
+#include <iostream>
 
-#include "layers.h"
+#include "../../../include/FJML/layers.h"
 
 namespace FJML {
 
 namespace Layers {
 
-layer_vals Softmax::norm(const layer_vals& input) const {
-    layer_vals ret(input.size());
-    double max = input[0];
-    for (int i = 1; i < (int)input.size(); i++) {
-        if (input[i] > max) {
-            max = input[i];
-        }
+Tensor<double> Softmax::norm(const Tensor<double>& input) const {
+    Tensor<double> ret(input);
+    double max = input.at(0);
+    for (auto& i : ret) {
+        max = std::max(max, i);
     }
-    for (int i = 0; i < (int)input.size(); i++) {
-        ret[i] = input[i] - max;
+    for (auto& i : ret) {
+        i -= max;
     }
     return ret;
 }
 
-layer_vals Softmax::apply(const layer_vals& input) const {
-    layer_vals res = norm(input);
+Tensor<double> Softmax::apply(const Tensor<double>& input) const {
+    Tensor<double> res = norm(input);
     double sum = 0;
 
     for (double& d : res) {
@@ -38,24 +37,22 @@ layer_vals Softmax::apply(const layer_vals& input) const {
     return res;
 }
 
-std::vector<layer_vals> Softmax::apply(const std::vector<layer_vals>& input) const {
-    std::vector<layer_vals> res;
-    for (const layer_vals& l : input) {
+std::vector<Tensor<double>> Softmax::apply(const std::vector<Tensor<double>>& input) const {
+    std::vector<Tensor<double>> res;
+    for (const Tensor<double>& l : input) {
         res.push_back(apply(l));
     }
     return res;
 }
 
-std::vector<layer_vals> Softmax::apply_grad(const std::vector<layer_vals>& input_vals,
-                                            const std::vector<layer_vals>& output_vals,
-                                            const std::vector<layer_vals>& output_grad) {
-    assert(input_vals.size() == output_grad.size());
-    assert(input_vals[0].size() == output_grad[0].size());
-    int n = input_vals.size(), m = input_vals[0].size();
+std::vector<Tensor<double>> Softmax::backward(const std::vector<Tensor<double>>& input_vals,
+                                              const std::vector<Tensor<double>>& output_vals,
+                                              const std::vector<Tensor<double>>& output_grad) {
+    int n = input_vals.size(), m = input_vals[0].data_size[0];
 
-    std::vector<layer_vals> res(n, layer_vals{m});
+    std::vector<Tensor<double>> res(n, Tensor<double>{input_vals[0].shape});
     for (int i = 0; i < n; i++) {
-        layer_vals out = norm(input_vals[i]);
+        Tensor<double> out = norm(input_vals[i]);
 
         double sum = 0;
         for (double& d : out) {
@@ -66,7 +63,7 @@ std::vector<layer_vals> Softmax::apply_grad(const std::vector<layer_vals>& input
         double denom = sum * sum;
         for (int j = 0; j < m; j++) {
             for (int k = 0; k < m; k++) {
-                res[i][j] += output_grad[i][k] * (out[j] * (k == j ? sum - out[j] : -out[k])) / denom;
+                res[i].data[j] += output_grad[i].at(k) * (out.at(j) * (k == j ? sum - out.at(j) : -out.at(k))) / denom;
             }
         }
     }

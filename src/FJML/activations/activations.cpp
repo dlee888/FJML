@@ -1,100 +1,96 @@
-// Copyright (c) 2022 David Lee
+// Copyright (c) 2023 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
-#include <cassert>
 #include <cmath>
 
-#include "activations.h"
+#include "../../../include/FJML/activations.h"
 
 namespace FJML {
 
 namespace Activations {
 
-template <> Tensor<1> Activation::apply(Tensor<1>& layer) const {
-    for (auto& i : layer) {
-        i = func(i);
-    }
-    return layer;
-}
-
 /**
- * @brief The sigmoid function
+ * The sigmoid function.
  *
- * The sigmoid function is defined as:
- * \f[\sigma(x) = \frac{1}{1 + e^{-x}}\f]
+ * Equation:
+ * \f[
+ *   \sigma(x) = \frac{1}{1 + e^{-x}}
+ * \f]
  */
-Activation sigmoid([](double x) { return 1 / (1 + exp(-x)); },
-                   [](double x) -> double {
-                       if (std::abs(x) > 100) {
-                           return 0;
-                       }
-                       double expx = exp(-x);
-                       return expx / (1 + expx) / (1 + expx);
-                   },
-                   "sigmoid");
+const Activation sigmoid = Activation(
+    "sigmoid", [](double x) { return 1 / (1 + std::exp(-x)); },
+    [](double x) { return std::exp(-x) / std::pow(1 + std::exp(-x), 2); });
 
 /**
- * @brief The linear function
+ * The hyperbolic tangent function.
  *
- * Simply returns the input.
+ * Equation:
+ * \f[
+ *  \tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}
+ * \f]
  */
-Activation linear([](double x) { return x; },
-                  [](double x) {
-                      assert(x != NAN);
-                      return 1;
-                  },
-                  "linear");
+const Activation tanh = Activation(
+    "tanh", [](double x) { return std::tanh(x); }, [](double x) { return 1 - std::pow(std::tanh(x), 2); });
 
 /**
- * @brief The swish function
+ * The rectified linear unit function.
  *
- * The swish function is defined as:
- * \f[\sigma(x) = \frac{x}{1 + e^{-x}}\f]
+ * Equation:
+ * \f[
+ * \text{ReLU}(x) = \begin{cases}
+ *  x & \text{if } x > 0 \\
+ *  0 & \text{otherwise}
+ *  \end{cases}
+ *  \f]
  */
-Activation swish([](double x) { return x / (1 + exp(-x)); },
-                 [](double x) -> double {
-                     if (x < -100) {
-                         return 0;
-                     }
-                     if (x > 100) {
-                         return 1;
-                     }
-                     double expx = exp(-x);
-                     double denom = 1 + expx;
-                     return (1 + expx + x * expx) / denom / denom;
-                 },
-                 "swish");
+const Activation relu = Activation(
+    "relu", [](double x) { return x > 0 ? x : 0; }, [](double x) { return x > 0 ? 1 : 0; });
 
 /**
- * @brief The relu function
+ * The leaky rectified linear unit function.
  *
- * The relu function is defined as:
- * \f[\sigma(x) = \max(0, x)\f]
+ * Equation:
+ * \f[
+ * \text{LeakyReLU}(x) = \begin{cases}
+ * x & \text{if } x > 0 \\
+ * 0.01x & \text{otherwise}
+ * \end{cases}
+ * \f]
  */
-Activation relu([](double x) -> double { return std::max(0.0, x); }, [](double x) -> double { return x > 0 ? 1 : 0; },
-                "relu");
+const Activation leaky_relu = Activation(
+    "leaky relu", [](double x) { return x > 0 ? x : 0.01 * x; }, [](double x) { return x > 0 ? 1 : 0.01; });
 
 /**
- * @brief The leaky relu function
+ * The linear function.
  *
- * The leaky relu function is defined as:
- * \f[\sigma(x) = \max(0.01x, x)\f]
+ * Equation:
+ * \f[
+ * \text{linear}(x) = x
+ * \f]
  */
-Activation leaky_relu([](double x) -> double { return x > 0 ? x : 0.01 * x; },
-                      [](double x) -> double { return x > 0 ? 1 : 0.01; }, "leaky_relu");
+const Activation linear = Activation(
+    "linear", [](double x) { return x; }, [](double x) { return 1; });
 
 /**
- * @brief The tanh function
- * The tanh function is defined as:
- * \f[\sigma(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}\f]
+ * The swish function.
+ *
+ * Equation:
+ * \f[
+ * \text{swish}(x) = \frac{x}{1 + e^{-x}}
+ * \f]
  */
-Activation tanh([](double x) { return std::tanh(x); }, [](double x) { return 1 - std::tanh(x) * std::tanh(x); },
-                "tanh");
+const Activation swish = Activation(
+    "swish", [](double x) { return x / (1 + std::exp(-x)); },
+    [](double x) {
+        double exp = std::exp(x);
+        double exp_plus_one = 1 + exp;
+        return 1 + (x - 1) / exp_plus_one - x / exp_plus_one / exp_plus_one;
+    });
 
 /**
- * @brief A list of all the activations
+ * A vector of all the activations.
  */
-std::vector<Activation> all_activations = {sigmoid, linear, swish, relu, leaky_relu, tanh};
+const std::vector<Activation> activations = {sigmoid, tanh, relu, leaky_relu, linear, swish};
 
 } // namespace Activations
 

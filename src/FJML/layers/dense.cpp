@@ -1,98 +1,71 @@
 // Copyright (c) 2022 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
+#include <chrono>
 #include <cmath>
+#include <cstring>
+#include <iostream>
+#include <random>
 
-#include "layers.h"
+#include "../../../include/FJML/layers.h"
 
 namespace FJML {
 
 namespace Layers {
 
-Layers::Dense::Dense() {
-    activ = Activations::sigmoid;
-    input_size = 0;
-    output_size = 0;
-    name = "Dense";
-}
-
-Layers::Dense::Dense(int _input, int _output, Activations::Activation _activ, Optimizers::Optimizer<1>* _opt,
-                     bool randomize) {
-    input_size = _input;
-    output_size = _output;
-    layer_weights = weights(std::vector<int>{input_size, output_size});
-    layer_bias = bias(output_size);
-    activ = _activ;
-    w_opt = Optimizers::get_optimizer<2>(_opt);
-    b_opt = Optimizers::get_optimizer<1>(_opt);
-    name = "Dense";
+Layers::Dense::Dense(int input, int output, Activations::Activation activ, Optimizers::Optimizer* opt, bool randomize)
+    : Layer{"Dense"}, input_size{input}, output_size{output}, weights{Tensor<double>(std::vector<int>{input, output})},
+      bias{Tensor<double>(std::vector<int>{output})}, activ{activ}, w_opt{opt->clone()}, b_opt{opt->clone()} {
     if (randomize) {
-        unsigned long long seed = std::chrono::system_clock::now().time_since_epoch().count();
-        std::mt19937_64 rng = std::mt19937_64(seed);
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::normal_distribution<double> d(0, std::sqrt(2.0 / input));
         for (int i = 0; i < input_size; i++) {
             for (int j = 0; j < output_size; j++) {
-                layer_weights[i][j] = (double)rng() / (double)(rng.max() - rng.min()) * 2 - 1;
+                weights.at(i, j) = d(gen);
             }
-        }
-        for (int i = 0; i < output_size; i++) {
-            layer_bias[i] = (double)rng() / (double)(rng.max() - rng.min()) * 2 - 1;
         }
     }
 }
 
-layer_vals Layers::Dense::apply(const layer_vals& input) const {
-    layer_vals res = LinAlg::matrixMultiply(input, layer_weights);
-    res += layer_bias;
-    activ.apply(res);
-    return res;
+Tensor<double> Layers::Dense::apply(const Tensor<double>& input) const {
+    return LinAlg::matrix_multiply(input, weights) + bias;
 }
 
-std::vector<layer_vals> Layers::Dense::apply(const std::vector<layer_vals>& input) const {
-    std::vector<layer_vals> res;
-    for (const layer_vals& l : input) {
+std::vector<Tensor<double>> Layers::Dense::apply(const std::vector<Tensor<double>>& input) const {
+    std::vector<Tensor<double>> res;
+    for (const Tensor<double>& l : input) {
         res.push_back(apply(l));
     }
     return res;
 }
 
-std::vector<layer_vals> Layers::Dense::apply_grad(const std::vector<layer_vals>& input_vals,
-                                                  const std::vector<layer_vals>& output_vals,
-                                                  const std::vector<layer_vals>& output_grad) {
-    assert(input_vals.size() == output_grad.size());
-    assert((int)input_vals[0].size() == input_size);
-    assert((int)output_grad[0].size() == output_size);
-
+std::vector<Tensor<double>> Layers::Dense::backward(const std::vector<Tensor<double>>& input_vals,
+                                                    const std::vector<Tensor<double>>& output_vals,
+                                                    const std::vector<Tensor<double>>& output_grad) {
     int n = input_vals.size();
 
-    weights w_grad = weights(std::vector<int>{input_size, output_size});
-    bias b_grad = bias{output_size};
-    std::vector<layer_vals> prev_grad(n, layer_vals{input_size});
+    Tensor<double> w_grad({input_size, output_size});
+    Tensor<double> b_grad({output_size});
+    std::vector<Tensor<double>> prev_grad(n, Tensor<double>({input_size}));
 
     for (int datapoint = 0; datapoint < n; datapoint++) {
-        layer_vals out_grad2{output_size}; // Save results to speed up
-        for (int i = 0; i < output_size; i++) {
-            out_grad2[i] = activ.grad(output_vals[datapoint][i]) * output_grad[datapoint][i];
-            assert(!std::isnan(out_grad2[i]));
-        }
+        Tensor<double> out_grad = activ.backward(output_vals[datapoint]) * output_grad[datapoint];
 
         for (int i = 0; i < input_size; i++) {
             for (int j = 0; j < output_size; j++) {
-                w_grad[i][j] += input_vals[datapoint][i] * out_grad2[j];
-                assert(!std::isnan(w_grad[i][j]));
-                prev_grad[datapoint][i] += layer_weights[i][j] * out_grad2[j];
-                assert(!std::isnan(prev_grad[datapoint][i]));
+                w_grad.at(i, j) += input_vals[datapoint].at(i) * out_grad.at(j);
+                prev_grad[datapoint].at(i) += weights.at(i, j) * out_grad.at(j);
             }
         }
-        for (int i = 0; i < output_size; i++) {
-            b_grad[i] += out_grad2[i];
-            assert(!std::isnan(b_grad[i]));
-        }
+
+        b_grad += out_grad;
     }
 
     w_grad /= n;
     b_grad /= n;
-    w_opt->apply_grad(layer_weights, w_grad);
-    b_opt->apply_grad(layer_bias, b_grad);
+    w_opt->apply_grad(weights, w_grad);
+    b_opt->apply_grad(bias, b_grad);
 
     return prev_grad;
 }
@@ -103,20 +76,21 @@ void Layers::Dense::save(std::ofstream& file) const {
     file << input_size << " " << output_size << " ";
     for (int i = 0; i < input_size; i++) {
         for (int j = 0; j < output_size; j++) {
-            file << layer_weights[i][j] << " ";
+            file << weights.at(i, j) << " ";
         }
     }
     for (int i = 0; i < output_size; i++) {
-        file << layer_bias[i] << " ";
+        file << bias.at(i) << " ";
     }
     file << std::endl;
 }
 
-Layers::Dense::Dense(std::ifstream& file) {
-    name = "Dense";
+Layers::Dense::Dense(std::ifstream& file)
+    : Layer{"Dense"}, weights{{0}}, bias{{0}}, activ{Activations::Activation(
+                                                   "", [](double x) { return x; }, [](double x) { return 1; })} {
     std::string activation;
     file >> activation;
-    for (Activations::Activation a : Activations::all_activations) {
+    for (Activations::Activation a : Activations::activations) {
         if (a.name == activation) {
             activ = a;
             break;
@@ -126,21 +100,26 @@ Layers::Dense::Dense(std::ifstream& file) {
         throw std::runtime_error("Unknown activation function");
     }
     file >> input_size >> output_size;
-    layer_weights = weights(std::vector<int>{input_size, output_size});
-    layer_bias = bias{output_size};
+    weights = Tensor<double>({input_size, output_size});
+    bias = Tensor<double>({output_size});
     for (int i = 0; i < input_size; i++) {
         for (int j = 0; j < output_size; j++) {
-            file >> layer_weights[i][j];
+            file >> weights.at(i, j);
         }
     }
     for (int i = 0; i < output_size; i++) {
-        file >> layer_bias[i];
+        file >> bias.at(i);
     }
 }
 
 void Layers::Dense::summary() const {
     std::cout << "Dense layer with " << input_size << " inputs and " << output_size << " outputs" << std::endl;
     std::cout << "Activation function: " << activ.name << std::endl;
+}
+
+void Layers::Dense::set_optimizer(const Optimizers::Optimizer* opt) {
+    w_opt = opt->clone();
+    b_opt = opt->clone();
 }
 
 } // namespace Layers

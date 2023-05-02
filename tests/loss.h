@@ -1,46 +1,45 @@
 #include <catch2/catch_all.hpp>
-#include <catch2/catch_test_macros.hpp>
 
-#include <FJML.h>
+#include "../include/FJML/loss.h"
 
 using namespace FJML;
 using namespace Catch;
 
 TEST_CASE("Testing loss functions", "[loss]") {
-    Tensor<1> y{3}, yhat{3};
-    y[0] = 1;
-    y[1] = 2;
-    y[2] = 3;
-    yhat[0] = 3;
-    yhat[1] = 2;
-    yhat[2] = 1;
+    Tensor<double> y = Tensor<double>::array({1, 2, 3}), yhat = Tensor<double>::array({3, 2, 1});
 
     SECTION("Testing MSE") {
         REQUIRE(Loss::mse.calc_loss(y, yhat) == 8);
 
-        Tensor<1> dy = Loss::mse.calc_grad(y, yhat);
-        REQUIRE(dy[0] == 4);
-        REQUIRE(dy[1] == 0);
-        REQUIRE(dy[2] == -4);
+        Tensor<double> dy = Loss::mse.calc_derivative(y, yhat);
+        REQUIRE(dy.at(0) == 4);
+        REQUIRE(dy.at(1) == 0);
+        REQUIRE(dy.at(2) == -4);
     }
 
     SECTION("Testing huber") {
         REQUIRE(Loss::huber.calc_loss(y, yhat) == 3);
 
-        Tensor<1> dy = Loss::huber.calc_grad(y, yhat);
-        REQUIRE(dy[0] == 1);
-        REQUIRE(dy[1] == 0);
-        REQUIRE(dy[2] == -1);
+        Tensor<double> dy = Loss::huber.calc_derivative(y, yhat);
+        REQUIRE(dy.at(0) == 1);
+        REQUIRE(dy.at(1) == 0);
+        REQUIRE(dy.at(2) == -1);
     }
 
     SECTION("Testing crossentropy") {
-        y[0] = 0;
-        y[1] = 0;
-        y[2] = 1;
-        yhat[0] = 0.3;
-        yhat[1] = 0.4;
-        yhat[2] = 0.3;
+        y.at(0) = 0;
+        y.at(1) = 0;
+        y.at(2) = 1;
+        yhat.at(0) = 0.3;
+        yhat.at(1) = 0.4;
+        yhat.at(2) = 0.3;
 
         REQUIRE(Loss::crossentropy.calc_loss(y, yhat) == Approx(2.0714733720306593));
+
+        Tensor<double> dy = Loss::crossentropy.calc_derivative(y, yhat);
+
+        REQUIRE(dy.at(0) == Approx(1 / 0.7));
+        REQUIRE(dy.at(1) == Approx(1 / 0.6));
+        REQUIRE(dy.at(2) == Approx(-1 / 0.3));
     }
 }

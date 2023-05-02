@@ -1,16 +1,24 @@
-// Copyright (c) 2022 David Lee
+// Copyright (c) 2023 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <cmath>
 
-#include "loss.h"
+#include "../../../include/FJML/loss.h"
 
 namespace FJML {
 
 namespace Loss {
 
-Loss mse([](double a, double b) { return (a - b) * (a - b); }, [](double a, double b) { return 2 * (b - a); });
-Loss huber(
+/**
+ * @brief The mean squared error loss function
+ */
+const Loss mse(
+    "mse", [](double a, double b) { return (a - b) * (a - b); }, [](double a, double b) { return 2 * (b - a); });
+/**
+ * @brief The huber loss function
+ */
+const Loss huber(
+    "huber",
     [](double a, double b) -> double {
         double diff = a - b;
         if (std::abs(diff) > 1) {
@@ -28,7 +36,11 @@ Loss huber(
         }
         return (b - a);
     });
-Loss crossentropy(
+/**
+ * @brief The cross entropy loss function
+ */
+const Loss crossentropy(
+    "crossentropy",
     [](double a, double b) -> double {
         if (a == 0) {
             return -log(1 - b);
