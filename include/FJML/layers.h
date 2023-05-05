@@ -70,7 +70,6 @@ class Layer {
      * Applies gradients to the parameters of the layer.
      *
      * @param input_vals The batch of inputs to apply the layer to
-     * @param output_vals The batch of outputs of the layer
      * @param output_grad The batch of gradients of the loss with respect to the output of the layers
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
@@ -165,7 +164,6 @@ class Dense : public Layer {
     /**
      * @brief Apply the gradient of the layer to a batch of inputs
      * @param input_vals The batch of inputs to apply the layer to
-     * @param output_vals The batch of outputs of the layer
      * @param output_grad The batch of gradients of the loss with respect to the output of the layer
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
@@ -229,7 +227,6 @@ class Softmax : public Layer {
     /**
      * @brief Apply the gradient of the layer to a batch of inputs
      * @param input_vals The batch of inputs to apply the layer to
-     * @param output_vals The batch of outputs of the layer
      * @param output_grad The batch of gradients of the loss with respect to the output of the layer
      * @return The batch of gradients of the loss with respect to the input of the layer
      */

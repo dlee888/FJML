@@ -46,11 +46,11 @@ install: libFJML.so
 init:
 	mkdir -p bin
 
-docs: src/**/* include/**/* doxygen.conf
+docs: src/* include/**/* doxygen.conf
 	doxygen doxygen.conf
 
 coverage:
-	lcov --directory . --capture --output-file coverage.info
+	lcov --directory . --no-external --exclude `pwd`/tests/\* --exclude `pwd`/tests/\*\*/\* --capture --output-file coverage.info
 	genhtml coverage.info --output-directory docs/html/coverage
 
 clean:
