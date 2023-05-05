@@ -64,16 +64,7 @@ class Loss {
      * @param pred The predicted value (function output)
      * @return The loss
      */
-    double calc_loss(const Tensor<double>& obs, const Tensor<double>& pred) const {
-        if (obs.data_size[0] != pred.data_size[0]) {
-            throw std::invalid_argument("obs and pred must have the same number of items");
-        }
-        double loss = 0;
-        for (int i = 0; i < obs.data_size[0]; i++) {
-            loss += function(obs.data[i], pred.data[i]);
-        }
-        return loss;
-    }
+    double calc_loss(const Tensor& obs, const Tensor& pred) const;
 
     /**
      * @brief Calculates the derivative of the loss
@@ -84,16 +75,7 @@ class Loss {
      * @param pred The predicted value (function output)
      * @return The derivative of the loss
      */
-    Tensor<double> calc_derivative(const Tensor<double>& obs, const Tensor<double>& pred) const {
-        if (obs.data_size[0] != pred.data_size[0]) {
-            throw std::invalid_argument("obs and pred must have the same number of items");
-        }
-        Tensor<double> deriv = Tensor<double>(pred.shape);
-        for (int i = 0; i < obs.data_size[0]; i++) {
-            deriv.data[i] = std::max(std::min(derivative(obs.data[i], pred.data[i]), clip), -clip);
-        }
-        return deriv;
-    }
+    Tensor calc_derivative(const Tensor& obs, const Tensor& pred) const;
 };
 
 extern const Loss mse, huber, crossentropy;

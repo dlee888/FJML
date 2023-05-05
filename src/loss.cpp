@@ -3,11 +3,33 @@
 
 #include <cmath>
 
-#include "../../../include/FJML/loss.h"
+#include "../include/FJML/loss.h"
 
 namespace FJML {
 
 namespace Loss {
+
+double Loss::calc_loss(const Tensor& obs, const Tensor& pred) const {
+    if (obs.data_size[0] != pred.data_size[0]) {
+        throw std::invalid_argument("obs and pred must have the same number of items");
+    }
+    double loss = 0;
+    for (int i = 0; i < obs.data_size[0]; i++) {
+        loss += function(obs.data[i], pred.data[i]);
+    }
+    return loss;
+}
+
+Tensor Loss::calc_derivative(const Tensor& obs, const Tensor& pred) const {
+    if (obs.data_size[0] != pred.data_size[0]) {
+        throw std::invalid_argument("obs and pred must have the same number of items");
+    }
+    Tensor deriv = Tensor(pred.shape);
+    for (int i = 0; i < obs.data_size[0]; i++) {
+        deriv.data[i] = std::max(std::min(derivative(obs.data[i], pred.data[i]), clip), -clip);
+    }
+    return deriv;
+}
 
 /**
  * @brief The mean squared error loss function

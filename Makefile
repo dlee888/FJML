@@ -7,6 +7,11 @@ release: CFLAGS += -DNDEBUG
 release: all libFJML.so
 	sudo make install
 
+cuda: CFLAGS = -ccbin g++ -O3 --std=c++17 -DNDEBUG -DCUDA -lcublas --compiler-options
+cuda: CC = nvcc
+cuda: all libFJML.so
+	sudo make install
+
 debug: CFLAGS += -coverage -g -fsanitize=undefined
 debug: all libFJML.so
 	sudo make install
@@ -18,18 +23,19 @@ HEADERS = include/FJML/activations.h \
 		  include/FJML/loss.h \
 		  include/FJML/mlp.h \
 		  include/FJML/optimizers.h
-CFILES = bin/activations/activations.o \
-		 bin/data/data.o \
-		 bin/layers/dense.o bin/layers/layers.o bin/layers/softmax.o \
-		 bin/loss/loss.o \
-		 bin/mlp/mlp.o \
-		 bin/optimizers/SGD.o bin/optimizers/adam.o 
+CFILES = bin/activations.o \
+		 bin/data.o \
+		 bin/dense.o bin/layers.o bin/softmax.o \
+		 bin/linalg.o bin/tensor.o \
+		 bin/loss.o \
+		 bin/mlp.o \
+		 bin/adam.o bin/SGD.o 
 
-bin/%.o: src/FJML/%.cpp $(HEADERS) init
+bin/%.o: src/%.cpp $(HEADERS) init
 	$(CC) -c $(CFLAGS) -fPIC $< -o $@
 
 all: $(CFILES)
-	$(CC) -shared $(CFLAGS) $(CFILES) -o libFJML.so
+	$(CC) $(CFLAGS) -shared $(CFILES) -o libFJML.so
 
 install: libFJML.so
 	rm -rf /usr/local/include/FJML
@@ -38,7 +44,7 @@ install: libFJML.so
 	ldconfig /usr/local/lib
 
 init:
-	mkdir -p bin/activations bin/data bin/layers bin/loss bin/mlp bin/optimizers
+	mkdir -p bin
 
 docs: src/**/* include/**/* doxygen.conf
 	doxygen doxygen.conf

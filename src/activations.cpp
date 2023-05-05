@@ -3,11 +3,44 @@
 
 #include <cmath>
 
-#include "../../../include/FJML/activations.h"
+#include "../include/FJML/activations.h"
 
 namespace FJML {
 
 namespace Activations {
+
+Activation::Activation(std::string name, std::function<double(double)> func, std::function<double(double)> derivative)
+    : name{name}, func{func}, derivative{derivative} {}
+
+Tensor Activation::apply(Tensor& layer) const {
+    for (auto& x : layer) {
+        x = func(x);
+    }
+    return layer;
+}
+
+Tensor Activation::apply_derivative(Tensor& layer) const {
+    for (auto& x : layer) {
+        x = derivative(x);
+    }
+    return layer;
+}
+
+Tensor Activation::forward(const Tensor& layer) const {
+    Tensor result = layer;
+    for (auto& x : result) {
+        x = func(x);
+    }
+    return result;
+}
+
+Tensor Activation::backward(const Tensor& layer) const {
+    Tensor result = layer;
+    for (auto& x : result) {
+        x = derivative(x);
+    }
+    return result;
+}
 
 /**
  * The sigmoid function.

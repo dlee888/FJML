@@ -53,7 +53,7 @@ class Optimizer {
      * @param params The parameters to be updated
      * @param grads The gradients to be applied
      */
-    virtual void apply_grad(Tensor<double>& params, const Tensor<double>& grads) {
+    virtual void apply_grad(Tensor& params, const Tensor& grads) {
         std::cerr << "Optimizer not implemented" << std::endl;
     }
 
@@ -90,7 +90,7 @@ class SGD : public Optimizer {
      * @param params The parameters to be updated
      * @param grads The gradients to be applied
      */
-    void apply_grad(Tensor<double>& params, const Tensor<double>& grads) override;
+    void apply_grad(Tensor& params, const Tensor& grads) override;
 
     /**
      * Clone the optimizer
@@ -107,11 +107,11 @@ class Adam : public Optimizer {
     /**
      * @brief The first momentum
      */
-    Tensor<double> m;
+    Tensor m;
     /**
      * @brief The second momentum
      */
-    Tensor<double> v;
+    Tensor v;
     /**
      * @brief The time step
      */
@@ -121,7 +121,7 @@ class Adam : public Optimizer {
      * Helper function to initialize the first and second momentums
      * @param params The parameters to be updated
      */
-    void init(const Tensor<double>& params);
+    void init(const Tensor& params);
 
   public:
     /**
@@ -161,7 +161,7 @@ class Adam : public Optimizer {
      * @param params The parameters to be updated
      * @param grads The gradients to be applied
      */
-    void apply_grad(Tensor<double>& params, const Tensor<double>& grads) override;
+    void apply_grad(Tensor& params, const Tensor& grads) override;
 
     /**
      * Clone the optimizer
