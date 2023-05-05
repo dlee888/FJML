@@ -108,7 +108,13 @@ class Tensor {
      * @param vec the vector to create the tensor from
      * @return a tensor with the given vector as its data
      */
-    template <typename __elem> static Tensor array(std::vector<__elem> vec);
+    template <typename __elem> static Tensor array(std::vector<__elem> vec) {
+        std::vector<Tensor> tensors;
+        for (int i = 0; i < (int)vec.size(); i++) {
+            tensors.push_back(array(vec[i]));
+        }
+        return array(tensors);
+    }
 
     /**
      * Returns the number of dimensions of the tensor
