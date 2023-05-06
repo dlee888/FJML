@@ -8,10 +8,19 @@
 #include <functional>
 #include <vector>
 
+#ifdef CUDA
+#include <cublas_v2.h>
+#endif
+
 #pragma GCC target("avx2,fma")
 #pragma GCC optimize("O3,unroll-loops")
 
 namespace FJML {
+
+/**
+ * An enum for what device a tensor lives on.
+ */
+enum Device { DEVICE_CPU, DEVICE_CUDA };
 
 /**
  * This class represents an N dimensional tensor of doubles.
@@ -31,6 +40,10 @@ class Tensor {
      * Element i contains the number of elements in the ith dimension
      */
     std::vector<int> data_size;
+    /**
+     * The device this tensor lives on.
+     */
+    const Device device;
 
     /**
      * Default constructor
@@ -40,9 +53,10 @@ class Tensor {
     /**
      * Creates a tensor with the given shape
      * @param shape the shape of the tensor
-     * @param init the initial value of the tensor, default is 0 or whatever the default constructor of double is
+     * @param init the initial value of the tensor, default is 0
+     * @param device the device this tensor lives on
      */
-    Tensor(const std::vector<int>& shape, const double& init = 0);
+    Tensor(const std::vector<int>& shape, double init = 0, Device device = DEVICE_CPU);
 
     /**
      * Copy constructor
@@ -69,52 +83,65 @@ class Tensor {
     ~Tensor();
 
     /**
-     * Creates a tensor with the given shape, filled with zeros (or whatever the default constructor of double is)
+     * Creates a tensor with the given shape, filled with zeros
      * @param shape the shape of the tensor
-     * @return a tensor with the given shape, filled with zeros (or whatever the default constructor of double is)
+     * @param device the device this tensor lives on
+     * @return a tensor with the given shape, filled with zeros
      */
-    static Tensor zeros(const std::vector<int>& shape);
+    static Tensor zeros(const std::vector<int>& shape, Device device = DEVICE_CPU);
 
     /**
      * Creates a tensor with the given shape, filled with ones
      * @param shape the shape of the tensor
+     * @param device the device this tensor lives on
      * @return a tensor with the given shape, filled with ones
      */
-    static Tensor ones(const std::vector<int>& shape);
+    static Tensor ones(const std::vector<int>& shape, Device device = DEVICE_CPU);
 
     /**
      * Creates a tensor with the given shape, filled with random values
      * @param shape the shape of the tensor
+     * @param device the device this tensor lives on
      * @return a tensor with the given shape, filled with random values
      */
-    static Tensor rand(const std::vector<int>& shape);
+    static Tensor rand(const std::vector<int>& shape, Device device = DEVICE_CPU);
 
     /**
      * Create a tensor from a given vector
      * @param vec the vector to create the tensor from
+     * @param device the device this tensor lives on
      * @return a tensor with the given vector as its data
      */
-    static Tensor array(const std::vector<double>& vec);
+    static Tensor array(const std::vector<double>& vec, Device device = DEVICE_CPU);
 
     /**
      * Create a tensor from a given vector
      * @param vec the vector to create the tensor from
+     * @param device the device this tensor lives on
      * @return a tensor with the given vector as its data
      */
-    static Tensor array(const std::vector<Tensor>& vec);
+    static Tensor array(const std::vector<Tensor>& vec, Device device = DEVICE_CPU);
 
     /**
      * Create a tensor from a given vector
      * @param vec the vector to create the tensor from
+     * @param device the device this tensor lives on
      * @return a tensor with the given vector as its data
      */
-    template <typename __elem> static Tensor array(std::vector<__elem> vec) {
+    template <typename __elem> static Tensor array(std::vector<__elem> vec, Device device = DEVICE_CPU) {
         std::vector<Tensor> tensors;
         for (int i = 0; i < (int)vec.size(); i++) {
-            tensors.push_back(array(vec[i]));
+            tensors.emplace_back(array(vec[i], device));
         }
-        return array(tensors);
+        return array(tensors, device);
     }
+
+    /**
+     * Convert the tensor to a different device
+     * @param device the device to convert to
+     * @return a tensor with the same data, but on a different device
+     */
+    Tensor to_device(Device device) const;
 
     /**
      * Returns the number of dimensions of the tensor

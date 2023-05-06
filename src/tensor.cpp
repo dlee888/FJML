@@ -2,83 +2,200 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <cstdarg>
+#include <iostream>
 #include <numeric>
+
+#ifdef CUDA
+#include <cublas_v2.h>
+#include <cuda_runtime.h>
+#endif
 
 #include "../include/FJML/tensor.h"
 
 namespace FJML {
 
-Tensor::Tensor() {}
+Tensor::Tensor() : data{nullptr}, shape(0), data_size{1}, device{DEVICE_CPU} {}
 
-Tensor::Tensor(const std::vector<int>& shape, const double& init) {
-    this->shape = shape;
+Tensor::Tensor(const std::vector<int>& shape, double init, Device device) : shape{shape}, device{device} {
+    // std::cerr << "Creating tensor with shape: ";
+    // for (int i = 0; i < (int)this->shape.size(); i++) {
+    // std::cerr << this->shape[i] << " ";
+    //     if (this->shape[i] <= 0) {
+    //         throw std::runtime_error("Invalid shape: " + std::to_string(this->shape[i]) + " at index " +
+    //         std::to_string(i));
+    //     }
+    // }
+    // std::cerr << std::endl;
+    // std::cerr << "Copying shape" << std::endl;
     data_size = shape;
+    // std::cerr << "Hello there" << std::endl;
     for (int i = (int)shape.size() - 2; i >= 0; i--) {
         data_size[i] *= data_size[i + 1];
     }
     data_size.push_back(1);
-    data = new double[data_size[0]];
-    for (int i = 0; i < data_size[0]; i++) {
-        data[i] = init;
+    // std::cerr << "Hello there (2)" << std::endl;
+    if (device == DEVICE_CPU) {
+        // std::cerr << "Allocating CPU memory: " << data_size[0] << std::endl;
+        data = (double*)malloc(data_size[0] * sizeof(double));
+        // std::cerr << "Allocated CPU memory" << std::endl;
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] = init;
+        }
+    } else if (device == DEVICE_CUDA) {
+#ifdef CUDA
+        // std::cerr << "Allocating CUDA memory" << std::endl;
+        cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] = init;
+        }
+#else
+        throw std::runtime_error("The library was not compiled with CUDA support");
+#endif
+    } else {
+        throw std::runtime_error("Unsupported device");
+    }
+    // std::cerr << "Tensor created" << std::endl;
+}
+
+Tensor::Tensor(const Tensor& other) : device{other.device} {
+    // std::cerr << "Copying tensor" << std::endl;
+    shape = other.shape;
+    data_size = other.data_size;
+    // std::cerr << "Copying tensor: shape copied" << std::endl;
+    if (device == DEVICE_CPU) {
+        // std::cerr << "Copying tensor: CPU" << std::endl;
+        if (other.data == nullptr) {
+            // std::cerr << "Copying tensor: data is nullptr" << std::endl;
+            data = nullptr;
+            return;
+        }
+        data = (double*)malloc(data_size[0] * sizeof(double));
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] = other.data[i];
+        }
+    } else if (device == DEVICE_CUDA) {
+#ifdef CUDA
+        if (other.data == nullptr) {
+            data = nullptr;
+            return;
+        }
+        cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
+        memcpy(data, other.data, data_size[0] * sizeof(double));
+#else
+        throw std::runtime_error("The library was not compiled with CUDA support");
+#endif
+    } else {
+        throw std::runtime_error("Unsupported device");
     }
 }
 
-Tensor::Tensor(const Tensor& other) {
-    shape = other.shape;
-    data_size = other.data_size;
-    data = new double[data_size[0]];
-    for (int i = 0; i < data_size[0]; i++) {
-        data[i] = other.data[i];
-    }
-}
-
-Tensor::Tensor(Tensor&& other) {
-    shape = other.shape;
-    data_size = other.data_size;
-    data = std::move(other.data);
+Tensor::Tensor(Tensor&& other) : device{other.device} {
+    shape = std::move(other.shape);
+    data_size = std::move(other.data_size);
+    data = other.data;
     other.data = nullptr;
 }
 
+Tensor::~Tensor() {
+    if (device == DEVICE_CPU) {
+        free(data);
+    } else if (device == DEVICE_CUDA) {
+#ifdef CUDA
+        cudaFreeHost(data);
+#else
+        throw std::runtime_error("The library was not compiled with CUDA support");
+#endif
+    }
+}
+
 Tensor& Tensor::operator=(const Tensor& other) {
+    // std::cerr << "Copying tensor operator=" << std::endl;
     shape = other.shape;
     data_size = other.data_size;
-    data = new double[data_size[0]];
-    for (int i = 0; i < data_size[0]; i++) {
-        data[i] = other.data[i];
+    if (device == DEVICE_CPU) {
+        if (other.data == nullptr) {
+            free(data);
+            data = nullptr;
+            return *this;
+        }
+        free(data);
+        data = (double*)malloc(data_size[0] * sizeof(double));
+        for (int i = 0; i < data_size[0]; i++) {
+            data[i] = other.data[i];
+        }
+    } else if (device == DEVICE_CUDA) {
+#ifdef CUDA
+        if (other.data == nullptr) {
+            cudaFreeHost(data);
+            data = nullptr;
+            return *this;
+        }
+        cudaFreeHost(data);
+        cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
+        memcpy(data, other.data, data_size[0] * sizeof(double));
+#else
+        throw std::runtime_error("The library was not compiled with CUDA support");
+#endif
+    } else {
+        throw std::runtime_error("Unsupported device");
     }
     return *this;
 }
 
-Tensor::~Tensor() { delete[] data; }
+Tensor Tensor::zeros(const std::vector<int>& shape, Device device) { return Tensor(shape, 0.0, device); }
 
-Tensor Tensor::zeros(const std::vector<int>& shape) { return Tensor(shape, 0.0); }
+Tensor Tensor::ones(const std::vector<int>& shape, Device device) { return Tensor(shape, 1.0, device); }
 
-Tensor Tensor::ones(const std::vector<int>& shape) { return Tensor(shape, 1); }
-
-Tensor Tensor::rand(const std::vector<int>& shape) {
-    Tensor tensor(shape);
+Tensor Tensor::rand(const std::vector<int>& shape, Device device) {
+    Tensor tensor(shape, 0, device);
     for (int i = 0; i < tensor.data_size[0]; i++) {
         tensor.data[i] = double(std::rand()) / double(RAND_MAX);
     }
     return tensor;
 }
 
-Tensor Tensor::array(const std::vector<double>& vec) {
-    Tensor tensor({(int)vec.size()});
+Tensor Tensor::array(const std::vector<double>& vec, Device device) {
+    Tensor tensor({(int)vec.size()}, 0.0, device);
     for (int i = 0; i < (int)vec.size(); i++) {
         tensor.data[i] = vec[i];
     }
     return tensor;
 }
 
-Tensor Tensor::array(const std::vector<Tensor>& vec) {
+Tensor Tensor::array(const std::vector<Tensor>& vec, Device device) {
     std::vector<int> shape = vec[0].shape;
     shape.insert(shape.begin(), (int)vec.size());
-    Tensor tensor(shape);
+    Tensor tensor(shape, 0.0, device);
     for (int i = 0; i < (int)vec.size(); i++) {
         for (int j = 0; j < vec[i].data_size[0]; j++) {
             tensor.data[i * vec[i].data_size[0] + j] = vec[i].data[j];
         }
+    }
+    return tensor;
+}
+
+Tensor Tensor::to_device(Device device) const {
+    for (int i = 0; i < (int)shape.size(); i++) {
+        std::cerr << shape[i] << " ";
+        if (shape[i] == 0) {
+            throw std::runtime_error("Cannot move tensor to device: shape is not defined");
+        }
+    }
+    Tensor tensor(shape, 0.0, device);
+    if (device == DEVICE_CPU) {
+        for (int i = 0; i < data_size[0]; i++) {
+            tensor.data[i] = data[i];
+        }
+    } else if (device == DEVICE_CUDA) {
+#ifdef CUDA
+        cudaFreeHost(tensor.data);
+        cudaHostAlloc(&tensor.data, data_size[0] * sizeof(double), cudaHostAllocMapped);
+        memcpy(tensor.data, data, data_size[0] * sizeof(double));
+#else
+        throw std::runtime_error("The library was not compiled with CUDA support");
+#endif
+    } else {
+        throw std::runtime_error("Unsupported device");
     }
     return tensor;
 }

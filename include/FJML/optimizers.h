@@ -149,7 +149,7 @@ class Adam : public Optimizer {
      * @param b2 The second momentum
      */
     Adam(double a = 0.001, double b1 = 0.9, double b2 = 0.999)
-        : Optimizer{"Adam"}, m{{0}}, v{{0}}, t{1}, alpha{a}, beta1{b1}, beta2{b2} {}
+        : Optimizer{"Adam"}, t{1}, alpha{a}, beta1{b1}, beta2{b2} {}
     /**
      * @brief Destructor
      */

@@ -25,11 +25,6 @@ namespace FJML {
  */
 namespace LinAlg {
 
-#ifdef CUDA
-extern cublasHandle_t handle;
-extern bool cublas_handle_initialized;
-#endif
-
 /**
  * @brief Compute the dot product of two vectors.
  * @param a The first vector.

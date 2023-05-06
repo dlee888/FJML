@@ -20,7 +20,7 @@ namespace LinAlg {
 
 #ifdef CUDA
 cublasHandle_t handle;
-bool cublas_handle_initialized = false;
+bool handle_initialized = false;
 #endif
 
 double dot_product(const Tensor& a, const Tensor& b) {
@@ -35,126 +35,111 @@ double dot_product(const Tensor& a, const Tensor& b) {
 }
 
 Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
+#ifdef CUDA
+    if (!handle_initialized) {
+        cublasStatus_t status = cublasCreate(&handle);
+        if (status != CUBLAS_STATUS_SUCCESS) {
+            throw std::runtime_error("Cublas initialization failed");
+        }
+        handle_initialized = true;
+    }
+#endif
     if (a.dim() == 1 && b.dim() == 1) {
         Tensor result({a.shape[0], b.shape[0]});
+        if (a.device == DEVICE_CUDA && b.device == DEVICE_CUDA) {
 #ifdef CUDA
-        cublasStatus_t status = CUBLAS_STATUS_SUCCESS;
-        cudaError_t cuda_status;
+            cublasStatus_t status = CUBLAS_STATUS_SUCCESS;
 
-        double *d_a, *d_b, *d_result;
-        cuda_status = cudaMalloc((void**)&d_a, a.shape[0] * sizeof(double));
-        if (cuda_status != cudaSuccess) {
-            throw std::runtime_error("Cuda memory allocation failed");
-        }
-        cuda_status = cudaMalloc((void**)&d_b, b.shape[0] * sizeof(double));
-        if (cuda_status != cudaSuccess) {
-            throw std::runtime_error("Cuda memory allocation failed");
-        }
-        cuda_status = cudaMalloc((void**)&d_result, a.shape[0] * b.shape[0] * sizeof(double));
-        if (cuda_status != cudaSuccess) {
-            throw std::runtime_error("Cuda memory allocation failed");
-        }
+            double *d_a, *d_b, *d_result;
+            cudaHostGetDevicePointer(&d_a, a.data, 0);
+            cudaHostGetDevicePointer(&d_b, b.data, 0);
+            cudaHostGetDevicePointer(&d_result, result.data, 0);
 
-        if (!cublas_handle_initialized) {
-            cublas_handle_initialized = true;
-            status = cublasCreate(&handle);
+            // status = cublasSetMatrix(b.shape[0], 1, sizeof(double), b.data, b.shape[0], d_b, b.shape[0]);
+            // cudaMemcpy(d_b, b.data, b.shape[0] * sizeof(double), cudaMemcpyHostToDevice);
+            // if (status != CUBLAS_STATUS_SUCCESS) {
+            //     throw std::runtime_error("Cublas data upload failed");
+            // }
+            // status = cublasSetMatrix(1, a.shape[0], sizeof(double), a.data, 1, d_a, 1);
+            // cudaMemcpy(d_a, a.data, a.shape[0] * sizeof(double), cudaMemcpyHostToDevice);
+            // if (status != CUBLAS_STATUS_SUCCESS) {
+            //     throw std::runtime_error("Cublas data upload failed");
+            // }
+
+            const double alpha = 1, beta = 0;
+            status = cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, b.shape[0], a.shape[0], 1, &alpha, d_b, b.shape[0],
+                                 d_a, 1, &beta, d_result, b.shape[0]);
             if (status != CUBLAS_STATUS_SUCCESS) {
-                throw std::runtime_error("Cublas handle creation failed");
+                std::cerr << "Cublas matrix multiplication failed " << status << print_shape(a) << " " << print_shape(b)
+                          << std::endl;
+                throw std::runtime_error("Cublas matrix multiplication failed");
             }
-        }
 
-        status = cublasSetMatrix(b.shape[0], 1, sizeof(double), b.data, b.shape[0], d_b, b.shape[0]);
-        if (status != CUBLAS_STATUS_SUCCESS) {
-            throw std::runtime_error("Cublas data upload failed");
-        }
-        status = cublasSetMatrix(1, a.shape[0], sizeof(double), a.data, 1, d_a, 1);
-        if (status != CUBLAS_STATUS_SUCCESS) {
-            throw std::runtime_error("Cublas data upload failed");
-        }
-
-        const double alpha = 1, beta = 0;
-        status = cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, b.shape[0], a.shape[0], 1, &alpha, d_b, b.shape[0], d_a,
-                             1, &beta, d_result, b.shape[0]);
-        if (status != CUBLAS_STATUS_SUCCESS) {
-            throw std::runtime_error("Cublas matrix multiplication failed");
-        }
-
-        status = cublasGetMatrix(b.shape[0], a.shape[0], sizeof(double), d_result, b.shape[0], result.data, b.shape[0]);
-        if (status != CUBLAS_STATUS_SUCCESS) {
-            throw std::runtime_error("Cublas data download failed");
-        }
-        cudaFree(d_a);
-        cudaFree(d_b);
-        cudaFree(d_result);
-#else
-        for (int i = 0; i < a.shape[0]; i++) {
-            for (int j = 0; j < b.shape[0]; j++) {
-                result.data[i * b.shape[0] + j] = a.data[i] * b.data[j];
-            }
-        }
+            // status = cublasGetMatrix(b.shape[0], a.shape[0], sizeof(double), d_result, b.shape[0], result.data,
+            // b.shape[0]); if (status != CUBLAS_STATUS_SUCCESS) {
+            //     throw std::runtime_error("Cublas data download failed");
+            // }
+            // cudaFree(d_a);
+            // cudaFree(d_b);
+            // cudaFree(d_result);
 #endif
+        } else {
+            for (int i = 0; i < a.shape[0]; i++) {
+                for (int j = 0; j < b.shape[0]; j++) {
+                    result.data[i * b.shape[0] + j] = a.data[i] * b.data[j];
+                }
+            }
+        }
         return result;
     } else if (a.dim() == 1 && b.dim() == 2) {
         if (a.shape[0] != b.shape[0]) {
             throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
         }
         Tensor result({b.shape[1]});
+        if (a.device == DEVICE_CUDA && b.device == DEVICE_CUDA) {
 #ifdef CUDA
-        cublasStatus_t status = CUBLAS_STATUS_SUCCESS;
-        cudaError_t cuda_status;
+            cublasStatus_t status = CUBLAS_STATUS_SUCCESS;
 
-        double *d_a, *d_b, *d_result;
-        cuda_status = cudaMalloc((void**)&d_a, a.shape[0] * sizeof(double));
-        if (cuda_status != cudaSuccess) {
-            throw std::runtime_error("Cuda memory allocation failed");
-        }
-        cuda_status = cudaMalloc((void**)&d_b, b.data_size[0] * sizeof(double));
-        if (cuda_status != cudaSuccess) {
-            throw std::runtime_error("Cuda memory allocation failed");
-        }
-        cuda_status = cudaMalloc((void**)&d_result, b.shape[1] * sizeof(double));
-        if (cuda_status != cudaSuccess) {
-            throw std::runtime_error("Cuda memory allocation failed");
-        }
+            double *d_a, *d_b, *d_result;
+            cudaHostGetDevicePointer(&d_a, a.data, 0);
+            cudaHostGetDevicePointer(&d_b, b.data, 0);
+            cudaHostGetDevicePointer(&d_result, result.data, 0);
 
-        if (!cublas_handle_initialized) {
-            cublas_handle_initialized = true;
-            status = cublasCreate(&handle);
+            // status = cublasSetMatrix(b.shape[1], b.shape[0], sizeof(double), b.data, b.shape[1], d_b, b.shape[1]);
+            // cudaMemcpy(d_b, b.data, b.data_size[0] * sizeof(double), cudaMemcpyHostToDevice);
+            // if (status != CUBLAS_STATUS_SUCCESS) {
+            //     throw std::runtime_error("Cublas data upload failed");
+            // }
+            // status = cublasSetVector(a.shape[0], sizeof(double), a.data, 1, d_a, 1);
+            // cudaMemcpy(d_a, a.data, a.shape[0] * sizeof(double), cudaMemcpyHostToDevice);
+            // if (status != CUBLAS_STATUS_SUCCESS) {
+            //     throw std::runtime_error("Cublas data upload failed");
+            // }
+
+            const double alpha = 1, beta = 0;
+            status = cublasDgemv(handle, CUBLAS_OP_N, b.shape[1], b.shape[0], &alpha, d_b, b.shape[1], d_a, 1, &beta,
+                                 d_result, 1);
             if (status != CUBLAS_STATUS_SUCCESS) {
-                throw std::runtime_error("Cublas handle creation failed");
+                std::cerr << "Cublas matrix multiplication failed " << status << print_shape(a) << " " << print_shape(b)
+                          << std::endl;
+                throw std::runtime_error("Cublas matrix multiplication failed");
             }
-        }
 
-        status = cublasSetMatrix(b.shape[1], b.shape[0], sizeof(double), b.data, b.shape[1], d_b, b.shape[1]);
-        if (status != CUBLAS_STATUS_SUCCESS) {
-            throw std::runtime_error("Cublas data upload failed");
-        }
-        status = cublasSetVector(a.shape[0], sizeof(double), a.data, 1, d_a, 1);
-        if (status != CUBLAS_STATUS_SUCCESS) {
-            throw std::runtime_error("Cublas data upload failed");
-        }
-
-        const double alpha = 1, beta = 0;
-        status = cublasDgemv(handle, CUBLAS_OP_N, b.shape[1], b.shape[0], &alpha, d_b, b.shape[1], d_a, 1, &beta,
-                             d_result, 1);
-        if (status != CUBLAS_STATUS_SUCCESS) {
-            throw std::runtime_error("Cublas matrix multiplication failed");
-        }
-
-        status = cublasGetVector(b.shape[1], sizeof(double), d_result, 1, result.data, 1);
-        if (status != CUBLAS_STATUS_SUCCESS) {
-            throw std::runtime_error("Cublas data download failed");
-        }
-        cudaFree(d_a);
-        cudaFree(d_b);
-        cudaFree(d_result);
-#else
-        for (int j = 0; j < b.shape[0]; j++) {
-            for (int i = 0; i < b.shape[1]; i++) {
-                result.data[i] += a.data[j] * b.data[j * b.shape[1] + i];
-            }
-        }
+            // status = cublasGetVector(b.shape[1], sizeof(double), d_result, 1, result.data, 1);
+            // if (status != CUBLAS_STATUS_SUCCESS) {
+            //     throw std::runtime_error("Cublas data download failed");
+            // }
+            // cudaFree(d_a);
+            // cudaFree(d_b);
+            // cudaFree(d_result);
 #endif
+        } else {
+            for (int j = 0; j < b.shape[0]; j++) {
+                for (int i = 0; i < b.shape[1]; i++) {
+                    result.data[i] += a.data[j] * b.data[j * b.shape[1] + i];
+                }
+            }
+        }
         return result;
     } else if (a.dim() == 2 && b.dim() == 1) {
         if (a.shape[1] != b.shape[0]) {

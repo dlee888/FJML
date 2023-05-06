@@ -2,13 +2,19 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include "../include/FJML/data.h"
+#include <iostream>
 
 namespace FJML {
 
 namespace Data {
 
 Tensor one_hot(int x, int n) {
-    Tensor res({n});
+    // std::cerr << "One hot encoding " << x << " " << n << std::endl;
+    std::vector<int> shape;
+    shape.push_back(n);
+    // std::cerr << "Shape: " << shape[0] << std::endl;
+    // std::cerr << "Creating tensor" << std::endl;
+    Tensor res(shape);
     res.at(x) = 1;
     return res;
 }

@@ -30,7 +30,7 @@ void load_data(std::vector<FJML::Tensor>& x, std::vector<FJML::Tensor>& y, std::
         ss >> label;
 
         // The rest of the values are the pixels
-        FJML::Tensor pixels({28 * 28});
+        FJML::Tensor pixels({28 * 28}, 0.0, FJML::DEVICE_CPU);
         for (int i = 0; i < 28 * 28; i++) {
             int pixel;
             char comma;
@@ -53,8 +53,8 @@ int main() {
     // Load the data
     std::vector<FJML::Tensor> mnist_train_x, mnist_train_y;
     std::vector<FJML::Tensor> mnist_test_x, mnist_test_y;
-    load_data(mnist_train_x, mnist_train_y, "mnist_train.csv", 1000);
-    load_data(mnist_test_x, mnist_test_y, "mnist_test.csv", 500);
+    load_data(mnist_train_x, mnist_train_y, "mnist_train.csv");
+    load_data(mnist_test_x, mnist_test_y, "mnist_test.csv");
     std::cout << "Loaded " << mnist_train_x.size() << " training samples and " << mnist_test_x.size()
               << " testing samples" << std::endl;
 
