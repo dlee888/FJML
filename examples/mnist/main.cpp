@@ -30,7 +30,8 @@ void load_data(std::vector<FJML::Tensor>& x, std::vector<FJML::Tensor>& y, std::
         ss >> label;
 
         // The rest of the values are the pixels
-        FJML::Tensor pixels({28 * 28}, 0.0, FJML::DEVICE_CPU);
+        FJML::Tensor pixels({28 * 28}); // Uncomment the following line and comment this line to use the GPU
+        // FJML::Tensor pixels({28 * 28}, 0.0, FJML::DEVICE_CUDA);
         for (int i = 0; i < 28 * 28; i++) {
             int pixel;
             char comma;
@@ -40,7 +41,9 @@ void load_data(std::vector<FJML::Tensor>& x, std::vector<FJML::Tensor>& y, std::
 
         // Add the data to the vectors
         x.push_back(pixels);
-        y.push_back(FJML::Data::one_hot(label, 10));
+        y.push_back(FJML::Data::one_hot(label, 10)); // Uncomment the following line and comment this line to use the
+                                                     // GPU
+        // y.push_back(FJML::Data::one_hot(label, 10).to_device(FJML::DEVICE_CUDA));
 
         // Stop if we have enough data
         if (limit != -1 && (int)x.size() >= limit) {
@@ -87,3 +90,5 @@ int main() {
 
 // Compile with:
 // g++ -std=c++17 -O2 -o main main.cpp -lFJML
+// Or with GPU support:
+// nvcc --std=c++17 -DCUDA -O2 -o main main.cpp -lFJML

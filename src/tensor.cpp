@@ -17,33 +17,18 @@ namespace FJML {
 Tensor::Tensor() : data{nullptr}, shape(0), data_size{1}, device{DEVICE_CPU} {}
 
 Tensor::Tensor(const std::vector<int>& shape, double init, Device device) : shape{shape}, device{device} {
-    // std::cerr << "Creating tensor with shape: ";
-    // for (int i = 0; i < (int)this->shape.size(); i++) {
-    // std::cerr << this->shape[i] << " ";
-    //     if (this->shape[i] <= 0) {
-    //         throw std::runtime_error("Invalid shape: " + std::to_string(this->shape[i]) + " at index " +
-    //         std::to_string(i));
-    //     }
-    // }
-    // std::cerr << std::endl;
-    // std::cerr << "Copying shape" << std::endl;
     data_size = shape;
-    // std::cerr << "Hello there" << std::endl;
     for (int i = (int)shape.size() - 2; i >= 0; i--) {
         data_size[i] *= data_size[i + 1];
     }
     data_size.push_back(1);
-    // std::cerr << "Hello there (2)" << std::endl;
     if (device == DEVICE_CPU) {
-        // std::cerr << "Allocating CPU memory: " << data_size[0] << std::endl;
         data = (double*)malloc(data_size[0] * sizeof(double));
-        // std::cerr << "Allocated CPU memory" << std::endl;
         for (int i = 0; i < data_size[0]; i++) {
             data[i] = init;
         }
     } else if (device == DEVICE_CUDA) {
 #ifdef CUDA
-        // std::cerr << "Allocating CUDA memory" << std::endl;
         cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
         for (int i = 0; i < data_size[0]; i++) {
             data[i] = init;
@@ -54,18 +39,13 @@ Tensor::Tensor(const std::vector<int>& shape, double init, Device device) : shap
     } else {
         throw std::runtime_error("Unsupported device");
     }
-    // std::cerr << "Tensor created" << std::endl;
 }
 
 Tensor::Tensor(const Tensor& other) : device{other.device} {
-    // std::cerr << "Copying tensor" << std::endl;
     shape = other.shape;
     data_size = other.data_size;
-    // std::cerr << "Copying tensor: shape copied" << std::endl;
     if (device == DEVICE_CPU) {
-        // std::cerr << "Copying tensor: CPU" << std::endl;
         if (other.data == nullptr) {
-            // std::cerr << "Copying tensor: data is nullptr" << std::endl;
             data = nullptr;
             return;
         }
@@ -109,28 +89,25 @@ Tensor::~Tensor() {
 }
 
 Tensor& Tensor::operator=(const Tensor& other) {
-    // std::cerr << "Copying tensor operator=" << std::endl;
     shape = other.shape;
     data_size = other.data_size;
     if (device == DEVICE_CPU) {
+        free(data);
         if (other.data == nullptr) {
-            free(data);
             data = nullptr;
             return *this;
         }
-        free(data);
         data = (double*)malloc(data_size[0] * sizeof(double));
         for (int i = 0; i < data_size[0]; i++) {
             data[i] = other.data[i];
         }
     } else if (device == DEVICE_CUDA) {
 #ifdef CUDA
+        cudaFreeHost(data);
         if (other.data == nullptr) {
-            cudaFreeHost(data);
             data = nullptr;
             return *this;
         }
-        cudaFreeHost(data);
         cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
         memcpy(data, other.data, data_size[0] * sizeof(double));
 #else
@@ -175,12 +152,6 @@ Tensor Tensor::array(const std::vector<Tensor>& vec, Device device) {
 }
 
 Tensor Tensor::to_device(Device device) const {
-    for (int i = 0; i < (int)shape.size(); i++) {
-        std::cerr << shape[i] << " ";
-        if (shape[i] == 0) {
-            throw std::runtime_error("Cannot move tensor to device: shape is not defined");
-        }
-    }
     Tensor tensor(shape, 0.0, device);
     if (device == DEVICE_CPU) {
         for (int i = 0; i < data_size[0]; i++) {
