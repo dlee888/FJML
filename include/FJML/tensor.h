@@ -17,6 +17,11 @@
 
 namespace FJML {
 
+#ifdef CUDA
+extern cublasHandle_t handle;
+extern bool handle_initialized;
+#endif
+
 /**
  * An enum for what device a tensor lives on.
  */
@@ -57,6 +62,13 @@ class Tensor {
      * @param device the device this tensor lives on
      */
     Tensor(const std::vector<int>& shape, double init = 0, Device device = DEVICE_CPU);
+
+    /**
+     * Creates a tensor with the given shape
+     * @param shape the shape of the tensor
+     * @param device the device this tensor lives on
+     */
+    Tensor(const std::vector<int>& shape, Device device);
 
     /**
      * Copy constructor

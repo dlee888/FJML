@@ -12,35 +12,13 @@ namespace Activations {
 Activation::Activation(std::string name, std::function<double(double)> func, std::function<double(double)> derivative)
     : name{name}, func{func}, derivative{derivative} {}
 
-Tensor Activation::apply(Tensor& layer) const {
-    for (auto& x : layer) {
-        x = func(x);
-    }
-    return layer;
-}
+Tensor Activation::apply(Tensor& layer) const { return layer.apply_function(func); }
 
-Tensor Activation::apply_derivative(Tensor& layer) const {
-    for (auto& x : layer) {
-        x = derivative(x);
-    }
-    return layer;
-}
+Tensor Activation::apply_derivative(Tensor& layer) const { return layer.apply_function(derivative); }
 
-Tensor Activation::forward(const Tensor& layer) const {
-    Tensor result = layer;
-    for (auto& x : result) {
-        x = func(x);
-    }
-    return result;
-}
+Tensor Activation::forward(const Tensor& layer) const { return layer.calc_function(func); }
 
-Tensor Activation::backward(const Tensor& layer) const {
-    Tensor result = layer;
-    for (auto& x : result) {
-        x = derivative(x);
-    }
-    return result;
-}
+Tensor Activation::backward(const Tensor& layer) const { return layer.calc_function(derivative); }
 
 /**
  * The sigmoid function.

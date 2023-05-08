@@ -78,6 +78,15 @@ int random_choice(const Tensor& a);
  */
 int argmax(const Tensor& a);
 
+/**
+ * Forward pass of a dense layer.
+ * @param input The input tensor.
+ * @param weights The weights tensor.
+ * @param bias The bias tensor.
+ * @return The output tensor.
+ */
+Tensor dense_forward(const Tensor& input, const Tensor& weights, const Tensor& bias);
+
 } // namespace LinAlg
 
 } // namespace FJML

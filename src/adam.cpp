@@ -11,8 +11,8 @@ namespace Optimizers {
 
 void Adam::init(const Tensor& params) {
     if (m.shape != params.shape) {
-        m = Tensor(params.shape);
-        v = Tensor(params.shape);
+        m = Tensor(params.shape, params.device);
+        v = Tensor(params.shape, params.device);
         t = 1;
     }
 }

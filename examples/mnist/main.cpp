@@ -30,8 +30,8 @@ void load_data(std::vector<FJML::Tensor>& x, std::vector<FJML::Tensor>& y, std::
         ss >> label;
 
         // The rest of the values are the pixels
-        FJML::Tensor pixels({28 * 28}); // Uncomment the following line and comment this line to use the GPU
-        // FJML::Tensor pixels({28 * 28}, 0.0, FJML::DEVICE_CUDA);
+        // FJML::Tensor pixels({28 * 28}); // Uncomment the following line and comment this line to use the GPU
+        FJML::Tensor pixels({28 * 28}, 0.0, FJML::DEVICE_CUDA);
         for (int i = 0; i < 28 * 28; i++) {
             int pixel;
             char comma;
@@ -41,9 +41,9 @@ void load_data(std::vector<FJML::Tensor>& x, std::vector<FJML::Tensor>& y, std::
 
         // Add the data to the vectors
         x.push_back(pixels);
-        y.push_back(FJML::Data::one_hot(label, 10)); // Uncomment the following line and comment this line to use the
-                                                     // GPU
-        // y.push_back(FJML::Data::one_hot(label, 10).to_device(FJML::DEVICE_CUDA));
+        // y.push_back(FJML::Data::one_hot(label, 10)); // Uncomment the following line and comment this line to use the
+        //                                              // GPU
+        y.push_back(FJML::Data::one_hot(label, 10).to_device(FJML::DEVICE_CUDA));
 
         // Stop if we have enough data
         if (limit != -1 && (int)x.size() >= limit) {
@@ -76,8 +76,9 @@ int main() {
     // 1. A vector of layers
     // 2. A loss function
     // 3. An optimizer
-    FJML::MLP model({new FJML::Layers::Dense(28 * 28, 128, FJML::Activations::relu),
-                     new FJML::Layers::Dense(128, 10, FJML::Activations::linear), new FJML::Layers::Softmax()},
+    // Change the device to FJML::DEVICE_CPU to use the CPU
+    FJML::MLP model({new FJML::Layers::Dense(28 * 28, 128, FJML::Activations::relu, FJML::DEVICE_CUDA),
+                     new FJML::Layers::Dense(128, 10, FJML::Activations::linear, FJML::DEVICE_CUDA), new FJML::Layers::Softmax()},
                     FJML::Loss::crossentropy, new FJML::Optimizers::Adam());
 
     // Train the model

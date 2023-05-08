@@ -13,22 +13,23 @@ namespace FJML {
 
 namespace Layers {
 
-Layers::Dense::Dense(int input, int output, Activations::Activation activ, Optimizers::Optimizer* opt, bool randomize)
-    : Layer{"Dense"}, input_size{input}, output_size{output}, weights{Tensor(std::vector<int>{input, output})},
-      bias{Tensor(std::vector<int>{output})}, activ{activ}, w_opt{opt->clone()}, b_opt{opt->clone()} {
-    if (randomize) {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::normal_distribution d(0.0, std::sqrt(2.0 / input));
-        for (int i = 0; i < input_size; i++) {
-            for (int j = 0; j < output_size; j++) {
-                weights.at(i, j) = d(gen);
-            }
+Layers::Dense::Dense(int input, int output, Activations::Activation activ, Device device)
+    : Layer{"Dense"}, input_size{input}, output_size{output}, weights{Tensor(std::vector<int>{input, output}, device)},
+      bias{Tensor(std::vector<int>{output}, device)}, activ{activ}, w_opt{nullptr}, b_opt{nullptr} {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::normal_distribution d(0.0, std::sqrt(2.0 / input));
+    for (int i = 0; i < input_size; i++) {
+        for (int j = 0; j < output_size; j++) {
+            weights.at(i, j) = d(gen);
         }
     }
 }
 
-Tensor Layers::Dense::apply(const Tensor& input) const { return LinAlg::matrix_multiply(input, weights) + bias; }
+Tensor Layers::Dense::apply(const Tensor& input) const {
+    Tensor res = LinAlg::dense_forward(input, weights, bias);
+    return activ.apply(res);
+}
 
 std::vector<Tensor> Layers::Dense::apply(const std::vector<Tensor>& input) const {
     std::vector<Tensor> res;
@@ -111,6 +112,8 @@ void Layers::Dense::summary() const {
 }
 
 void Layers::Dense::set_optimizer(const Optimizers::Optimizer* opt) {
+    delete w_opt;
+    delete b_opt;
     w_opt = opt->clone();
     b_opt = opt->clone();
 }

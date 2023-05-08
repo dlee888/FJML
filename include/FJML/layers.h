@@ -131,11 +131,9 @@ class Dense : public Layer {
      * @param input The number of nodes in the previous layer
      * @param output The number of nodes in this layer
      * @param activ The activation function to use
-     * @param opt The optimizer to use for the weights and bias
-     * @param randomize Whether to randomize the weights and bias
+     * @param device The device the weights and bias are stored on
      */
-    Dense(int input, int output, Activations::Activation activ = Activations::sigmoid,
-          Optimizers::Optimizer* opt = new Optimizers::SGD(), bool randomize = true);
+    Dense(int input, int output, Activations::Activation activ = Activations::sigmoid, Device device = DEVICE_CPU);
 
     /**
      * @brief Load a fully connected layer from a file

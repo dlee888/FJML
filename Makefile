@@ -1,7 +1,7 @@
 .PHONY: all init install docs clean coverage
 
 CC = g++
-CFLAGS = -O3 -std=c++17 -march=native
+CFLAGS = -O3 -std=c++17 -march=native -Wall -pedantic
 
 release: CFLAGS += -DNDEBUG
 release: all libFJML.so
