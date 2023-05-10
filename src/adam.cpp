@@ -10,7 +10,7 @@ namespace FJML {
 namespace Optimizers {
 
 void Adam::init(const Tensor& params) {
-    if (m.shape != params.shape) {
+    if (m.data_size[0] != params.data_size[0] || v.data_size[0] != params.data_size[0]) {
         m = Tensor(params.shape, params.device);
         v = Tensor(params.shape, params.device);
         t = 1;

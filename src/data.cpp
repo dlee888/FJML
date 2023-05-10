@@ -19,10 +19,9 @@ Tensor one_hot(int x, int n) {
     return res;
 }
 
-void split(const std::vector<Tensor>& input_set, const std::vector<Tensor>& output_set,
-           std::vector<Tensor>& input_train, std::vector<Tensor>& output_train, std::vector<Tensor>& input_test,
-           std::vector<Tensor>& output_test, double train_frac) {
-    int n = input_set.size();
+void split(const Tensor& input_set, const Tensor& output_set, Tensor& input_train, Tensor& output_train,
+           Tensor& input_test, Tensor& output_test, double train_frac) {
+    int n = input_set.shape[0];
     int train_n = n * train_frac;
 
     std::vector<int> indices(n);
@@ -31,17 +30,22 @@ void split(const std::vector<Tensor>& input_set, const std::vector<Tensor>& outp
     }
     std::random_shuffle(indices.begin(), indices.end());
 
-    input_train.clear();
-    output_train.clear();
-    input_test.clear();
-    output_test.clear();
+    input_train = Tensor({train_n, input_set.shape[1]}, input_set.device);
+    output_train = Tensor({train_n, output_set.shape[1]}, output_set.device);
+    input_test = Tensor({n - train_n, input_set.shape[1]}, input_set.device);
+    output_test = Tensor({n - train_n, output_set.shape[1]}, output_set.device);
+
     for (int i = 0; i < train_n; i++) {
-        input_train.push_back(input_set[indices[i]]);
-        output_train.push_back(output_set[indices[i]]);
+        memcpy(input_train.data + i * input_set.shape[1], input_set.data + indices[i] * input_set.shape[1],
+               input_set.shape[1] * sizeof(double));
+        memcpy(output_train.data + i * output_set.shape[1], output_set.data + indices[i] * output_set.shape[1],
+               output_set.shape[1] * sizeof(double));
     }
     for (int i = train_n; i < n; i++) {
-        input_test.push_back(input_set[indices[i]]);
-        output_test.push_back(output_set[indices[i]]);
+        memcpy(input_test.data + (i - train_n) * input_set.shape[1], input_set.data + indices[i] * input_set.shape[1],
+               input_set.shape[1] * sizeof(double));
+        memcpy(output_test.data + (i - train_n) * output_set.shape[1],
+               output_set.data + indices[i] * output_set.shape[1], output_set.shape[1] * sizeof(double));
     }
 }
 

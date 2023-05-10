@@ -26,59 +26,6 @@ Layers::Dense::Dense(int input, int output, Activations::Activation activ, Devic
     }
 }
 
-Tensor Layers::Dense::apply(const Tensor& input) const {
-    Tensor res = LinAlg::dense_forward(input, weights, bias);
-    return activ.apply(res);
-}
-
-std::vector<Tensor> Layers::Dense::apply(const std::vector<Tensor>& input) const {
-    std::vector<Tensor> res;
-    for (const Tensor& l : input) {
-        res.push_back(apply(l));
-    }
-    return res;
-}
-
-std::vector<Tensor> Layers::Dense::backward(const std::vector<Tensor>& input_vals,
-                                            const std::vector<Tensor>& output_grad) {
-    int n = input_vals.size();
-
-    Tensor w_grad({input_size, output_size});
-    Tensor b_grad({output_size});
-    std::vector<Tensor> prev_grad(n, Tensor({input_size}));
-
-    for (int datapoint = 0; datapoint < n; datapoint++) {
-        Tensor activ_grad = activ.backward(LinAlg::matrix_multiply(input_vals[datapoint], weights) + bias) *
-                            output_grad[datapoint];
-
-        w_grad += LinAlg::matrix_multiply(input_vals[datapoint], activ_grad);
-        b_grad += activ_grad;
-        prev_grad[datapoint] = LinAlg::matrix_multiply(weights, activ_grad);
-    }
-
-    w_grad /= n;
-    b_grad /= n;
-    w_opt->apply_grad(weights, w_grad);
-    b_opt->apply_grad(bias, b_grad);
-
-    return prev_grad;
-}
-
-void Layers::Dense::save(std::ofstream& file) const {
-    file << "Dense" << std::endl;
-    file << activ.name << std::endl;
-    file << input_size << " " << output_size << " ";
-    for (int i = 0; i < input_size; i++) {
-        for (int j = 0; j < output_size; j++) {
-            file << weights.at(i, j) << " ";
-        }
-    }
-    for (int i = 0; i < output_size; i++) {
-        file << bias.at(i) << " ";
-    }
-    file << std::endl;
-}
-
 Layers::Dense::Dense(std::ifstream& file)
     : Layer{"Dense"}, weights{{0}}, bias{{0}}, activ{Activations::Activation(
                                                    "", [](double x) { return x; }, [](double x) { return 1; })} {
@@ -104,6 +51,54 @@ Layers::Dense::Dense(std::ifstream& file)
     for (int i = 0; i < output_size; i++) {
         file >> bias.at(i);
     }
+}
+
+Dense::~Dense() {
+    delete w_opt;
+    delete b_opt;
+}
+
+Tensor Layers::Dense::apply(const Tensor& input) const {
+    Tensor res = LinAlg::dense_forward(input, weights, bias);
+    return activ.apply(res);
+}
+
+Tensor Layers::Dense::backward(const Tensor& input_vals, const Tensor& output_grad) {
+    int n = input_vals.shape[0];
+
+    Tensor activ_grad = activ.backward(LinAlg::dense_forward(input_vals, weights, bias)) * output_grad;
+
+    Tensor w_grad = LinAlg::matrix_multiply(LinAlg::transpose(input_vals), activ_grad);
+    Tensor b_grad = Tensor({output_size});
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < output_size; j++) {
+            b_grad.data[j] += activ_grad.data[i * output_size + j];
+        }
+    }
+
+    Tensor prev_grad = LinAlg::matrix_multiply(activ_grad, LinAlg::transpose(weights));
+
+    w_grad /= n;
+    b_grad /= n;
+    w_opt->apply_grad(weights, w_grad);
+    b_opt->apply_grad(bias, b_grad);
+
+    return prev_grad;
+}
+
+void Layers::Dense::save(std::ofstream& file) const {
+    file << "Dense" << std::endl;
+    file << activ.name << std::endl;
+    file << input_size << " " << output_size << " ";
+    for (int i = 0; i < input_size; i++) {
+        for (int j = 0; j < output_size; j++) {
+            file << weights.at(i, j) << " ";
+        }
+    }
+    for (int i = 0; i < output_size; i++) {
+        file << bias.at(i) << " ";
+    }
+    file << std::endl;
 }
 
 void Layers::Dense::summary() const {

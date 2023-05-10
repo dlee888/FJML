@@ -36,7 +36,8 @@ double dot_product(const Tensor& a, const Tensor& b);
 /**
  * @brief Multiplies two matrices.
  *
- * If the tensors are vectors, the first will be interpreted as a column vector, and the second will be interpreted as a row vector.
+ * If the tensors are vectors, the first will be interpreted as a column vector, and the second will be interpreted as a
+ * row vector.
  *
  * If `a` is a vector and `b` is a matrix, `a` will be interpreted as a row vector
  * If `b` is a vector and `a` is a matrix, `b` will be interpreted as a column vector
@@ -74,9 +75,11 @@ int random_choice(const Tensor& a);
  * Computes the index of the maximum value in a tensor.
  *
  * @param a The tensor.
+ * @param axis The axis to compute the maximum value along.
+ * @param index The index of the axis to compute the maximum value along.
  * @return The index of the maximum value in the tensor.
  */
-int argmax(const Tensor& a);
+int argmax(const Tensor& a, int axis = -1, int index = 0);
 
 /**
  * Forward pass of a dense layer.

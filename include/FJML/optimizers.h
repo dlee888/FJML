@@ -4,7 +4,6 @@
 #ifndef OPTIMIZERS_INCLUDED
 #define OPTIMIZERS_INCLUDED
 
-#include <iostream>
 #include <string>
 
 #include "linalg.h"
@@ -53,9 +52,7 @@ class Optimizer {
      * @param params The parameters to be updated
      * @param grads The gradients to be applied
      */
-    virtual void apply_grad(Tensor& params, const Tensor& grads) {
-        std::cerr << "Optimizer not implemented" << std::endl;
-    }
+    virtual void apply_grad(Tensor& params, const Tensor& grads) {}
 
     /**
      * Clone the optimizer
@@ -96,7 +93,7 @@ class SGD : public Optimizer {
      * Clone the optimizer
      * @return A pointer to a copy of the optimizer
      */
-    Optimizer* clone() const override { return new SGD(*this); }
+    Optimizer* clone() const override { return new SGD(this->alpha); }
 };
 
 /**
@@ -167,7 +164,7 @@ class Adam : public Optimizer {
      * Clone the optimizer
      * @return A pointer to a copy of the optimizer
      */
-    Optimizer* clone() const override { return new Adam(*this); }
+    Optimizer* clone() const override { return new Adam(this->alpha, this->beta1, this->beta2); }
 };
 
 } // namespace Optimizers

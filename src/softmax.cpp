@@ -10,58 +10,55 @@ namespace FJML {
 
 namespace Layers {
 
-Tensor Softmax::norm(const Tensor& input) const {
-    Tensor ret(input);
-    double max = input.at(0);
-    for (auto& i : ret) {
-        max = std::max(max, i);
-    }
-    for (auto& i : ret) {
-        i -= max;
-    }
-    return ret;
-}
-
 Tensor Softmax::apply(const Tensor& input) const {
-    Tensor res = norm(input);
-    double sum = 0;
-
-    for (double& d : res) {
-        d = exp(d);
-        sum += d;
-    }
-    for (double& d : res) {
-        d /= sum;
-    }
-
-    return res;
-}
-
-std::vector<Tensor> Softmax::apply(const std::vector<Tensor>& input) const {
-    std::vector<Tensor> res;
-    for (const Tensor& l : input) {
-        res.push_back(apply(l));
-    }
-    return res;
-}
-
-std::vector<Tensor> Softmax::backward(const std::vector<Tensor>& input_vals, const std::vector<Tensor>& output_grad) {
-    int n = input_vals.size(), m = input_vals[0].data_size[0];
-
-    std::vector<Tensor> res(n, Tensor{input_vals[0].shape});
-    for (int i = 0; i < n; i++) {
-        Tensor out = norm(input_vals[i]);
-
+    Tensor res = input;
+    for (int i = 0; i < res.shape[0]; i++) {
+        double max = res.data[0];
+        for (int j = 1; j < res.shape[1]; j++) {
+            if (res.data[i * res.shape[1] + j] > max) {
+                max = res.data[i * res.shape[1] + j];
+            }
+        }
         double sum = 0;
-        for (double& d : out) {
-            d = exp(d);
-            sum += d;
+        for (int j = 0; j < res.shape[1]; j++) {
+            res.data[i * res.shape[1] + j] = exp(res.data[i * res.shape[1] + j] - max);
+            sum += res.data[i * res.shape[1] + j];
+        }
+        for (int j = 0; j < res.shape[1]; j++) {
+            res.data[i * res.shape[1] + j] /= sum;
+        }
+    }
+    return res;
+}
+
+Tensor Softmax::backward(const Tensor& input_vals, const Tensor& output_grad) {
+    Tensor res{input_vals.shape, 0.0, input_vals.device};
+    Tensor out = input_vals;
+    for (int i = 0; i < res.shape[0]; i++) {
+        double max = out.data[i * res.shape[1]];
+        for (int j = 1; j < res.shape[1]; j++) {
+            if (out.data[i * res.shape[1] + j] > max) {
+                max = out.data[i * res.shape[1] + j];
+            }
+        }
+        double sum = 0;
+        for (int j = 0; j < res.shape[1]; j++) {
+            out.data[i * out.shape[1] + j] = exp(out.data[i * out.shape[1] + j] - max);
+            sum += out.data[i * out.shape[1] + j];
         }
 
         double denom = sum * sum;
-        for (int j = 0; j < m; j++) {
-            for (int k = 0; k < m; k++) {
-                res[i].data[j] += output_grad[i].at(k) * (out.at(j) * (k == j ? sum - out.at(j) : -out.at(k))) / denom;
+        for (int j = 0; j < res.shape[1]; j++) {
+            for (int k = 0; k < res.shape[1]; k++) {
+                if (j == k) {
+                    res.data[i * res.shape[1] + j] += (sum - out.data[i * res.shape[1] + k]) / denom *
+                                                      output_grad.data[i * res.shape[1] + k] *
+                                                      out.data[i * res.shape[1] + k];
+                } else {
+                    res.data[i * res.shape[1] + j] += -out.data[i * res.shape[1] + k] / denom *
+                                                      output_grad.data[i * res.shape[1] + k] *
+                                                      out.data[i * res.shape[1] + j];
+                }
             }
         }
     }

@@ -26,6 +26,8 @@ Tensor one_hot(int x, int n);
 /**
  * @brief Split data into training and testing sets
  *
+ * The data should be given as a matrix, where each row is a data point.
+ *
  * @param input_set The input data
  * @param output_set The output data
  * @param input_train The vector where the training input data will be stored
@@ -34,9 +36,8 @@ Tensor one_hot(int x, int n);
  * @param output_test The vector where the testing output data will be stored
  * @param train_frac The percentage of the data to be used for training (from 0.0 - 1.0)
  */
-void split(const std::vector<Tensor>& input_set, const std::vector<Tensor>& output_set,
-                  std::vector<Tensor>& input_train, std::vector<Tensor>& output_train, std::vector<Tensor>& input_test,
-                  std::vector<Tensor>& output_test, double train_frac = 0.8);
+void split(const Tensor& input_set, const Tensor& output_set, Tensor& input_train, Tensor& output_train,
+           Tensor& input_test, Tensor& output_test, double train_frac = 0.8);
 
 } // namespace Data
 

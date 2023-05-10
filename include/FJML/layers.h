@@ -58,13 +58,6 @@ class Layer {
     virtual Tensor apply(const Tensor& input) const { return input; }
 
     /**
-     * @brief Apply the layer to a batch of inputs
-     * @param input The batch of inputs to apply the layer to
-     * @return The batch of outputs of the layer
-     */
-    virtual std::vector<Tensor> apply(const std::vector<Tensor>& input) const { return input; }
-
-    /**
      * @brief Backpropagate through the layer
      *
      * Applies gradients to the parameters of the layer.
@@ -73,10 +66,7 @@ class Layer {
      * @param output_grad The batch of gradients of the loss with respect to the output of the layers
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
-    virtual std::vector<Tensor> backward(const std::vector<Tensor>& input_vals,
-                                         const std::vector<Tensor>& output_grad) {
-        return output_grad;
-    }
+    virtual Tensor backward(const Tensor& input_vals, const Tensor& output_grad) { return output_grad; }
 
     /**
      * Save the layer to a file
@@ -143,7 +133,7 @@ class Dense : public Layer {
     /**
      * @brief Destructor
      */
-    ~Dense() {}
+    ~Dense();
 
     /**
      * @brief Apply the layer to an input
@@ -153,20 +143,12 @@ class Dense : public Layer {
     Tensor apply(const Tensor& input) const override;
 
     /**
-     * Apply the layer to a batch of inputs
-     * @param input The batch of inputs to apply the layer to
-     * @return The batch of outputs of the layer
-     */
-    std::vector<Tensor> apply(const std::vector<Tensor>& input) const override;
-
-    /**
      * @brief Apply the gradient of the layer to a batch of inputs
      * @param input_vals The batch of inputs to apply the layer to
      * @param output_grad The batch of gradients of the loss with respect to the output of the layer
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
-    std::vector<Tensor> backward(const std::vector<Tensor>& input_vals,
-                                 const std::vector<Tensor>& output_grad) override;
+    Tensor backward(const Tensor& input_vals, const Tensor& output_grad) override;
 
     /**
      * @brief Save the layer to a file
@@ -195,8 +177,6 @@ class Dense : public Layer {
  * \f[\sigma(x_i) = \frac{e^{x_i}}{\sum_{j=1}^n e^{x_j}}\f]
  */
 class Softmax : public Layer {
-    Tensor norm(const Tensor& input) const;
-
   public:
     /**
      * @brief Constructor for a softmax layer
@@ -214,22 +194,12 @@ class Softmax : public Layer {
     Tensor apply(const Tensor& input) const override;
 
     /**
-     * @brief Apply the layer to a batch of inputs
-     *
-     * The softmax layer applies the softmax function to each input in the batch.
-     * @param input The batch of inputs to apply the layer to
-     * @return The batch of outputs of the layer
-     */
-    std::vector<Tensor> apply(const std::vector<Tensor>& input) const override;
-
-    /**
      * @brief Apply the gradient of the layer to a batch of inputs
      * @param input_vals The batch of inputs to apply the layer to
      * @param output_grad The batch of gradients of the loss with respect to the output of the layer
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
-    std::vector<Tensor> backward(const std::vector<Tensor>& input_vals,
-                                 const std::vector<Tensor>& output_grad) override;
+    Tensor backward(const Tensor& input_vals, const Tensor& output_grad) override;
 
     /**
      * @brief Save the layer to a file

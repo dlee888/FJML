@@ -90,7 +90,7 @@ class MLP {
      * @param y_test The target data
      * @return The loss
      */
-    double calc_loss(const std::vector<Tensor>& x_test, const std::vector<Tensor>& y_test) const;
+    double calc_loss(const Tensor& x_test, const Tensor& y_test) const;
 
     /**
      * @brief Calculate the accuracy of the model on a batch of data
@@ -101,7 +101,7 @@ class MLP {
      * @param y_test The target data
      * @return The accuracy
      */
-    double calc_accuracy(const std::vector<Tensor>& x_test, const std::vector<Tensor>& y_test) const;
+    double calc_accuracy(const Tensor& x_test, const Tensor& y_test) const;
 
     /**
      * Applies gradients in a backwards pass
@@ -109,7 +109,7 @@ class MLP {
      * @param input the input
      * @param grads the gradients of the output
      */
-    void backwards_pass(const std::vector<Tensor>& input, const std::vector<Tensor>& grads);
+    void backwards_pass(const Tensor& input, const Tensor& grads);
 
     /**
      * @brief Train the model on a batch of data
@@ -119,7 +119,7 @@ class MLP {
      * @param x_train The input data
      * @param y_train The target data
      */
-    void grad_descent(const std::vector<Tensor>& x_train, const std::vector<Tensor>& y_train);
+    void grad_descent(const Tensor& x_train, const Tensor& y_train);
 
     /**
      * @brief Save the model to a file
@@ -143,9 +143,8 @@ class MLP {
      * @param batch_size The size of the batches to train on
      * @param save_file The file to save the model to, or "" to not save
      */
-    void train(const std::vector<Tensor>& x_train, const std::vector<Tensor>& y_train,
-               const std::vector<Tensor>& x_test, const std::vector<Tensor>& y_test, int epochs, int batch_size,
-               const std::string& save_file);
+    void train(const Tensor& x_train, const Tensor& y_train, const Tensor& x_test, const Tensor& y_test, int epochs,
+               int batch_size, const std::string& save_file);
 
     /**
      * @brief Print a summary of the model

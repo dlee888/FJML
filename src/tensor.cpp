@@ -147,13 +147,12 @@ Tensor Tensor::array(const std::vector<double>& vec, Device device) {
 }
 
 Tensor Tensor::array(const std::vector<Tensor>& vec, Device device) {
-    std::vector<int> shape = vec[0].shape;
-    shape.insert(shape.begin(), (int)vec.size());
+    std::vector<int> shape;
+    shape.push_back((int)vec.size());
+    shape.insert(shape.end(), vec[0].shape.begin(), vec[0].shape.end());
     Tensor tensor(shape, 0.0, device);
     for (int i = 0; i < (int)vec.size(); i++) {
-        for (int j = 0; j < vec[i].data_size[0]; j++) {
-            tensor.data[i * vec[i].data_size[0] + j] = vec[i].data[j];
-        }
+        std::memcpy(tensor.data + i * vec[i].data_size[0], vec[i].data, vec[i].data_size[0] * sizeof(double));
     }
     return tensor;
 }
