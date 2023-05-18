@@ -2,6 +2,7 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <algorithm>
+#include <cstring>
 #include <cassert>
 #include <chrono>
 #include <iomanip>
@@ -117,10 +118,10 @@ void MLP::train(const Tensor& x_train, const Tensor& y_train, const Tensor& x_te
             Tensor x_batch(batch_shape_x);
             Tensor y_batch(batch_shape_y);
             for (int k = j; k < batch_end; k++) {
-                std::memcpy(x_batch.data + (k - j) * x_train.data_size[1],
-                            x_train.data + indices[k] * x_train.data_size[1], x_train.data_size[1] * sizeof(double));
-                std::memcpy(y_batch.data + (k - j) * y_train.data_size[1],
-                            y_train.data + indices[k] * y_train.data_size[1], y_train.data_size[1] * sizeof(double));
+                memcpy(x_batch.data + (k - j) * x_train.data_size[1], x_train.data + indices[k] * x_train.data_size[1],
+                       x_train.data_size[1] * sizeof(double));
+                memcpy(y_batch.data + (k - j) * y_train.data_size[1], y_train.data + indices[k] * y_train.data_size[1],
+                       y_train.data_size[1] * sizeof(double));
             }
             grad_descent(x_batch, y_batch);
         }
@@ -147,11 +148,18 @@ void MLP::save(std::string filename) const {
 
 void MLP::load(std::string filename) {
     std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cout << "File " << filename << " could not be opened" << std::endl;
+        throw std::invalid_argument("File " + filename + " could not be opened");
+    }
+    std::cout << "Loading model from " << filename << std::endl;
     int num_layers;
     file >> num_layers;
+    std::cout << "Number of layers: " << num_layers << std::endl;
     layers.clear();
     for (int i = 0; i < num_layers; i++) {
         layers.push_back(Layers::load(file));
+        std::cout << "Loaded layer " << i << ": " << layers[i]->name << std::endl;
     }
 }
 

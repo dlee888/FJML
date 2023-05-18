@@ -4,6 +4,7 @@
 #include <cstdarg>
 #include <iostream>
 #include <numeric>
+#include <cstring>
 
 #ifdef CUDA
 #include <cublas_v2.h>
@@ -89,8 +90,6 @@ Tensor::~Tensor() {
     } else if (device == DEVICE_CUDA) {
 #ifdef CUDA
         cudaFreeHost(data);
-#else
-        throw std::runtime_error("The library was not compiled with CUDA support");
 #endif
     }
 }
@@ -116,7 +115,7 @@ Tensor& Tensor::operator=(const Tensor& other) {
             return *this;
         }
         cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
-        memcpy(data, other.data, data_size[0] * sizeof(double));
+        std::memcpy(data, other.data, data_size[0] * sizeof(double));
 #else
         throw std::runtime_error("The library was not compiled with CUDA support");
 #endif
@@ -152,7 +151,7 @@ Tensor Tensor::array(const std::vector<Tensor>& vec, Device device) {
     shape.insert(shape.end(), vec[0].shape.begin(), vec[0].shape.end());
     Tensor tensor(shape, 0.0, device);
     for (int i = 0; i < (int)vec.size(); i++) {
-        std::memcpy(tensor.data + i * vec[i].data_size[0], vec[i].data, vec[i].data_size[0] * sizeof(double));
+        memcpy(tensor.data + i * vec[i].data_size[0], vec[i].data, vec[i].data_size[0] * sizeof(double));
     }
     return tensor;
 }

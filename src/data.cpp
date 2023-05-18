@@ -1,8 +1,9 @@
 // Copyright (c) 2023 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
+#include <cstring>
+
 #include "../include/FJML/data.h"
-#include <iostream>
 
 namespace FJML {
 

@@ -43,6 +43,11 @@ class Loss {
     std::function<double(double, double)> derivative;
 
     /**
+     * Default constructor
+     */
+    Loss() = default;
+
+    /**
      * Constructor
      *
      * Each function should take two arguments, the first is the label and the second is the prediction.
