@@ -31,6 +31,11 @@ class MLP {
     Loss::Loss loss_fn;
 
     /**
+     * @brief Default constructor for MLP
+     */
+    MLP() {}
+
+    /**
      * @brief Constructor for MLP
      * @param layers A vector of layers
      * @param loss The loss function to use

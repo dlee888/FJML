@@ -54,8 +54,12 @@ Layers::Dense::Dense(std::ifstream& file)
 }
 
 Dense::~Dense() {
-    delete w_opt;
-    delete b_opt;
+    if (w_opt) {
+        delete w_opt;
+    }
+    if (b_opt) {
+        delete b_opt;
+    }
 }
 
 Tensor Layers::Dense::apply(const Tensor& input) const {
