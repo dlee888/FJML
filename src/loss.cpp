@@ -24,7 +24,7 @@ Tensor Loss::calc_derivative(const Tensor& obs, const Tensor& pred) const {
     if (obs.data_size[0] != pred.data_size[0]) {
         throw std::invalid_argument("obs and pred must have the same number of items");
     }
-    Tensor deriv = Tensor(pred.shape);
+    Tensor deriv = Tensor(pred.shape, pred.device);
     for (int i = 0; i < obs.data_size[0]; i++) {
         deriv.data[i] = std::max(std::min(derivative(obs.data[i], pred.data[i]), clip), -clip);
     }

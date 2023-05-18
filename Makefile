@@ -3,18 +3,22 @@
 CC = g++
 CFLAGS = -O3 -std=c++17 -march=native -Wall -pedantic
 
-release: CFLAGS += -DNDEBUG
-release: all libFJML.so
-	sudo make install
+ifeq ($(debug), true)
+	CFLAGS += -g
+else
+	CFLAGS += -DNDEBUG
+endif
 
-cuda: CFLAGS = -ccbin g++ -O3 --std=c++17 -DNDEBUG -DCUDA -lcublas --compiler-options
-cuda: CC = nvcc
-cuda: all libFJML.so
-	sudo make install
-
-debug: CFLAGS += -coverage -g -fsanitize=undefined
-debug: all libFJML.so
-	sudo make install
+ifeq ($(arch), cuda)
+	CFLAGS = -ccbin g++ -O3 --std=c++17 -DCUDA -lcublas
+	CC = nvcc
+	ifeq ($(debug), true)
+		CFLAGS += -g -G
+	else
+		CFLAGS += -DNDEBUG
+	endif
+	CFLAGS += --compiler-options
+endif
 
 HEADERS = include/FJML/activations.h \
 		  include/FJML/data.h \
@@ -34,10 +38,10 @@ CFILES = bin/activations.o \
 bin/%.o: src/%.cpp $(HEADERS) init
 	$(CC) -c $(CFLAGS) -fPIC $< -o $@
 
-all: $(CFILES)
+libFJML.so: $(CFILES)
 	$(CC) $(CFLAGS) -shared $(CFILES) -o libFJML.so
 
-install: libFJML.so
+install:
 	rm -rf /usr/local/include/FJML
 	cp -r include/* /usr/local/include
 	cp libFJML.so /usr/local/lib

@@ -48,7 +48,7 @@ class Tensor {
     /**
      * The device this tensor lives on.
      */
-    const Device device;
+    Device device;
 
     /**
      * Default constructor
@@ -534,7 +534,7 @@ class Tensor {
      * @param f the function
      * @return the tensor with the function applied to each element
      */
-    Tensor apply_function(std::function<double(double)> f) const;
+    Tensor& apply_function(std::function<double(double)> f);
 
     /**
      * Applies a function to each element of the tensor
@@ -555,7 +555,7 @@ class Tensor {
      * @param other the other tensor
      * @return the tensor with the function applied to each element
      */
-    Tensor apply_function(std::function<double(double, double)> f, const Tensor& other) const;
+    Tensor& apply_function(std::function<double(double, double)> f, const Tensor& other);
 
     /**
      * Applies a function to each element of two tensors

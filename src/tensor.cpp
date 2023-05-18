@@ -89,39 +89,40 @@ Tensor::~Tensor() {
     } else if (device == DEVICE_CUDA) {
 #ifdef CUDA
         cudaFreeHost(data);
-#else
-        throw std::runtime_error("The library was not compiled with CUDA support");
 #endif
     }
 }
 
 Tensor& Tensor::operator=(const Tensor& other) {
-    shape = other.shape;
-    data_size = other.data_size;
+    if (other.device != DEVICE_CPU && other.device != DEVICE_CUDA) {
+        throw std::runtime_error("Unsupported device");
+    }
     if (device == DEVICE_CPU) {
-        free(data);
-        if (other.data == nullptr) {
-            data = nullptr;
-            return *this;
-        }
-        data = (double*)malloc(data_size[0] * sizeof(double));
-        for (int i = 0; i < data_size[0]; i++) {
-            data[i] = other.data[i];
+        if (data != nullptr) {
+            free(data);
         }
     } else if (device == DEVICE_CUDA) {
 #ifdef CUDA
-        cudaFreeHost(data);
-        if (other.data == nullptr) {
-            data = nullptr;
-            return *this;
+        if (data != nullptr) {
+            cudaFreeHost(data);
         }
-        cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
-        memcpy(data, other.data, data_size[0] * sizeof(double));
 #else
         throw std::runtime_error("The library was not compiled with CUDA support");
 #endif
+    }
+    device = other.device;
+    shape = other.shape;
+    data_size = other.data_size;
+    if (other.data == nullptr) {
+        data = nullptr;
+        return *this;
+    }
+    if (device == DEVICE_CPU) {
+        data = (double*)malloc(data_size[0] * sizeof(double));
+        memcpy(data, other.data, data_size[0] * sizeof(double));
     } else {
-        throw std::runtime_error("Unsupported device");
+        cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
+        memcpy(data, other.data, data_size[0] * sizeof(double));
     }
     return *this;
 }
@@ -396,7 +397,10 @@ Tensor& Tensor::operator+=(const Tensor& other) {
         double *d_data = data, *d_other_data = other.data;
         cudaHostGetDevicePointer(&d_data, data, 0);
         cudaHostGetDevicePointer(&d_other_data, other.data, 0);
-        cublasDaxpy(handle, data_size[0], &alpha, d_other_data, 1, d_data, 1);
+        cublasStatus_t status = cublasDaxpy(handle, data_size[0], &alpha, d_other_data, 1, d_data, 1);
+        if (status != CUBLAS_STATUS_SUCCESS) {
+            throw std::runtime_error("Tensor addition failed");
+        }
         return *this;
     }
 #endif
@@ -512,7 +516,10 @@ Tensor Tensor::operator*(double other) const {
         cudaHostGetDevicePointer(&d_data, data, 0);
         cudaHostGetDevicePointer(&d_result_data, result.data, 0);
         cublasDcopy(handle, data_size[0], d_data, 1, d_result_data, 1);
-        cublasDscal(handle, data_size[0], &alpha, d_result_data, 1);
+        cublasStatus_t status = cublasDscal(handle, data_size[0], &alpha, d_result_data, 1);
+        if (status != CUBLAS_STATUS_SUCCESS) {
+            throw std::runtime_error("Tensor multiplication failed");
+        }
         return result;
     }
 #endif
@@ -533,7 +540,10 @@ Tensor& Tensor::operator*=(double other) {
         const double alpha = other;
         double* d_data = data;
         cudaHostGetDevicePointer(&d_data, data, 0);
-        cublasDscal(handle, data_size[0], &alpha, d_data, 1);
+        cublasStatus_t status = cublasDscal(handle, data_size[0], &alpha, d_data, 1);
+        if (status != CUBLAS_STATUS_SUCCESS) {
+            throw std::runtime_error("Tensor multiplication failed");
+        }
         return *this;
     }
 #endif
@@ -556,7 +566,10 @@ Tensor Tensor::operator/(double other) const {
         cudaHostGetDevicePointer(&d_data, data, 0);
         cudaHostGetDevicePointer(&d_result_data, result.data, 0);
         cublasDcopy(handle, data_size[0], d_data, 1, d_result_data, 1);
-        cublasDscal(handle, data_size[0], &alpha, d_result_data, 1);
+        cublasStatus_t status = cublasDscal(handle, data_size[0], &alpha, d_result_data, 1);
+        if (status != CUBLAS_STATUS_SUCCESS) {
+            throw std::runtime_error("Tensor division failed");
+        }
         return result;
     }
 #endif
@@ -577,7 +590,10 @@ Tensor& Tensor::operator/=(double other) {
         const double alpha = 1.0 / other;
         double* d_data = data;
         cudaHostGetDevicePointer(&d_data, data, 0);
-        cublasDscal(handle, data_size[0], &alpha, d_data, 1);
+        cublasStatus_t status = cublasDscal(handle, data_size[0], &alpha, d_data, 1);
+        if (status != CUBLAS_STATUS_SUCCESS) {
+            throw std::runtime_error("Tensor division failed");
+        }
         return *this;
     }
 #endif
@@ -656,7 +672,8 @@ bool Tensor::operator==(const Tensor& other) const {
 
 bool Tensor::operator!=(const Tensor& other) const { return !(*this == other); }
 
-Tensor Tensor::apply_function(std::function<double(double)> f) const {
+Tensor& Tensor::apply_function(std::function<double(double)> f) {
+    std::cerr << "apply_function " << data_size[0] << " " << this << " " << data << std::endl;
     for (int i = 0; i < data_size[0]; i++) {
         data[i] = f(data[i]);
     }
@@ -671,7 +688,7 @@ Tensor Tensor::calc_function(std::function<double(double)> f) const {
     return result;
 }
 
-Tensor Tensor::apply_function(std::function<double(double, double)> f, const Tensor& other) const {
+Tensor& Tensor::apply_function(std::function<double(double, double)> f, const Tensor& other) {
     if (data_size[0] != other.data_size[0]) {
         throw std::invalid_argument("Tensors must have the same shape");
     }

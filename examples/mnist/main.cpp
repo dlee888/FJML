@@ -31,8 +31,7 @@ void load_data(FJML::Tensor& x, FJML::Tensor& y, std::string filename, int limit
         ss >> label;
 
         // The rest of the values are the pixels
-        // FJML::Tensor pixels({28 * 28}); // Uncomment the following line and comment this line to use the GPU
-        FJML::Tensor pixels({28 * 28}, 0.0, FJML::DEVICE_CUDA);
+        FJML::Tensor pixels({28 * 28});
         for (int i = 0; i < 28 * 28; i++) {
             int pixel;
             char comma;
@@ -42,9 +41,7 @@ void load_data(FJML::Tensor& x, FJML::Tensor& y, std::string filename, int limit
 
         // Add the data to the vectors
         x_vec.push_back(pixels);
-        // y_vec.push_back(FJML::Data::one_hot(label, 10)); // Uncomment the following line and comment this line to use
-        //                                                  // the GPU
-        y_vec.push_back(FJML::Data::one_hot(label, 10).to_device(FJML::DEVICE_CUDA));
+        y_vec.push_back(FJML::Data::one_hot(label, 10));
 
         // Stop if we have enough data
         if (limit != -1 && (int)x_vec.size() >= limit) {
@@ -53,8 +50,8 @@ void load_data(FJML::Tensor& x, FJML::Tensor& y, std::string filename, int limit
     }
 
     // Convert the vectors to tensors
-    x = FJML::Tensor::array(x_vec);
-    y = FJML::Tensor::array(y_vec);
+    x = FJML::Tensor::array(x_vec, FJML::DEVICE_CUDA);
+    y = FJML::Tensor::array(y_vec, FJML::DEVICE_CUDA);
 }
 
 int main() {
@@ -83,7 +80,6 @@ int main() {
     // 3. An optimizer
     // Change the device to FJML::DEVICE_CUDA to use the GPU
     FJML::MLP model({new FJML::Layers::Dense(28 * 28, 128, FJML::Activations::relu, FJML::DEVICE_CUDA),
-                     new FJML::Layers::Dense(128, 128, FJML::Activations::relu, FJML::DEVICE_CUDA),
                      new FJML::Layers::Dense(128, 10, FJML::Activations::linear, FJML::DEVICE_CUDA),
                      new FJML::Layers::Softmax()},
                     FJML::Loss::crossentropy, new FJML::Optimizers::Adam());

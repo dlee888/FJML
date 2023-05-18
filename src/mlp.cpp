@@ -114,8 +114,8 @@ void MLP::train(const Tensor& x_train, const Tensor& y_train, const Tensor& x_te
             std::vector<int> batch_shape_x = x_train.shape, batch_shape_y = y_train.shape;
             batch_shape_x[0] = batch_end - j;
             batch_shape_y[0] = batch_end - j;
-            Tensor x_batch(batch_shape_x);
-            Tensor y_batch(batch_shape_y);
+            Tensor x_batch(batch_shape_x, x_train.device);
+            Tensor y_batch(batch_shape_y, y_train.device);
             for (int k = j; k < batch_end; k++) {
                 std::memcpy(x_batch.data + (k - j) * x_train.data_size[1],
                             x_train.data + indices[k] * x_train.data_size[1], x_train.data_size[1] * sizeof(double));

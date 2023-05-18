@@ -141,8 +141,8 @@ Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
         cudaHostGetDevicePointer(&d_result, result.data, 0);
 
         const double alpha = 1, beta = 0;
-        status = cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, b.shape[1], a.shape[1], a.shape[0], &alpha, d_b,
-                             b.shape[0], d_a, a.shape[1], &beta, d_result, b.shape[0]);
+        status = cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, b.shape[1], a.shape[0], a.shape[1], &alpha, d_b,
+                             b.shape[1], d_a, a.shape[1], &beta, d_result, b.shape[1]);
         if (status != CUBLAS_STATUS_SUCCESS) {
             throw std::runtime_error("Cublas matrix multiplication failed");
         }
@@ -199,21 +199,6 @@ int argmax(const Tensor& a, int axis, int index) {
     if (axis < 0 || axis >= a.dim()) {
         throw std::invalid_argument("Invalid axis");
     }
-// #ifdef CUDA
-//     if (a.device == DEVICE_CUDA) {
-//         cublasStatus_t status = CUBLAS_STATUS_SUCCESS;
-//
-//         double* d_a;
-//         cudaHostGetDevicePointer(&d_a, a.data, 0);
-//
-//         int result;
-//         status = cublasIdamax(handle, a.shape[axis], d_a + index * a.data_size[axis + 1], 1, &result);
-//         if (status != CUBLAS_STATUS_SUCCESS) {
-//             throw std::runtime_error("Cublas argmax failed");
-//         }
-//         return result;
-//     }
-// #endif
     int result = 0;
     for (int i = 1; i < a.shape[axis]; i++) {
         if (a.data[index * a.data_size[axis] + i] > a.data[index * a.data_size[axis] + result]) {
@@ -250,8 +235,8 @@ Tensor dense_forward(const Tensor& input, const Tensor& weights, const Tensor& b
         }
 
         const double alpha = 1, beta = 1;
-        cublasStatus_t status = cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, weights.shape[1], weights.shape[0],
-                                            input.shape[1], &alpha, d_weights, weights.shape[1], d_input,
+        cublasStatus_t status = cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, weights.shape[1], input.shape[0],
+                                            weights.shape[0], &alpha, d_weights, weights.shape[1], d_input,
                                             input.shape[1], &beta, d_result, weights.shape[1]);
         if (status != CUBLAS_STATUS_SUCCESS) {
             throw std::runtime_error("Cublas matrix multiplication failed");
