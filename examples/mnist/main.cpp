@@ -50,8 +50,8 @@ void load_data(FJML::Tensor& x, FJML::Tensor& y, std::string filename, int limit
     }
 
     // Convert the vectors to tensors
-    x = FJML::Tensor::array(x_vec, FJML::DEVICE_CUDA);
-    y = FJML::Tensor::array(y_vec, FJML::DEVICE_CUDA);
+    x = FJML::Tensor::array(x_vec);
+    y = FJML::Tensor::array(y_vec);
 }
 
 int main() {
@@ -79,9 +79,8 @@ int main() {
     // 2. A loss function
     // 3. An optimizer
     // Change the device to FJML::DEVICE_CUDA to use the GPU
-    FJML::MLP model({new FJML::Layers::Dense(28 * 28, 128, FJML::Activations::relu, FJML::DEVICE_CUDA),
-                     new FJML::Layers::Dense(128, 10, FJML::Activations::linear, FJML::DEVICE_CUDA),
-                     new FJML::Layers::Softmax()},
+    FJML::MLP model({new FJML::Layers::Dense(28 * 28, 128, FJML::Activations::relu),
+                     new FJML::Layers::Dense(128, 10, FJML::Activations::linear), new FJML::Layers::Softmax()},
                     FJML::Loss::crossentropy, new FJML::Optimizers::Adam());
 
     // Train the model

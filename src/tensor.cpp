@@ -124,8 +124,12 @@ Tensor& Tensor::operator=(const Tensor& other) {
         data = (double*)malloc(data_size[0] * sizeof(double));
         memcpy(data, other.data, data_size[0] * sizeof(double));
     } else {
+#ifdef CUDA
         cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
         memcpy(data, other.data, data_size[0] * sizeof(double));
+#else
+        throw std::runtime_error("The library was not compiled with CUDA support");
+#endif
     }
     return *this;
 }
@@ -676,7 +680,7 @@ bool Tensor::operator==(const Tensor& other) const {
 bool Tensor::operator!=(const Tensor& other) const { return !(*this == other); }
 
 Tensor& Tensor::apply_function(std::function<double(double)> f) {
-    std::cerr << "apply_function " << data_size[0] << " " << this << " " << data << std::endl;
+    // std::cerr << "apply_function " << data_size[0] << " " << this << " " << data << std::endl;
     for (int i = 0; i < data_size[0]; i++) {
         data[i] = f(data[i]);
     }

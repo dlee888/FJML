@@ -13,4 +13,5 @@ coverage.info
 *.csv
 *.fjml
 examples/mnist/main
+examples/mnist/*prof*
 */**/*callgrind*

@@ -150,6 +150,7 @@ Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
     }
 #endif
     Tensor result({a.shape[0], b.shape[1]});
+#pragma omp parallel for
     for (int i = 0; i < a.shape[0]; i++) {
         for (int k = 0; k < a.shape[1]; k++) {
             for (int j = 0; j < b.shape[1]; j++) {
@@ -208,6 +209,16 @@ int argmax(const Tensor& a, int axis, int index) {
     return result;
 }
 
+double max(const Tensor& a) {
+    double result = a.data[0];
+    for (int i = 1; i < a.data_size[0]; i++) {
+        if (a.data[i] > result) {
+            result = a.data[i];
+        }
+    }
+    return result;
+}
+
 Tensor dense_forward(const Tensor& input, const Tensor& weights, const Tensor& bias) {
     if (input.dim() != 2 || weights.dim() != 2 || bias.dim() != 1) {
         throw std::invalid_argument("Invalid dimensions for dense layer");
@@ -245,6 +256,7 @@ Tensor dense_forward(const Tensor& input, const Tensor& weights, const Tensor& b
     }
 #endif
     Tensor result = matrix_multiply(input, weights);
+#pragma omp parallel for
     for (int i = 0; i < result.shape[0]; i++) {
         for (int j = 0; j < result.shape[1]; j++) {
             result.data[i * result.shape[1] + j] += bias.data[j];

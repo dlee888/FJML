@@ -82,6 +82,13 @@ int random_choice(const Tensor& a);
 int argmax(const Tensor& a, int axis = -1, int index = 0);
 
 /**
+ * Computes the maximum value in a tensor.
+ * @param a The tensor.
+ * @return The maximum value in the tensor.
+ */
+double max(const Tensor& a);
+
+/**
  * Forward pass of a dense layer.
  * @param input The input tensor.
  * @param weights The weights tensor.
