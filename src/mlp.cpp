@@ -2,9 +2,9 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <algorithm>
-#include <cstring>
 #include <cassert>
 #include <chrono>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 
@@ -36,10 +36,27 @@ static void progress_bar(int curr, int tot, int bar_width = 69, double time_elap
 namespace FJML {
 
 void MLP::grad_descent(const Tensor& x_train, const Tensor& y_train) {
+    // std::cerr << "Using const reference for grad_descent" << std::endl;
     int num_layers = layers.size();
 
     std::vector<Tensor> run_res(num_layers + 1);
     run_res[0] = x_train;
+    for (int i = 0; i < num_layers; i++) {
+        run_res[i + 1] = layers[i]->apply(run_res[i]);
+    }
+
+    Tensor out_grad = loss_fn.calc_derivative(y_train, run_res[num_layers]);
+    for (int i = num_layers - 1; i >= 0; i--) {
+        out_grad = layers[i]->backward(run_res[i], out_grad);
+    }
+}
+
+void MLP::grad_descent(Tensor&& x_train, Tensor&& y_train) {
+    // std::cerr << "Using rvalue reference for grad_descent" << std::endl;
+    int num_layers = layers.size();
+
+    std::vector<Tensor> run_res(num_layers + 1);
+    run_res[0] = std::move(x_train);
     for (int i = 0; i < num_layers; i++) {
         run_res[i + 1] = layers[i]->apply(run_res[i]);
     }
@@ -123,7 +140,7 @@ void MLP::train(const Tensor& x_train, const Tensor& y_train, const Tensor& x_te
                 memcpy(y_batch.data + (k - j) * y_train.data_size[1], y_train.data + indices[k] * y_train.data_size[1],
                        y_train.data_size[1] * sizeof(double));
             }
-            grad_descent(x_batch, y_batch);
+            grad_descent(std::move(x_batch), std::move(y_batch));
         }
         progress_bar(num_inputs, num_inputs, 69, time_elapsed);
         std::cout << std::endl;
@@ -149,17 +166,13 @@ void MLP::save(std::string filename) const {
 void MLP::load(std::string filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
-        std::cout << "File " << filename << " could not be opened" << std::endl;
         throw std::invalid_argument("File " + filename + " could not be opened");
     }
-    std::cout << "Loading model from " << filename << std::endl;
     int num_layers;
     file >> num_layers;
-    std::cout << "Number of layers: " << num_layers << std::endl;
     layers.clear();
     for (int i = 0; i < num_layers; i++) {
         layers.push_back(Layers::load(file));
-        std::cout << "Loaded layer " << i << ": " << layers[i]->name << std::endl;
     }
 }
 

@@ -2,6 +2,11 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include "../include/FJML/linalg.h"
+#include <cassert>
+
+#pragma GCC optimize("Ofast")
+#pragma GCC optimize("unroll-loops")
+#pragma GCC optimize("fast-math")
 
 static std::string print_shape(const FJML::Tensor& a) {
     std::string res = "(";
@@ -27,6 +32,145 @@ double dot_product(const Tensor& a, const Tensor& b) {
         res += a.data[i] * b.data[i];
     }
     return res;
+}
+
+/**
+ * Completes a micro kernel of matrix multiplication.
+ * @param a The first matrix.
+ * @param b The second matrix.
+ * @param c The result matrix.
+ * @param l The left bound of the multiplication.
+ * @param r The right bound of the multiplication.
+ * @param x The x coordinate of the upper left corner of the block.
+ * @param y The y coordinate of the upper left corner of the block.
+ * @param m The number of columns of the result matrix.
+ * @param w The number of columns of the first matrix.
+ */
+static void micro_kernel(double* __restrict__ a, double* __restrict__ b, double* __restrict__ c, int l, int r, int x,
+                         int y, int m, int w) {
+    for (int k = l; k < r; k++) {
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 8; j++) {
+                // assert(w == 969);
+                // assert(m == 969);
+                assert(i * m + x * m + j + y < 969 * m);
+                assert(i * w + x * w + k < 969 * w);
+                assert(k * m + j + y < w * m);
+                c[i * m + x * m + j + y] += a[i * w + x * w + k] * b[k * m + j + y];
+            }
+        }
+    }
+}
+
+/**
+ * Completes a micro kernel of matrix multiplication.
+ *
+ * This version is used when the number of columns of the first matrix is not divisible by 8.
+ * @param a The first matrix.
+ * @param b The second matrix.
+ * @param c The result matrix.
+ * @param l The left bound of the multiplication.
+ * @param r The right bound of the multiplication.
+ * @param x The x coordinate of the upper left corner of the block.
+ * @param y The y coordinate of the upper left corner of the block.
+ * @param m The number of columns of the result matrix.
+ * @param w The number of columns of the first matrix.
+ */
+static void var_micro_kernel1(double const* __restrict__ a, double const* __restrict__ b, double* __restrict__ c, int l,
+                              int r, int x, int y, int m, int w) {
+    // std::cerr << "var_micro_kernel1" << std::endl;
+    // std::cerr << "l = " << l << ", r = " << r << ", x = " << x << ", y = " << y << ", m = " << m << ", w = " << w
+    //           << std::endl;
+    for (int k = l; k < r; k++) {
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < m - y; j++) {
+                // std::cerr << "i = " << i << ", j = " << j << std::endl;
+                // std::cerr << "a[" << i * w + x * w + k << "] = " << a[i * w + x * w + k] << std::endl;
+                // std::cerr << "b[" << k * m + j + y << "] = " << b[k * m + j + y] << std::endl;
+                // std::cerr << "c[" << i * m + x * m + j + y << "] = " << c[i * m + x * m + j + y] << std::endl;
+                c[i * m + x * m + j + y] += a[i * w + x * w + k] * b[k * m + j + y];
+            }
+        }
+    }
+    // assert(0);
+}
+
+/**
+ * Completes a micro kernel of matrix multiplication.
+ *
+ * This version is used when the number of rows of the first matrix is not divisible by 6.
+ * @param a The first matrix.
+ * @param b The second matrix.
+ * @param c The result matrix.
+ * @param l The left bound of the multiplication.
+ * @param r The right bound of the multiplication.
+ * @param x The x coordinate of the upper left corner of the block.
+ * @param y The y coordinate of the upper left corner of the block.
+ * @param m The number of columns of the result matrix.
+ * @param w The number of columns of the first matrix.
+ */
+static void var_micro_kernel2(double const* __restrict__ a, double const* __restrict__ b, double* __restrict__ c, int l,
+                              int r, int x, int y, int n, int m, int w) {
+    // std::cerr << "var_micro_kernel2" << std::endl;
+    // std::cerr << "l = " << l << ", r = " << r << ", x = " << x << ", y = " << y << ", n = " << n << ", m = " << m
+    //           << ", w = " << w << std::endl;
+    for (int k = l; k < r; k++) {
+        for (int i = 0; i < n - x; i++) {
+            for (int j = 0; j < 8; j++) {
+                // std::cerr << "i = " << i << ", j = " << j << std::endl;
+                // std::cerr << a << " " << b << " " << c << std::endl;
+                // std::cerr << n << " " << m << " " << w << std::endl;
+                // std::cerr << "a[" << i * w + x * w + k << "] = " << a[i * w + x * w + k] << std::endl;
+                // std::cerr << "b[" << k * m + j + y << "] = " << b[k * m + j + y] << std::endl;
+                // std::cerr << "c[" << i * m + x * m + j + y << "] = " << c[i * m + x * m + j + y] << std::endl;
+                assert(i * m + x * m + j + y < n * m);
+                assert(i * w + x * w + k < n * w);
+                assert(k * m + j + y < w * m);
+                // std::cerr << "a[" << i * w + x * w + k << "] = " << a[i * w + x * w + k] << std::endl;
+                // std::cerr << "b[" << k * m + j + y << "] = " << b[k * m + j + y] << std::endl;
+                // std::cerr << "c[" << i * m + x * m + j + y << "] = " << c[i * m + x * m + j + y] << std::endl;
+                c[i * m + x * m + j + y] += a[i * w + x * w + k] * b[k * m + j + y];
+                assert(i * m + x * m + j + y < n * m);
+                assert(i * w + x * w + k < n * w);
+                assert(k * m + j + y < w * m);
+            }
+        }
+    }
+    // assert(0);
+}
+
+/**
+ * Completes a micro kernel of matrix multiplication.
+ *
+ * This version is used when the number of rows of the first matrix is not divisible by 6 and the number of columns of
+ * the first matrix is not divisible by 8.
+ * @param a The first matrix.
+ * @param b The second matrix.
+ * @param c The result matrix.
+ * @param l The left bound of the multiplication.
+ * @param r The right bound of the multiplication.
+ * @param x The x coordinate of the upper left corner of the block.
+ * @param y The y coordinate of the upper left corner of the block.
+ * @param m The number of columns of the result matrix.
+ * @param w The number of columns of the first matrix.
+ */
+static void var_micro_kernel3(double const* __restrict__ a, double const* __restrict__ b, double* __restrict__ c, int l,
+                              int r, int x, int y, int n, int m, int w) {
+    // std::cerr << "var_micro_kernel3" << std::endl;
+    // std::cerr << "l = " << l << ", r = " << r << ", x = " << x << ", y = " << y << ", n = " << n << ", m = " << m
+    //           << ", w = " << w << std::endl;
+    for (int k = l; k < r; k++) {
+        for (int i = 0; i < n - x; i++) {
+            for (int j = 0; j < m - y; j++) {
+                // std::cerr << "i = " << i << ", j = " << j << std::endl;
+                // std::cerr << "a[" << i * w + x * w + k << "] = " << a[i * w + x * w + k] << std::endl;
+                // std::cerr << "b[" << k * m + j + y << "] = " << b[k * m + j + y] << std::endl;
+                // std::cerr << "c[" << i * m + x * m + j + y << "] = " << c[i * m + x * m + j + y] << std::endl;
+                c[i * m + x * m + j + y] += a[i * w + x * w + k] * b[k * m + j + y];
+            }
+        }
+    }
+    // assert(0);
 }
 
 Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
@@ -150,14 +294,48 @@ Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
     }
 #endif
     Tensor result({a.shape[0], b.shape[1]});
+    const int s1 = 48, s2 = 48, s3 = 24;
 #pragma omp parallel for
-    for (int i = 0; i < a.shape[0]; i++) {
-        for (int k = 0; k < a.shape[1]; k++) {
-            for (int j = 0; j < b.shape[1]; j++) {
-                result.data[i * b.shape[1] + j] += a.data[i * a.shape[1] + k] * b.data[k * b.shape[1] + j];
+    for (int i3 = 0; i3 < b.shape[1]; i3 += s3) {
+        for (int i2 = 0; i2 < a.shape[0]; i2 += s2) {
+            for (int i1 = 0; i1 < a.shape[1]; i1 += s1) {
+                for (int x = i2; x < std::min(i2 + s2, a.shape[0]); x += 6) {
+                    if (x + 6 > a.shape[0]) {
+                        for (int y = i3; y < std::min(i3 + s3, b.shape[1]); y += 8) {
+                            // std::cerr << x << " " << y << " " << a.data << " " << b.data << std::endl;
+                            if (y + 8 > b.shape[1]) {
+                                var_micro_kernel3(a.data, b.data, result.data, i1, std::min(i1 + s1, a.shape[1]), x, y,
+                                                  a.shape[0], b.shape[1], b.shape[0]);
+                            } else {
+                                var_micro_kernel2(a.data, b.data, result.data, i1, std::min(i1 + s1, a.shape[1]), x, y,
+                                                  a.shape[0], b.shape[1], b.shape[0]);
+                            }
+                            // std::cerr << x << " " << y << " " << a.data << " " << b.data << std::endl;
+                        }
+                    } else {
+                        for (int y = i3; y < std::min(i3 + s3, b.shape[1]); y += 8) {
+                            // std::cerr << x << " " << y << " " << a.data << " " << b.data << std::endl;
+                            if (y + 8 > b.shape[1]) {
+                                var_micro_kernel1(a.data, b.data, result.data, i1, std::min(i1 + s1, a.shape[1]), x, y,
+                                                  b.shape[1], b.shape[0]);
+                            } else {
+                                micro_kernel(a.data, b.data, result.data, i1, std::min(i1 + s1, a.shape[1]), x, y,
+                                             b.shape[1], b.shape[0]);
+                            }
+                            // std::cerr << x << " " << y << " " << a.data << " " << b.data << std::endl;
+                        }
+                    }
+                }
             }
         }
     }
+    // for (int i = 0; i < a.shape[0]; i++) {
+    //     for (int k = 0; k < a.shape[1]; k++) {
+    //         for (int j = 0; j < b.shape[1]; j++) {
+    //             result.data[i * b.shape[1] + j] += a.data[i * a.shape[1] + k] * b.data[k * b.shape[1] + j];
+    //         }
+    //     }
+    // }
     return result;
 }
 

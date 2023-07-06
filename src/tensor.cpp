@@ -2,9 +2,10 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <cstdarg>
+#include <cstring>
 #include <iostream>
 #include <numeric>
-#include <cstring>
+#include <sstream>
 
 #ifdef CUDA
 #include <cublas_v2.h>
@@ -23,6 +24,7 @@ bool handle_initialized = false;
 Tensor::Tensor() : data{nullptr}, shape(0), data_size{1}, device{DEVICE_CPU} {}
 
 Tensor::Tensor(const std::vector<int>& shape, double init, Device device) : shape{shape}, device{device} {
+    // std::cerr << "Tensor::Tensor(const std::vector<int>& shape, double init, Device device) " << this << std::endl;
     data_size = shape;
     for (int i = (int)shape.size() - 2; i >= 0; i--) {
         data_size[i] *= data_size[i + 1];
@@ -50,6 +52,7 @@ Tensor::Tensor(const std::vector<int>& shape, double init, Device device) : shap
 Tensor::Tensor(const std::vector<int>& shape, Device device) : Tensor(shape, 0.0, device) {}
 
 Tensor::Tensor(const Tensor& other) : device{other.device} {
+    // std::cerr << "Tensor::Tensor(const Tensor& other) " << this << " " << &other << std::endl;
     shape = other.shape;
     data_size = other.data_size;
     if (device == DEVICE_CPU) {
@@ -78,6 +81,7 @@ Tensor::Tensor(const Tensor& other) : device{other.device} {
 }
 
 Tensor::Tensor(Tensor&& other) : device{other.device} {
+    // std::cerr << "Tensor::Tensor(Tensor&& other) " << this << " " << &other << std::endl;
     shape = std::move(other.shape);
     data_size = std::move(other.data_size);
     data = other.data;
@@ -85,6 +89,7 @@ Tensor::Tensor(Tensor&& other) : device{other.device} {
 }
 
 Tensor::~Tensor() {
+    // std::cerr << "Tensor::~Tensor() " << this << std::endl;
     if (device == DEVICE_CPU) {
         free(data);
     } else if (device == DEVICE_CUDA) {
@@ -95,6 +100,7 @@ Tensor::~Tensor() {
 }
 
 Tensor& Tensor::operator=(const Tensor& other) {
+    // std::cerr << "Tensor& Tensor::operator=(const Tensor& other) " << this << " " << &other << std::endl;
     if (other.device != DEVICE_CPU && other.device != DEVICE_CUDA) {
         throw std::runtime_error("Unsupported device");
     }
@@ -131,6 +137,16 @@ Tensor& Tensor::operator=(const Tensor& other) {
         throw std::runtime_error("The library was not compiled with CUDA support");
 #endif
     }
+    return *this;
+}
+
+Tensor& Tensor::operator=(Tensor&& other) {
+    // std::cerr << "Tensor& Tensor::operator=(Tensor&& other) " << this << " " << &other << std::endl;
+    free(data);
+    shape = std::move(other.shape);
+    data_size = std::move(other.data_size);
+    data = other.data;
+    other.data = nullptr;
     return *this;
 }
 
@@ -643,6 +659,12 @@ std::ostream& operator<<(std::ostream& os, const Tensor& tensor) {
     return os;
 }
 
+std::string Tensor::to_string() const {
+    std::stringstream ss;
+    print(ss, 0, 0);
+    return ss.str();
+}
+
 void Tensor::print(std::ostream& os, int dim, int index) const {
     if (dim == (int)shape.size() - 1) {
         os << "[";
@@ -679,12 +701,11 @@ bool Tensor::operator==(const Tensor& other) const {
 
 bool Tensor::operator!=(const Tensor& other) const { return !(*this == other); }
 
-Tensor& Tensor::apply_function(std::function<double(double)> f) {
-    // std::cerr << "apply_function " << data_size[0] << " " << this << " " << data << std::endl;
+void Tensor::apply_function(std::function<double(double)> f) {
+    // std::cerr << "apply_function" << std::endl;
     for (int i = 0; i < data_size[0]; i++) {
         data[i] = f(data[i]);
     }
-    return *this;
 }
 
 Tensor Tensor::calc_function(std::function<double(double)> f) const {
@@ -695,14 +716,13 @@ Tensor Tensor::calc_function(std::function<double(double)> f) const {
     return result;
 }
 
-Tensor& Tensor::apply_function(std::function<double(double, double)> f, const Tensor& other) {
+void Tensor::apply_function(std::function<double(double, double)> f, const Tensor& other) {
     if (data_size[0] != other.data_size[0]) {
         throw std::invalid_argument("Tensors must have the same shape");
     }
     for (int i = 0; i < data_size[0]; i++) {
         data[i] = f(data[i], other.data[i]);
     }
-    return *this;
 }
 
 Tensor Tensor::calc_function(std::function<double(double, double)> f, const Tensor& other) const {

@@ -90,6 +90,13 @@ class Tensor {
     Tensor& operator=(const Tensor& other);
 
     /**
+     * Move assignment operator
+     * @param other the tensor to move
+     * @return a reference to this tensor
+     */
+    Tensor& operator=(Tensor&& other);
+
+    /**
      * Destructor
      */
     ~Tensor();
@@ -502,6 +509,12 @@ class Tensor {
      */
     friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
 
+    /**
+     * Converts the tensor to a string
+     * @return the string representation of the tensor
+     */
+    std::string to_string() const;
+
   private:
     /**
      * Helper method to print the tensor
@@ -534,7 +547,7 @@ class Tensor {
      * @param f the function
      * @return the tensor with the function applied to each element
      */
-    Tensor& apply_function(std::function<double(double)> f);
+    void apply_function(std::function<double(double)> f);
 
     /**
      * Applies a function to each element of the tensor
@@ -555,7 +568,7 @@ class Tensor {
      * @param other the other tensor
      * @return the tensor with the function applied to each element
      */
-    Tensor& apply_function(std::function<double(double, double)> f, const Tensor& other);
+    void apply_function(std::function<double(double, double)> f, const Tensor& other);
 
     /**
      * Applies a function to each element of two tensors

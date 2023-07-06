@@ -2,6 +2,7 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <cmath>
+#include <iostream>
 
 #include "../include/FJML/activations.h"
 
@@ -12,9 +13,9 @@ namespace Activations {
 Activation::Activation(std::string name, std::function<double(double)> func, std::function<double(double)> derivative)
     : name{name}, func{func}, derivative{derivative} {}
 
-Tensor Activation::apply(Tensor& layer) const { return layer.apply_function(func); }
+void Activation::apply(Tensor& layer) const { layer.apply_function(func); }
 
-Tensor Activation::apply_derivative(Tensor& layer) const { return layer.apply_function(derivative); }
+void Activation::apply_derivative(Tensor& layer) const { layer.apply_function(derivative); }
 
 Tensor Activation::forward(const Tensor& layer) const { return layer.calc_function(func); }
 

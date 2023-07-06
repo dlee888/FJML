@@ -53,7 +53,7 @@ class Activation {
      * @param layer The layer to apply the function to
      * @return The result of applying the function to the layer
      */
-    Tensor apply(Tensor& layer) const;
+    void apply(Tensor& layer) const;
 
     /**
      * @brief apply the derivative of the function to a layer
@@ -63,7 +63,7 @@ class Activation {
      * @param layer The layer to apply the derivative to
      * @return The result of applying the derivative to the layer
      */
-    Tensor apply_derivative(Tensor& layer) const;
+    void apply_derivative(Tensor& layer) const;
 
     /**
      * @brief apply the function to a layer

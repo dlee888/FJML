@@ -127,6 +127,17 @@ class MLP {
     void grad_descent(const Tensor& x_train, const Tensor& y_train);
 
     /**
+     * @brief Train the model on a batch of data
+     *
+     * Another version of grad_descent that takes rvalue references.
+     * This is used to avoid copying the data when training.
+     *
+     * @param x_train The input data
+     * @param y_train The target data
+     */
+    void grad_descent(Tensor&& x_train, Tensor&& y_train);
+
+    /**
      * @brief Save the model to a file
      * @param filename The name of the file to save to
      */

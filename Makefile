@@ -1,16 +1,16 @@
 .PHONY: all init install docs clean coverage
 
 CC = g++
-CFLAGS = -O3 -std=c++17 -march=native -Wall -pedantic -fopenmp
+CFLAGS = -std=c++17 -march=native -Wall -Wextra -Wno-unused-parameter -Wunknown-pragmas -pedantic
 
 ifeq ($(debug), true)
 	CFLAGS += -g
 else
-	CFLAGS += -DNDEBUG
+	CFLAGS += -O3 -DNDEBUG -fopenmp
 endif
 
 ifeq ($(arch), cuda)
-	CFLAGS = -ccbin g++ -O3 --std=c++17 -DCUDA -lcublas
+	CFLAGS = -O3 -ccbin g++ -O3 --std=c++17 -DCUDA -lcublas
 	CC = nvcc
 	ifeq ($(debug), true)
 		CFLAGS += -g -G

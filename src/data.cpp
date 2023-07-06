@@ -10,10 +10,8 @@ namespace FJML {
 namespace Data {
 
 Tensor one_hot(int x, int n) {
-    std::vector<int> shape;
-    shape.push_back(n);
-    Tensor res(shape);
-    res.at(x) = 1;
+    Tensor res({n});
+    res.data[x] = 1;
     return res;
 }
 

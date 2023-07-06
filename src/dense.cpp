@@ -64,16 +64,16 @@ Dense::~Dense() {
 
 Tensor Layers::Dense::apply(const Tensor& input) const {
     Tensor res = LinAlg::dense_forward(input, weights, bias);
-    return activ.apply(res);
+    activ.apply(res);
+    return res;
 }
 
 Tensor Layers::Dense::backward(const Tensor& input_vals, const Tensor& output_grad) {
     int n = input_vals.shape[0];
 
-    Tensor activ_grad = activ.backward(LinAlg::dense_forward(input_vals, weights, bias)) * output_grad;
-    // Tensor activ_grad = LinAlg::dense_forward(input_vals, weights, bias);
-    // activ.apply_derivative(activ_grad);
-    // activ_grad *= output_grad;
+    Tensor activ_grad = LinAlg::dense_forward(input_vals, weights, bias);
+    activ.apply_derivative(activ_grad);
+    activ_grad *= output_grad;
 
     Tensor w_grad = LinAlg::matrix_multiply(LinAlg::transpose(input_vals), activ_grad);
     Tensor b_grad = Tensor({output_size}, activ_grad.device);

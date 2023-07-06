@@ -45,7 +45,17 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
             Tensor a = Tensor::array(std::vector<std::vector<double>>{{1, 2}, {3, 4}, {5, 6}});
             Tensor b = Tensor::array(std::vector<std::vector<double>>{{7, 8, 9}, {10, 11, 12}});
 
+            INFO("Multiplying matrix a with shape (3, 2) with matrix b with shape (2, 3)");
+            // INFO("Matrix a:");
+            // INFO(a.to_string());
+            // INFO("Matrix b:");
+            // INFO(b.to_string());
+
             Tensor c = LinAlg::matrix_multiply(a, b);
+
+            // INFO("Resulting matrix c with shape (3, 3)");
+            // INFO(c.to_string());
+
             REQUIRE(c.shape == std::vector<int>({3, 3}));
             REQUIRE(c.at({0, 0}) == 27);
             REQUIRE(c.at({0, 1}) == 30);
@@ -120,6 +130,20 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         //
         //     REQUIRE_THROWS_AS(LinAlg::matrix_multiply(c, d), std::invalid_argument);
         // }
+
+        SECTION("Testing large matrix multiplication") {
+            Tensor a = Tensor::ones({969, 969});
+            Tensor b = Tensor::ones({969, 969});
+
+            Tensor c = LinAlg::matrix_multiply(a, b);
+
+            REQUIRE(c.shape == std::vector<int>({969, 969}));
+            for (int i = 0; i < 969; i++) {
+                for (int j = 0; j < 969; j++) {
+                    REQUIRE(c.at({i, j}) == 969);
+                }
+            }
+        }
     }
 
     SECTION("Testing sum") {
@@ -172,14 +196,8 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         BENCHMARK("vector multiply matrix") { return FJML::LinAlg::matrix_multiply(a, c); };
         BENCHMARK("matrix multiply vector") { return FJML::LinAlg::matrix_multiply(c, a); };
 
-        Tensor d{{500, 500}}, e{{500, 500}};
-        for (int i = 0; i < 500; i++) {
-            for (int j = 0; j < 500; j++) {
-                d.at(i, j) = i + j;
-                e.at(i, j) = i + j;
-            }
-        }
-
-        BENCHMARK("matrix multiply matrix") { return FJML::LinAlg::matrix_multiply(d, e); };
+        BENCHMARK("matrix multiply matrix") {
+            return FJML::LinAlg::matrix_multiply(FJML::Tensor::rand({500, 500}), FJML::Tensor::rand({500, 500}));
+        };
     }
 }
