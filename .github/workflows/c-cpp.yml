@@ -19,7 +19,7 @@ jobs:
     - run: cd Catch2 && sudo cmake --build build/ --target install
     - run: sudo apt install lcov      
     - name: Build 
-      run: make debug && sudo make install
+      run: sudo make debug=true
     - name: Build tests
       run: cd tests && cmake -H. -Bbuild && cd build && make
     - name: Run tests

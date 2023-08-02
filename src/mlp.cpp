@@ -2,9 +2,9 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <algorithm>
-#include <cstring>
 #include <cassert>
 #include <chrono>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 
@@ -34,6 +34,8 @@ static void progress_bar(int curr, int tot, int bar_width = 69, double time_elap
 }
 
 namespace FJML {
+
+namespace MLP {
 
 void MLP::grad_descent(const Tensor& x_train, const Tensor& y_train) {
     int num_layers = layers.size();
@@ -73,27 +75,12 @@ Tensor MLP::run(const Tensor& input) const {
     return result;
 }
 
-double MLP::calc_loss(const Tensor& x_test, const Tensor& y_test) const {
-    return loss_fn.calc_loss(run(x_test), y_test) / x_test.shape[0];
-}
-
-double MLP::calc_accuracy(const Tensor& x_test, const Tensor& y_test) const {
-    int correct = 0;
-    Tensor y_pred = run(x_test);
-    for (int i = 0; i < (int)x_test.shape[0]; i++) {
-        if (LinAlg::argmax(y_pred, 1, i) == LinAlg::argmax(y_test, 1, i)) {
-            correct++;
-        }
-    }
-    return (double)correct / x_test.shape[0];
-}
-
 #define time_elapsed                                                                                                   \
     std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time).count() /     \
         1000.0
 
 void MLP::train(const Tensor& x_train, const Tensor& y_train, const Tensor& x_test, const Tensor& y_test, int epochs,
-                int batch_size, const std::string& save_file) {
+                int batch_size, const std::string& save_file, const std::vector<Metric>& metrics) {
     if (x_train.shape[0] != y_train.shape[0]) {
         throw std::invalid_argument("x_train and y_train must have the same number of samples");
     }
@@ -126,13 +113,16 @@ void MLP::train(const Tensor& x_train, const Tensor& y_train, const Tensor& x_te
             grad_descent(x_batch, y_batch);
         }
         progress_bar(num_inputs, num_inputs, 69, time_elapsed);
-        std::cout << std::endl;
-        std::cout << "Training loss: " << calc_loss(x_train, y_train) << std::endl;
-        std::cout << "Training accuracy: " << calc_accuracy(x_train, y_train) << std::endl;
-        std::cout << "Testing loss: " << calc_loss(x_test, y_test) << std::endl;
-        std::cout << "Testing accuracy: " << calc_accuracy(x_test, y_test) << std::endl;
         if (save_file.size() > 0) {
             save(save_file);
+        }
+        std::cout << std::endl;
+        Tensor y_train_pred = run(x_train);
+        Tensor y_test_pred = run(x_test);
+        for (const Metric& m : metrics) {
+            std::cout << "Metric " << m.name << ": ";
+            std::cout << "Train: " << m.compute(y_train, y_train_pred) << ", ";
+            std::cout << "Validation: " << m.compute(y_test, y_test_pred) << std::endl;
         }
     }
 }
@@ -152,14 +142,11 @@ void MLP::load(std::string filename) {
         std::cout << "File " << filename << " could not be opened" << std::endl;
         throw std::invalid_argument("File " + filename + " could not be opened");
     }
-    std::cout << "Loading model from " << filename << std::endl;
     int num_layers;
     file >> num_layers;
-    std::cout << "Number of layers: " << num_layers << std::endl;
     layers.clear();
     for (int i = 0; i < num_layers; i++) {
         layers.push_back(Layers::load(file));
-        std::cout << "Loaded layer " << i << ": " << layers[i]->name << std::endl;
     }
 }
 
@@ -170,5 +157,7 @@ void MLP::summary() {
         layers[i]->summary();
     }
 }
+
+} // namespace MLP
 
 } // namespace FJML

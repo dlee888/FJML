@@ -15,8 +15,8 @@ A ML library in C++.
 
 ### Installation
 
-Simply run `make` to install the library. To build the library
-with debug info, use `make debug` instead.
+Simply run `sudo make` to install the library. To build the library
+with debug info, use `sudo make debug=true` instead.
 
 To compile programs with FJML, just add the flag `-lFJML` to the end of each compile command.
 

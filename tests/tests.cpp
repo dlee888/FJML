@@ -4,6 +4,7 @@
 #include "layers.h"
 #include "linalg.h"
 #include "loss.h"
+#include "metrics.h"
 #include "mlp.h"
 #include "optimizers.h"
 #include "tensor.h"

@@ -18,12 +18,12 @@ TEST_CASE("Testing loss functions", "[loss]") {
     }
 
     SECTION("Testing huber") {
-        REQUIRE(Loss::huber.calc_loss(y, yhat) == 3);
+        REQUIRE(Loss::huber.calc_loss(y, yhat) == 6);
 
         Tensor dy = Loss::huber.calc_derivative(y, yhat);
-        REQUIRE(dy.at(0) == 1);
+        REQUIRE(dy.at(0) == 2);
         REQUIRE(dy.at(1) == 0);
-        REQUIRE(dy.at(2) == -1);
+        REQUIRE(dy.at(2) == -2);
     }
 
     SECTION("Testing crossentropy") {

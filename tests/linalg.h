@@ -122,21 +122,24 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         // }
     }
 
-    SECTION("Testing sum") {
+    SECTION("Testing sum and mean") {
         SECTION("Testing sum of vector") {
             Tensor a = Tensor::array(std::vector<double>{1, 2, 3, 4, 5});
             REQUIRE(LinAlg::sum(a) == 15);
+            REQUIRE(LinAlg::mean(a) == 3);
         }
 
         SECTION("Testing sum of matrix") {
             Tensor a = Tensor::array(std::vector<std::vector<double>>{{1, 2}, {3, 4}, {5, 6}});
             REQUIRE(LinAlg::sum(a) == 21);
+            REQUIRE(LinAlg::mean(a) == 3.5);
         }
 
         SECTION("Testing sum of array of matrices") {
             Tensor a = Tensor::array(std::vector<std::vector<std::vector<double>>>{{{1, 2}, {3, 4}, {5, 6}},
                                                                                    {{7, 8}, {9, 10}, {11, 12}}});
             REQUIRE(LinAlg::sum(a) == 78);
+            REQUIRE(LinAlg::mean(a) == 6.5);
         }
     }
 
@@ -148,8 +151,68 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
     }
 
     SECTION("Testing argmax") {
-        Tensor a = Tensor::array(std::vector<double>{0.1, 0.2, 0.3, 0.4});
-        REQUIRE(LinAlg::argmax(a) == 3);
+        Tensor a = Tensor::array(std::vector<double>{0.1, 0.2, 0.3, 0.6, 0.5, 0.4});
+        a.reshape({2, 3});
+
+        Tensor b = LinAlg::argmax(a, 0);
+        REQUIRE(b.shape == std::vector<int>({3}));
+        REQUIRE(b.at(0) == 1);
+        REQUIRE(b.at(1) == 1);
+        REQUIRE(b.at(2) == 1);
+
+        Tensor c = LinAlg::argmax(a, 1);
+        REQUIRE(c.shape == std::vector<int>({2}));
+        REQUIRE(c.at(0) == 2);
+        REQUIRE(c.at(1) == 0);
+    }
+
+    SECTION("Testing pow") {
+        Tensor a = Tensor::array(std::vector<double>{1, 2, 3, 4, 5});
+        Tensor b = LinAlg::pow(a, 2);
+        REQUIRE(b.shape == std::vector<int>({5}));
+        REQUIRE(b.at(0) == 1);
+        REQUIRE(b.at(1) == 4);
+        REQUIRE(b.at(2) == 9);
+        REQUIRE(b.at(3) == 16);
+        REQUIRE(b.at(4) == 25);
+
+        Tensor c = Tensor::array(std::vector<std::vector<double>>{{1, 4}, {9, 16}, {25, 36}});
+        Tensor d = LinAlg::pow(c, 0.5);
+        REQUIRE(d.shape == std::vector<int>({3, 2}));
+        REQUIRE(d.at(0, 0) == 1);
+        REQUIRE(d.at(0, 1) == 2);
+        REQUIRE(d.at(1, 0) == 3);
+        REQUIRE(d.at(1, 1) == 4);
+        REQUIRE(d.at(2, 0) == 5);
+        REQUIRE(d.at(2, 1) == 6);
+    }
+
+    SECTION("Testing equal") {
+        Tensor a = Tensor::array(std::vector<double>{1, 2, 3, 4, 5});
+        Tensor b = Tensor::array(std::vector<double>{1, 2, 6, 4, 9});
+
+        Tensor c = LinAlg::equal(a, b);
+        REQUIRE(c.shape == std::vector<int>({5}));
+        REQUIRE(c.at(0) == 1);
+        REQUIRE(c.at(1) == 1);
+        REQUIRE(c.at(2) == 0);
+        REQUIRE(c.at(3) == 1);
+        REQUIRE(c.at(4) == 0);
+    }
+
+    SECTION("Testing dense forward") {
+        Tensor weights = Tensor::array(std::vector<std::vector<double>>{{1, 2, 3}, {4, 5, 6}});
+        Tensor inputs = Tensor::array(std::vector<std::vector<double>>{{1, 2}, {3, 4}});
+        Tensor biases = Tensor::array(std::vector<double>{1, 2, 3});
+
+        Tensor outputs = LinAlg::dense_forward(inputs, weights, biases);
+        REQUIRE(outputs.shape == std::vector<int>({2, 3}));
+        REQUIRE(outputs.at(0, 0) == 10);
+        REQUIRE(outputs.at(0, 1) == 14);
+        REQUIRE(outputs.at(0, 2) == 18);
+        REQUIRE(outputs.at(1, 0) == 20);
+        REQUIRE(outputs.at(1, 1) == 28);
+        REQUIRE(outputs.at(1, 2) == 36);
     }
 
     SECTION("Benchmarks") {
@@ -181,5 +244,17 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         }
 
         BENCHMARK("matrix multiply matrix") { return FJML::LinAlg::matrix_multiply(d, e); };
+
+        Tensor bias{{500}};
+        for (int i = 0; i < 500; i++) {
+            bias.at(i) = i;
+        }
+        Tensor inputs{{500, 500}};
+        for (int i = 0; i < 500; i++) {
+            for (int j = 0; j < 500; j++) {
+                inputs.at(i, j) = i + j;
+            }
+        }
+        BENCHMARK("dense forward") { return FJML::LinAlg::dense_forward(d, inputs, bias); };
     }
 }

@@ -13,9 +13,6 @@
 #include <cuda_runtime.h>
 #endif
 
-#pragma GCC target("avx2,fma")
-#pragma GCC optimize("O3,unroll-loops")
-
 #include "tensor.h"
 
 namespace FJML {
@@ -64,6 +61,22 @@ Tensor transpose(const Tensor& a);
 double sum(const Tensor& a);
 
 /**
+ * Computes the mean of all the elements in a tensor.
+ *
+ * @param a The tensor.
+ * @return The mean of all the elements in the tensor.
+ */
+double mean(const Tensor& a);
+
+/**
+ * Raises all the elements in a tensor to a power.
+ * @param a The tensor.
+ * @param b The power.
+ * @return The tensor with all the elements raised to the power.
+ */
+Tensor pow(const Tensor& a, double b);
+
+/**
  * Randomly chooses an index using tensor values as probabilities
  *
  * @param a the probabilities
@@ -72,14 +85,26 @@ double sum(const Tensor& a);
 int random_choice(const Tensor& a);
 
 /**
- * Computes the index of the maximum value in a tensor.
+ * Computes the index of the maximum value in a tensor, given an axis to compute along.
+ *
+ * For example, if the input is a matrix and the axis is 0, the output will be a vector containing the maximum of each
+ * column. If the input is a matrix and the axis is 1, the output will be a vector containing the maximum of each row.
+ *
+ * The default axis is -1, which means the last axis.
  *
  * @param a The tensor.
  * @param axis The axis to compute the maximum value along.
- * @param index The index of the axis to compute the maximum value along.
- * @return The index of the maximum value in the tensor.
+ * @return A tensor containing the indices of the maximum value along the specified axis.
  */
-int argmax(const Tensor& a, int axis = -1, int index = 0);
+Tensor argmax(const Tensor& a, int axis = -1);
+
+/**
+ * Returns a tensor containing one where the two tensors are equal, and zero otherwise.
+ * @param a The first tensor.
+ * @param b The second tensor.
+ * @return A tensor containing one where the two tensors are equal, and zero otherwise.
+ */
+Tensor equal(const Tensor& a, const Tensor& b);
 
 /**
  * Computes the maximum value in a tensor.

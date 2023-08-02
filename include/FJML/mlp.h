@@ -9,10 +9,13 @@
 #include "layers.h"
 #include "linalg.h"
 #include "loss.h"
+#include "metrics.h"
 #include "optimizers.h"
 #include "tensor.h"
 
 namespace FJML {
+
+namespace MLP {
 
 /**
  * @brief Multi-layer perceptron class
@@ -90,25 +93,6 @@ class MLP {
     Tensor run(const Tensor& input) const;
 
     /**
-     * @brief Calculate the loss of the model on a batch of data
-     * @param x_test The input data
-     * @param y_test The target data
-     * @return The loss
-     */
-    double calc_loss(const Tensor& x_test, const Tensor& y_test) const;
-
-    /**
-     * @brief Calculate the accuracy of the model on a batch of data
-     *
-     * Note: data must be in one-hot format
-     *
-     * @param x_test The input data
-     * @param y_test The target data
-     * @return The accuracy
-     */
-    double calc_accuracy(const Tensor& x_test, const Tensor& y_test) const;
-
-    /**
      * Applies gradients in a backwards pass
      *
      * @param input the input
@@ -147,15 +131,18 @@ class MLP {
      * @param epochs The number of epochs to train for
      * @param batch_size The size of the batches to train on
      * @param save_file The file to save the model to, or "" to not save
+     * @param metrics A list of metrics to calculate after each epoch
      */
     void train(const Tensor& x_train, const Tensor& y_train, const Tensor& x_test, const Tensor& y_test, int epochs,
-               int batch_size, const std::string& save_file);
+               int batch_size, const std::string& save_file, const std::vector<Metric>& metrics = {});
 
     /**
      * @brief Print a summary of the model
      */
     void summary();
 };
+
+} // namespace MLP
 
 } // namespace FJML
 

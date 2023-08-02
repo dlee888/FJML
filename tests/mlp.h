@@ -6,11 +6,11 @@ using namespace Catch;
 using namespace FJML;
 
 TEST_CASE("Test mlp", "[mlp]") {
-    MLP mlp({new Layers::Dense(1, 1, Activations::linear)}, Loss::mse, new Optimizers::SGD(0.003));
+    MLP::MLP mlp({new Layers::Dense(1, 1, Activations::linear)}, Loss::mse, new Optimizers::SGD(0.003));
 
     SECTION("Test set_loss") {
         mlp.set_loss(Loss::huber);
-        REQUIRE(mlp.loss_fn.function(0, 1) == Approx(0.50));
+        REQUIRE(mlp.loss_fn.name == "huber");
     }
 
     SECTION("Test set_optimizer") {
@@ -35,39 +35,25 @@ TEST_CASE("Test mlp", "[mlp]") {
         REQUIRE(output.at(0, 0) == Approx(12.8));
     }
 
-    SECTION("Test calc_loss") {
+    SECTION("Test grad descent") {
+        mlp.set_optimizer(new Optimizers::SGD(0.01));
+
         ((Layers::Dense*)mlp.layers.at(0))->weights.at(0, 0) = 2;
         ((Layers::Dense*)mlp.layers.at(0))->bias.at(0) = -1;
-        mlp.set_loss(Loss::huber);
 
         Tensor input = Tensor::array(std::vector<double>{6.9});
-        Tensor output = Tensor::array(std::vector<double>{12.8});
         input.reshape(std::vector<int>{1, 1});
+        Tensor output = Tensor::array(std::vector<double>{12.8});
         output.reshape(std::vector<int>{1, 1});
-        REQUIRE(mlp.calc_loss(input, output) == Approx(0));
 
-        output = Tensor::array(std::vector<double>{12.9});
-        REQUIRE(mlp.calc_loss(input, output) == Approx(0.005));
+        mlp.grad_descent(input, output);
+        REQUIRE(((Layers::Dense*)mlp.layers.at(0))->weights.at(0, 0) == Approx(2).margin(0.00001));
+        REQUIRE(((Layers::Dense*)mlp.layers.at(0))->bias.at(0) == Approx(-1).margin(0.00001));
 
-        output = Tensor::array(std::vector<double>{12.7});
-        REQUIRE(mlp.calc_loss(input, output) == Approx(0.005));
-
-        output = Tensor::array(std::vector<double>{11.8});
-        REQUIRE(mlp.calc_loss(input, output) == Approx(0.5));
-    }
-
-    SECTION("Test calc_accuracy") {
-        MLP mlp2({new Layers::Softmax()}, Loss::mse, new Optimizers::SGD(0.003));
-
-        std::vector<Tensor> input, output;
-        input.push_back(Tensor::array(std::vector<double>{1, 2, 3}));
-        input.push_back(Tensor::array(std::vector<double>{4, 5, 6}));
-        input.push_back(Tensor::array(std::vector<double>{7, 8, -9}));
-        output.push_back(Tensor::array(std::vector<double>{0, 1, 0}));
-        output.push_back(Tensor::array(std::vector<double>{0, 0, 1}));
-        output.push_back(Tensor::array(std::vector<double>{1, 0, 0}));
-
-        REQUIRE(mlp2.calc_accuracy(Tensor::array(input), Tensor::array(output)) == Approx(1.0 / 3));
+        output.at(0, 0) = 12.9;
+        mlp.grad_descent(input, output);
+        REQUIRE(((Layers::Dense*)mlp.layers.at(0))->weights.at(0, 0) == Approx(2.0138).margin(0.000001));
+        REQUIRE(((Layers::Dense*)mlp.layers.at(0))->bias.at(0) == Approx(-0.998).margin(0.000001));
     }
 
     SECTION("Test linear regression") {
@@ -89,11 +75,10 @@ TEST_CASE("Test mlp", "[mlp]") {
         }
         REQUIRE(((Layers::Dense*)mlp.layers.at(0))->weights.at(0, 0) == Approx(2.0).margin(0.001));
         REQUIRE(((Layers::Dense*)mlp.layers.at(0))->bias.at(0) == Approx(-1).margin(0.001));
-        REQUIRE(mlp.calc_loss(x_train, y_train) == Approx(0).margin(0.001));
     }
 
     SECTION("Test logistic regression") {
-        MLP mlp2({new Layers::Dense(1, 2), new Layers::Softmax()}, Loss::crossentropy, new Optimizers::Adam());
+        MLP::MLP mlp2({new Layers::Dense(1, 2), new Layers::Softmax()}, Loss::crossentropy, new Optimizers::Adam());
 
         std::vector<Tensor> x_train_v, y_train_v;
         for (int i = -32; i < 33; i++) {
@@ -105,6 +90,6 @@ TEST_CASE("Test mlp", "[mlp]") {
         for (int i = 0; i < 5000; i++) {
             mlp2.grad_descent(x_train, y_train);
         }
-        REQUIRE(mlp2.calc_accuracy(x_train, y_train) == Approx(1.0).margin(0.001));
+        REQUIRE(MLP::accuracy.compute(y_train, mlp2.run(x_train)) == Approx(1.0).margin(0.001));
     }
 }

@@ -182,6 +182,16 @@ double sum(const Tensor& a) {
     return res;
 }
 
+double mean(const Tensor& a) { return sum(a) / a.data_size[0]; }
+
+Tensor pow(const Tensor& a, double b) {
+    Tensor result(a.shape, a.device);
+    for (int i = 0; i < a.data_size[0]; i++) {
+        result.data[i] = std::pow(a.data[i], b);
+    }
+    return result;
+}
+
 int random_choice(const Tensor& a) {
     double rand_num = (double)rand() / (double)RAND_MAX;
     for (int i = 0; i < a.data_size[0]; i++) {
@@ -193,18 +203,43 @@ int random_choice(const Tensor& a) {
     return a.data_size[0] - 1;
 }
 
-int argmax(const Tensor& a, int axis, int index) {
+Tensor argmax(const Tensor& a, int axis) {
     if (axis == -1) {
         axis = a.dim() - 1;
     }
     if (axis < 0 || axis >= a.dim()) {
         throw std::invalid_argument("Invalid axis");
     }
-    int result = 0;
-    for (int i = 1; i < a.shape[axis]; i++) {
-        if (a.data[index * a.data_size[axis] + i] > a.data[index * a.data_size[axis] + result]) {
-            result = i;
+    std::vector<int> result_shape;
+    for (int i = 0; i < a.dim(); i++) {
+        if (i != axis) {
+            result_shape.push_back(a.shape[i]);
         }
+    }
+    Tensor result(result_shape);
+    for (int i = 0; i < result.data_size[0]; i++) {
+        int max_index = 0;
+        double max_value = -INFINITY;
+        for (int j = 0; j < a.shape[axis]; j++) {
+            int index = i % a.data_size[axis + 1] + j * a.data_size[axis + 1] +
+                        i / a.data_size[axis + 1] * a.data_size[axis];
+            if (a.data[index] > max_value) {
+                max_value = a.data[index];
+                max_index = j;
+            }
+        }
+        result.data[i] = max_index;
+    }
+    return result;
+}
+
+Tensor equal(const Tensor& a, const Tensor& b) {
+    if (a.data_size[0] != b.data_size[0]) {
+        throw std::invalid_argument("Tensor sizes must match");
+    }
+    Tensor result(a.shape);
+    for (int i = 0; i < a.data_size[0]; i++) {
+        result.data[i] = a.data[i] == b.data[i];
     }
     return result;
 }

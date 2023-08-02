@@ -36,11 +36,11 @@ class Loss {
     /**
      * @brief The loss function
      */
-    std::function<double(double, double)> function;
+    std::function<double(const Tensor&, const Tensor&)> function;
     /**
      * @brief The derivative of the loss function
      */
-    std::function<double(double, double)> derivative;
+    std::function<Tensor(const Tensor&, const Tensor&)> derivative;
 
     /**
      * Default constructor
@@ -56,8 +56,8 @@ class Loss {
      * @param function The loss function
      * @param derivative The derivative of the loss function
      */
-    Loss(std::string name, std::function<double(double, double)> function,
-         std::function<double(double, double)> derivative)
+    Loss(std::string name, std::function<double(const Tensor&, const Tensor&)> function,
+         std::function<Tensor(const Tensor&, const Tensor&)> derivative)
         : name{name}, function{function}, derivative{derivative} {}
 
     /**
@@ -83,7 +83,11 @@ class Loss {
     Tensor calc_derivative(const Tensor& obs, const Tensor& pred) const;
 };
 
-extern const Loss mse, huber, crossentropy;
+extern const Loss mse, huber;
+
+Loss crossentropy(bool from_logits = false);
+
+Loss sparse_categorical_crossentropy(bool from_logits = false);
 
 } // namespace Loss
 
