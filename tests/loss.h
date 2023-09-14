@@ -34,9 +34,11 @@ TEST_CASE("Testing loss functions", "[loss]") {
         yhat.at(1) = 0.4;
         yhat.at(2) = 0.3;
 
-        REQUIRE(Loss::crossentropy.calc_loss(y, yhat) == Approx(2.0714733720306593));
+        Loss::Loss loss = Loss::crossentropy(false);
 
-        Tensor dy = Loss::crossentropy.calc_derivative(y, yhat);
+        REQUIRE(loss.calc_loss(y, yhat) == Approx(2.0714733720306593));
+
+        Tensor dy = loss.calc_derivative(y, yhat);
 
         REQUIRE(dy.at(0) == Approx(1 / 0.7));
         REQUIRE(dy.at(1) == Approx(1 / 0.6));
