@@ -12,8 +12,7 @@
  * @param y The output data
  * @param filename The name of the file to load
  */
-void load_data(std::vector<FJML::Tensor<double>>& x, std::vector<FJML::Tensor<double>>& y, std::string filename,
-               int limit = -1) {
+void load_data(FJML::Tensor& x, FJML::Tensor& y, std::string filename, int limit = -1) {
     // Uses data from the kaggle mnist dataset
     // https://www.kaggle.com/datasets/oddrationale/mnist-in-csv
     std::ifstream file(filename);
@@ -23,6 +22,7 @@ void load_data(std::vector<FJML::Tensor<double>>& x, std::vector<FJML::Tensor<do
     std::getline(file, line);
 
     // Read the data
+    std::vector<FJML::Tensor> x_vec, y_vec;
     while (std::getline(file, line)) {
         std::stringstream ss(line);
 
@@ -31,7 +31,7 @@ void load_data(std::vector<FJML::Tensor<double>>& x, std::vector<FJML::Tensor<do
         ss >> label;
 
         // The rest of the values are the pixels
-        FJML::Tensor<double> pixels({28 * 28});
+        FJML::Tensor pixels({28 * 28});
         for (int i = 0; i < 28 * 28; i++) {
             int pixel;
             char comma;
@@ -40,28 +40,32 @@ void load_data(std::vector<FJML::Tensor<double>>& x, std::vector<FJML::Tensor<do
         }
 
         // Add the data to the vectors
-        x.push_back(pixels);
-        y.push_back(FJML::Data::one_hot(label, 10));
+        x_vec.push_back(pixels);
+        y_vec.push_back(FJML::Data::one_hot(label, 10));
 
         // Stop if we have enough data
-        if (limit != -1 && (int)x.size() >= limit) {
+        if (limit != -1 && (int)x_vec.size() >= limit) {
             break;
         }
     }
+
+    // Convert the vectors to tensors
+    x = FJML::Tensor::array(x_vec);
+    y = FJML::Tensor::array(y_vec);
 }
 
 int main() {
     // Load the data
-    std::vector<FJML::Tensor<double>> mnist_train_x, mnist_train_y;
-    std::vector<FJML::Tensor<double>> mnist_test_x, mnist_test_y;
+    FJML::Tensor mnist_train_x, mnist_train_y;
+    FJML::Tensor mnist_test_x, mnist_test_y;
     load_data(mnist_train_x, mnist_train_y, "mnist_train.csv");
     load_data(mnist_test_x, mnist_test_y, "mnist_test.csv");
-    std::cout << "Loaded " << mnist_train_x.size() << " training samples and " << mnist_test_x.size()
+    std::cout << "Loaded " << mnist_train_x.shape[0] << " training samples and " << mnist_test_x.shape[0]
               << " testing samples" << std::endl;
 
     // Split the data into training and validation sets
-    std::vector<FJML::Tensor<double>> x_train, y_train;
-    std::vector<FJML::Tensor<double>> x_test, y_test;
+    FJML::Tensor x_train, y_train;
+    FJML::Tensor x_test, y_test;
     FJML::Data::split(mnist_train_x, mnist_train_y, x_train, y_train, x_test, y_test, 0.8);
 
     // Create the model
@@ -74,17 +78,18 @@ int main() {
     // 1. A vector of layers
     // 2. A loss function
     // 3. An optimizer
-    FJML::MLP model({new FJML::Layers::Dense(28 * 28, 128, FJML::Activations::relu),
-                     new FJML::Layers::Dense(128, 10, FJML::Activations::linear), new FJML::Layers::Softmax()},
-                    FJML::Loss::crossentropy, new FJML::Optimizers::Adam());
+    // Change the device to FJML::DEVICE_CUDA to use the GPU
+    FJML::MLP::MLP model({new FJML::Layers::Dense(28 * 28, 128, FJML::Activations::relu),
+                          new FJML::Layers::Dense(128, 10, FJML::Activations::linear), new FJML::Layers::Softmax()},
+                         FJML::Loss::crossentropy(false), new FJML::Optimizers::Adam());
 
     // Train the model
-    model.train(x_train, y_train, x_test, y_test, 6, 128, "mnist.fjml");
+    model.train(x_train, y_train, x_test, y_test, 6, 128, "mnist.fjml", {FJML::MLP::accuracy});
 
     // Evaluate the model
-    std::cout << "Training accuracy: " << model.calc_accuracy(x_train, y_train) << std::endl;
-    std::cout << "Testing accuracy: " << model.calc_accuracy(mnist_test_x, mnist_test_y) << std::endl;
+    std::cout << "Testing accuracy: "
+              << FJML::MLP::sparse_categorical_accuracy.compute(mnist_test_y, model.run(mnist_test_x)) << std::endl;
 }
 
 // Compile with:
-// g++ -std=c++17 -O2 -o main main.cpp -lFJML
+// g++ -O3 -o main main.cpp -lFJML

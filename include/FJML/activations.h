@@ -43,8 +43,7 @@ class Activation {
      * @param func The function to apply to a layer
      * @param derivative The derivative of the function
      */
-    Activation(std::string name, std::function<double(double)> func, std::function<double(double)> derivative)
-        : name{name}, func{func}, derivative{derivative} {}
+    Activation(std::string name, std::function<double(double)> func, std::function<double(double)> derivative);
 
     /**
      * @brief apply the function to a layer
@@ -54,12 +53,7 @@ class Activation {
      * @param layer The layer to apply the function to
      * @return The result of applying the function to the layer
      */
-    template <typename T> Tensor<T> apply(Tensor<T>& layer) const {
-        for (auto& x : layer) {
-            x = func(x);
-        }
-        return layer;
-    }
+    Tensor apply(Tensor& layer) const;
 
     /**
      * @brief apply the derivative of the function to a layer
@@ -69,12 +63,7 @@ class Activation {
      * @param layer The layer to apply the derivative to
      * @return The result of applying the derivative to the layer
      */
-    template <typename T> Tensor<T> apply_derivative(Tensor<T>& layer) const {
-        for (auto& x : layer) {
-            x = derivative(x);
-        }
-        return layer;
-    }
+    Tensor apply_derivative(Tensor& layer) const;
 
     /**
      * @brief apply the function to a layer
@@ -84,13 +73,7 @@ class Activation {
      * @param layer The layer to apply the function to
      * @return The result of applying the function to the layer
      */
-    template <typename T> Tensor<T> forward(const Tensor<T>& layer) const {
-        Tensor<T> result = layer;
-        for (auto& x : result) {
-            x = func(x);
-        }
-        return result;
-    }
+    Tensor forward(const Tensor& layer) const;
 
     /**
      * @brief apply the derivative of the function to a layer
@@ -100,13 +83,7 @@ class Activation {
      * @param layer The layer to apply the derivative to
      * @return The result of applying the derivative to the layer
      */
-    template <typename T> Tensor<T> backward(const Tensor<T>& layer) const {
-        Tensor<T> result = layer;
-        for (auto& x : result) {
-            x = derivative(x);
-        }
-        return result;
-    }
+    Tensor backward(const Tensor& layer) const;
 };
 
 extern const Activation sigmoid, tanh, relu, leaky_relu, linear, swish;

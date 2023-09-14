@@ -4,7 +4,6 @@
 #ifndef OPTIMIZERS_INCLUDED
 #define OPTIMIZERS_INCLUDED
 
-#include <iostream>
 #include <string>
 
 #include "linalg.h"
@@ -53,9 +52,7 @@ class Optimizer {
      * @param params The parameters to be updated
      * @param grads The gradients to be applied
      */
-    virtual void apply_grad(Tensor<double>& params, const Tensor<double>& grads) {
-        std::cerr << "Optimizer not implemented" << std::endl;
-    }
+    virtual void apply_grad(Tensor& params, const Tensor& grads) {}
 
     /**
      * Clone the optimizer
@@ -90,13 +87,13 @@ class SGD : public Optimizer {
      * @param params The parameters to be updated
      * @param grads The gradients to be applied
      */
-    void apply_grad(Tensor<double>& params, const Tensor<double>& grads) override;
+    void apply_grad(Tensor& params, const Tensor& grads) override;
 
     /**
      * Clone the optimizer
      * @return A pointer to a copy of the optimizer
      */
-    Optimizer* clone() const override { return new SGD(*this); }
+    Optimizer* clone() const override { return new SGD(this->alpha); }
 };
 
 /**
@@ -107,11 +104,11 @@ class Adam : public Optimizer {
     /**
      * @brief The first momentum
      */
-    Tensor<double> m;
+    Tensor m;
     /**
      * @brief The second momentum
      */
-    Tensor<double> v;
+    Tensor v;
     /**
      * @brief The time step
      */
@@ -121,7 +118,7 @@ class Adam : public Optimizer {
      * Helper function to initialize the first and second momentums
      * @param params The parameters to be updated
      */
-    void init(const Tensor<double>& params);
+    void init(const Tensor& params);
 
   public:
     /**
@@ -149,7 +146,7 @@ class Adam : public Optimizer {
      * @param b2 The second momentum
      */
     Adam(double a = 0.001, double b1 = 0.9, double b2 = 0.999)
-        : Optimizer{"Adam"}, m{{0}}, v{{0}}, t{1}, alpha{a}, beta1{b1}, beta2{b2} {}
+        : Optimizer{"Adam"}, t{1}, alpha{a}, beta1{b1}, beta2{b2} {}
     /**
      * @brief Destructor
      */
@@ -161,13 +158,13 @@ class Adam : public Optimizer {
      * @param params The parameters to be updated
      * @param grads The gradients to be applied
      */
-    void apply_grad(Tensor<double>& params, const Tensor<double>& grads) override;
+    void apply_grad(Tensor& params, const Tensor& grads) override;
 
     /**
      * Clone the optimizer
      * @return A pointer to a copy of the optimizer
      */
-    Optimizer* clone() const override { return new Adam(*this); }
+    Optimizer* clone() const override { return new Adam(this->alpha, this->beta1, this->beta2); }
 };
 
 } // namespace Optimizers

@@ -9,8 +9,8 @@
 
 #include "activations.h"
 #include "linalg.h"
-#include "tensor.h"
 #include "optimizers.h"
+#include "tensor.h"
 
 namespace FJML {
 
@@ -55,14 +55,7 @@ class Layer {
      * @param input The input to apply the layer to
      * @return The output of the layer
      */
-    virtual Tensor<double> apply(const Tensor<double>& input) const { return input; }
-
-    /**
-     * @brief Apply the layer to a batch of inputs
-     * @param input The batch of inputs to apply the layer to
-     * @return The batch of outputs of the layer
-     */
-    virtual std::vector<Tensor<double>> apply(const std::vector<Tensor<double>>& input) const { return input; }
+    virtual Tensor apply(const Tensor& input) const { return input; }
 
     /**
      * @brief Backpropagate through the layer
@@ -70,15 +63,10 @@ class Layer {
      * Applies gradients to the parameters of the layer.
      *
      * @param input_vals The batch of inputs to apply the layer to
-     * @param output_vals The batch of outputs of the layer
      * @param output_grad The batch of gradients of the loss with respect to the output of the layers
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
-    virtual std::vector<Tensor<double>> backward(const std::vector<Tensor<double>>& input_vals,
-                                                 const std::vector<Tensor<double>>& output_vals,
-                                                 const std::vector<Tensor<double>>& output_grad) {
-        return output_grad;
-    }
+    virtual Tensor backward(const Tensor& input_vals, const Tensor& output_grad) { return output_grad; }
 
     /**
      * Save the layer to a file
@@ -110,11 +98,11 @@ class Dense : public Layer {
     /**
      * @brief The weights of the layer, a matrix of shape (input_size, output_size)
      */
-    Tensor<double> weights;
+    Tensor weights;
     /**
      * @brief The bias of the layer, a vector of shape (output_size)
      */
-    Tensor<double> bias;
+    Tensor bias;
     /**
      * @brief The activation function of the layer
      */
@@ -133,11 +121,9 @@ class Dense : public Layer {
      * @param input The number of nodes in the previous layer
      * @param output The number of nodes in this layer
      * @param activ The activation function to use
-     * @param opt The optimizer to use for the weights and bias
-     * @param randomize Whether to randomize the weights and bias
+     * @param device The device the weights and bias are stored on
      */
-    Dense(int input, int output, Activations::Activation activ = Activations::sigmoid,
-          Optimizers::Optimizer* opt = new Optimizers::SGD(), bool randomize = true);
+    Dense(int input, int output, Activations::Activation activ = Activations::sigmoid, Device device = DEVICE_CPU);
 
     /**
      * @brief Load a fully connected layer from a file
@@ -147,32 +133,22 @@ class Dense : public Layer {
     /**
      * @brief Destructor
      */
-    ~Dense() {}
+    ~Dense();
 
     /**
      * @brief Apply the layer to an input
      * @param input The input to apply the layer to
      * @return The output of the layer
      */
-    Tensor<double> apply(const Tensor<double>& input) const override;
-
-    /**
-     * Apply the layer to a batch of inputs
-     * @param input The batch of inputs to apply the layer to
-     * @return The batch of outputs of the layer
-     */
-    std::vector<Tensor<double>> apply(const std::vector<Tensor<double>>& input) const override;
+    Tensor apply(const Tensor& input) const override;
 
     /**
      * @brief Apply the gradient of the layer to a batch of inputs
      * @param input_vals The batch of inputs to apply the layer to
-     * @param output_vals The batch of outputs of the layer
      * @param output_grad The batch of gradients of the loss with respect to the output of the layer
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
-    std::vector<Tensor<double>> backward(const std::vector<Tensor<double>>& input_vals,
-                                         const std::vector<Tensor<double>>& output_vals,
-                                         const std::vector<Tensor<double>>& output_grad) override;
+    Tensor backward(const Tensor& input_vals, const Tensor& output_grad) override;
 
     /**
      * @brief Save the layer to a file
@@ -201,8 +177,6 @@ class Dense : public Layer {
  * \f[\sigma(x_i) = \frac{e^{x_i}}{\sum_{j=1}^n e^{x_j}}\f]
  */
 class Softmax : public Layer {
-    Tensor<double> norm(const Tensor<double>& input) const;
-
   public:
     /**
      * @brief Constructor for a softmax layer
@@ -217,27 +191,15 @@ class Softmax : public Layer {
      * @param input The input to apply the layer to
      * @return The output of the layer
      */
-    Tensor<double> apply(const Tensor<double>& input) const override;
-
-    /**
-     * @brief Apply the layer to a batch of inputs
-     *
-     * The softmax layer applies the softmax function to each input in the batch.
-     * @param input The batch of inputs to apply the layer to
-     * @return The batch of outputs of the layer
-     */
-    std::vector<Tensor<double>> apply(const std::vector<Tensor<double>>& input) const override;
+    Tensor apply(const Tensor& input) const override;
 
     /**
      * @brief Apply the gradient of the layer to a batch of inputs
      * @param input_vals The batch of inputs to apply the layer to
-     * @param output_vals The batch of outputs of the layer
      * @param output_grad The batch of gradients of the loss with respect to the output of the layer
      * @return The batch of gradients of the loss with respect to the input of the layer
      */
-    std::vector<Tensor<double>> backward(const std::vector<Tensor<double>>& input_vals,
-                                         const std::vector<Tensor<double>>& output_vals,
-                                         const std::vector<Tensor<double>>& output_grad) override;
+    Tensor backward(const Tensor& input_vals, const Tensor& output_grad) override;
 
     /**
      * @brief Save the layer to a file

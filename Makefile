@@ -1,50 +1,65 @@
 .PHONY: all init install docs clean coverage
 
 CC = g++
-CFLAGS = -O3 -std=c++17 -march=native
+CFLAGS = -O3 -std=c++17 -march=native -Wall -pedantic -fopenmp
 
-release: CFLAGS += -DNDEBUG
-release: all libFJML.so
-	sudo make install
+ifeq ($(debug), true)
+	CFLAGS += -g
+else
+	CFLAGS += -DNDEBUG
+endif
 
-debug: CFLAGS += -coverage -g -fsanitize=undefined
-debug: all libFJML.so
-	sudo make install
+ifeq ($(arch), cuda)
+	CFLAGS = -ccbin g++ -Xcompiler -fopenmp -O3 --std=c++17 -DCUDA -lcublas
+	CC = nvcc
+	ifeq ($(debug), true)
+		CFLAGS += -g -G
+	else
+		CFLAGS += -DNDEBUG
+	endif
+	CFLAGS += --compiler-options
+endif
 
 HEADERS = include/FJML/activations.h \
 		  include/FJML/data.h \
 		  include/FJML/layers.h \
-		  include/FJML/tensor.h \
+		  include/FJML/linalg.h \
 		  include/FJML/loss.h \
+		  include/FJML/metrics.h \
 		  include/FJML/mlp.h \
-		  include/FJML/optimizers.h
-CFILES = bin/activations/activations.o \
-		 bin/data/data.o \
-		 bin/layers/dense.o bin/layers/layers.o bin/layers/softmax.o \
-		 bin/loss/loss.o \
-		 bin/mlp/mlp.o \
-		 bin/optimizers/SGD.o bin/optimizers/adam.o 
+		  include/FJML/optimizers.h \
+		  include/FJML/tensor.h
+CFILES = bin/activations.o \
+		 bin/data.o \
+		 bin/dense.o bin/layers.o bin/softmax.o \
+		 bin/linalg.o bin/tensor.o \
+		 bin/loss.o \
+		 bin/metrics.o \
+		 bin/mlp.o \
+		 bin/adam.o bin/SGD.o 
 
-bin/%.o: src/FJML/%.cpp $(HEADERS) init
+default: install
+
+bin/%.o: src/%.cpp $(HEADERS) init
 	$(CC) -c $(CFLAGS) -fPIC $< -o $@
 
-all: $(CFILES)
-	$(CC) -shared $(CFLAGS) $(CFILES) -o libFJML.so
+libFJML.so: $(CFILES)
+	$(CC) $(CFLAGS) -shared $(CFILES) -o libFJML.so
 
 install: libFJML.so
-	rm -rf /usr/local/include/FJML
-	cp -r include/* /usr/local/include
-	cp libFJML.so /usr/local/lib
-	ldconfig /usr/local/lib
+	sudo rm -rf /usr/local/include/FJML
+	sudo cp -r include/* /usr/local/include
+	sudo cp libFJML.so /usr/local/lib
+	sudo ldconfig /usr/local/lib
 
 init:
-	mkdir -p bin/activations bin/data bin/layers bin/loss bin/mlp bin/optimizers
+	mkdir -p bin
 
-docs: src/**/* include/**/* doxygen.conf
+docs: src/* include/**/* doxygen.conf
 	doxygen doxygen.conf
 
 coverage:
-	lcov --directory . --capture --output-file coverage.info
+	lcov --directory . --no-external --exclude `pwd`/tests/\* --exclude `pwd`/tests/\*\*/\* --capture --output-file coverage.info
 	genhtml coverage.info --output-directory docs/html/coverage
 
 clean:

@@ -6,16 +6,16 @@ using namespace Catch;
 using namespace FJML;
 
 TEST_CASE("Test activations", "[activations]") {
-    Tensor<double> x = Tensor<double>::array({1, 2, -1});
+    Tensor x = Tensor::array(std::vector<double>{1.0, 2.0, -1.0});
 
     SECTION("Test sigmoid") {
-        Tensor<double> y = Activations::sigmoid.forward(x);
+        Tensor y = Activations::sigmoid.forward(x);
 
         REQUIRE(y.at(0) == Approx(0.7310585786300049));
         REQUIRE(y.at(1) == Approx(0.8807970779778823));
         REQUIRE(y.at(2) == Approx(0.2689414213699951));
 
-        Tensor<double> dy = Activations::sigmoid.backward(x);
+        Tensor dy = Activations::sigmoid.backward(x);
 
         REQUIRE(dy.at(0) == Approx(0.19661193324148185));
         REQUIRE(dy.at(1) == Approx(0.10499358540350662));
@@ -23,13 +23,13 @@ TEST_CASE("Test activations", "[activations]") {
     }
 
     SECTION("Test tanh") {
-        Tensor<double> y = Activations::tanh.forward(x);
+        Tensor y = Activations::tanh.forward(x);
 
         REQUIRE(y.at(0) == Approx(0.7615941559557649));
         REQUIRE(y.at(1) == Approx(0.9640275800758169));
         REQUIRE(y.at(2) == Approx(-0.7615941559557649));
 
-        Tensor<double> dy = Activations::tanh.backward(x);
+        Tensor dy = Activations::tanh.backward(x);
 
         REQUIRE(dy.at(0) == Approx(0.41997434161402614));
         REQUIRE(dy.at(1) == Approx(0.07065082485316452));
@@ -37,13 +37,13 @@ TEST_CASE("Test activations", "[activations]") {
     }
 
     SECTION("Test relu") {
-        Tensor<double> y = Activations::relu.forward(x);
+        Tensor y = Activations::relu.forward(x);
 
         REQUIRE(y.at(0) == Approx(1));
         REQUIRE(y.at(1) == Approx(2));
         REQUIRE(y.at(2) == Approx(0));
 
-        Tensor<double> dy = Activations::relu.backward(x);
+        Tensor dy = Activations::relu.backward(x);
 
         REQUIRE(dy.at(0) == Approx(1));
         REQUIRE(dy.at(1) == Approx(1));
@@ -51,13 +51,13 @@ TEST_CASE("Test activations", "[activations]") {
     }
 
     SECTION("Test leaky relu") {
-        Tensor<double> y = Activations::leaky_relu.forward(x);
+        Tensor y = Activations::leaky_relu.forward(x);
 
         REQUIRE(y.at(0) == Approx(1));
         REQUIRE(y.at(1) == Approx(2));
         REQUIRE(y.at(2) == Approx(-0.01));
 
-        Tensor<double> dy = Activations::leaky_relu.backward(x);
+        Tensor dy = Activations::leaky_relu.backward(x);
 
         REQUIRE(dy.at(0) == Approx(1));
         REQUIRE(dy.at(1) == Approx(1));
@@ -65,13 +65,13 @@ TEST_CASE("Test activations", "[activations]") {
     }
 
     SECTION("Test linear") {
-        Tensor<double> y = Activations::linear.forward(x);
+        Tensor y = Activations::linear.forward(x);
 
         REQUIRE(y.at(0) == Approx(1));
         REQUIRE(y.at(1) == Approx(2));
         REQUIRE(y.at(2) == Approx(-1));
 
-        Tensor<double> dy = Activations::linear.backward(x);
+        Tensor dy = Activations::linear.backward(x);
 
         REQUIRE(dy.at(0) == Approx(1));
         REQUIRE(dy.at(1) == Approx(1));
@@ -79,13 +79,13 @@ TEST_CASE("Test activations", "[activations]") {
     }
 
     SECTION("Test swish") {
-        Tensor<double> y = Activations::swish.forward(x);
+        Tensor y = Activations::swish.forward(x);
 
         REQUIRE(y.at(0) == Approx(0.7310585786300049));
         REQUIRE(y.at(1) == Approx(1.7615941559557649));
         REQUIRE(y.at(2) == Approx(-0.2689414213699951));
 
-        Tensor<double> dy = Activations::swish.backward(x);
+        Tensor dy = Activations::swish.backward(x);
 
         REQUIRE(dy.at(0) == Approx(0.9276705384254456));
         REQUIRE(dy.at(1) == Approx(1.0907841920852661));

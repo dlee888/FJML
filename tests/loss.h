@@ -6,24 +6,24 @@ using namespace FJML;
 using namespace Catch;
 
 TEST_CASE("Testing loss functions", "[loss]") {
-    Tensor<double> y = Tensor<double>::array({1, 2, 3}), yhat = Tensor<double>::array({3, 2, 1});
+    Tensor y = Tensor::array(std::vector<double>{1, 2, 3}), yhat = Tensor::array(std::vector<double>{3, 2, 1});
 
     SECTION("Testing MSE") {
         REQUIRE(Loss::mse.calc_loss(y, yhat) == 8);
 
-        Tensor<double> dy = Loss::mse.calc_derivative(y, yhat);
+        Tensor dy = Loss::mse.calc_derivative(y, yhat);
         REQUIRE(dy.at(0) == 4);
         REQUIRE(dy.at(1) == 0);
         REQUIRE(dy.at(2) == -4);
     }
 
     SECTION("Testing huber") {
-        REQUIRE(Loss::huber.calc_loss(y, yhat) == 3);
+        REQUIRE(Loss::huber.calc_loss(y, yhat) == 6);
 
-        Tensor<double> dy = Loss::huber.calc_derivative(y, yhat);
-        REQUIRE(dy.at(0) == 1);
+        Tensor dy = Loss::huber.calc_derivative(y, yhat);
+        REQUIRE(dy.at(0) == 2);
         REQUIRE(dy.at(1) == 0);
-        REQUIRE(dy.at(2) == -1);
+        REQUIRE(dy.at(2) == -2);
     }
 
     SECTION("Testing crossentropy") {
@@ -34,9 +34,11 @@ TEST_CASE("Testing loss functions", "[loss]") {
         yhat.at(1) = 0.4;
         yhat.at(2) = 0.3;
 
-        REQUIRE(Loss::crossentropy.calc_loss(y, yhat) == Approx(2.0714733720306593));
+        Loss::Loss loss = Loss::crossentropy(false);
 
-        Tensor<double> dy = Loss::crossentropy.calc_derivative(y, yhat);
+        REQUIRE(loss.calc_loss(y, yhat) == Approx(2.0714733720306593));
+
+        Tensor dy = loss.calc_derivative(y, yhat);
 
         REQUIRE(dy.at(0) == Approx(1 / 0.7));
         REQUIRE(dy.at(1) == Approx(1 / 0.6));
