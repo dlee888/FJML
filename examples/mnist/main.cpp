@@ -41,7 +41,7 @@ void load_data(FJML::Tensor& x, FJML::Tensor& y, std::string filename, int limit
 
         // Add the data to the vectors
         x_vec.push_back(pixels);
-        y_vec.push_back(FJML::Tensor::array(std::vector<double>{(double)label}));
+        y_vec.push_back(FJML::Data::one_hot(label, 10));
 
         // Stop if we have enough data
         if (limit != -1 && (int)x_vec.size() >= limit) {
@@ -80,14 +80,15 @@ int main() {
     // 3. An optimizer
     // Change the device to FJML::DEVICE_CUDA to use the GPU
     FJML::MLP::MLP model({new FJML::Layers::Dense(28 * 28, 128, FJML::Activations::relu),
-                     new FJML::Layers::Dense(128, 10, FJML::Activations::linear)},
-                    FJML::Loss::sparse_categorical_crossentropy(true), new FJML::Optimizers::Adam());
+                          new FJML::Layers::Dense(128, 10, FJML::Activations::linear), new FJML::Layers::Softmax()},
+                         FJML::Loss::crossentropy(false), new FJML::Optimizers::Adam());
 
     // Train the model
-    model.train(x_train, y_train, x_test, y_test, 6, 128, "mnist.fjml", {FJML::MLP::sparse_categorical_accuracy});
+    model.train(x_train, y_train, x_test, y_test, 6, 128, "mnist.fjml", {FJML::MLP::accuracy});
 
     // Evaluate the model
-    std::cout << "Testing accuracy: " << FJML::MLP::sparse_categorical_accuracy.compute(mnist_test_y, model.run(mnist_test_x)) << std::endl;
+    std::cout << "Testing accuracy: "
+              << FJML::MLP::sparse_categorical_accuracy.compute(mnist_test_y, model.run(mnist_test_x)) << std::endl;
 }
 
 // Compile with:
