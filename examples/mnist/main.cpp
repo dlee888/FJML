@@ -88,7 +88,7 @@ int main() {
 
     // Evaluate the model
     std::cout << "Testing accuracy: "
-              << FJML::MLP::sparse_categorical_accuracy.compute(mnist_test_y, model.run(mnist_test_x)) << std::endl;
+              << FJML::MLP::accuracy.compute(mnist_test_y, model.run(mnist_test_x)) << std::endl;
 }
 
 // Compile with:
