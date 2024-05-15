@@ -95,7 +95,9 @@ void MLP::train(const Tensor& x_train, const Tensor& y_train, const Tensor& x_te
     for (int i = 0; i < epochs; i++) {
         std::cout << "Epoch " << i + 1 << ":\n";
         std::chrono::time_point<std::chrono::system_clock> start_time = std::chrono::system_clock::now();
-        std::random_shuffle(indices.begin(), indices.end());
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(indices.begin(), indices.end(), g);
         for (int j = 0; j < num_inputs; j += batch_size) {
             progress_bar(j, num_inputs, 69, time_elapsed);
             int batch_end = std::min(j + batch_size, num_inputs);

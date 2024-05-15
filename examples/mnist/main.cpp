@@ -16,6 +16,10 @@ void load_data(FJML::Tensor& x, FJML::Tensor& y, std::string filename, int limit
     // Uses data from the kaggle mnist dataset
     // https://www.kaggle.com/datasets/oddrationale/mnist-in-csv
     std::ifstream file(filename);
+    if (file.fail()) {
+        std::cerr << "Failed to load data from file " << filename << std::endl;
+        return;
+    }
 
     // The first line of the file is the header
     std::string line;

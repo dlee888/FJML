@@ -1,2 +1,2 @@
 CompileFlags:
-  Add: [-DCUDA, -I/usr/local/cuda/include, -lcublas]
+  # Add: [-DCUDA, -I/usr/local/cuda/include, -lcublas]

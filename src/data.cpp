@@ -2,6 +2,7 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <cstring>
+#include <random>
 
 #include "../include/FJML/data.h"
 
@@ -26,7 +27,9 @@ void split(const Tensor& input_set, const Tensor& output_set, Tensor& input_trai
     for (int i = 0; i < n; i++) {
         indices[i] = i;
     }
-    std::random_shuffle(indices.begin(), indices.end());
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(indices.begin(), indices.end(), g);
 
     input_train = Tensor({train_n, input_set.shape[1]}, input_set.device);
     output_train = Tensor({train_n, output_set.shape[1]}, output_set.device);

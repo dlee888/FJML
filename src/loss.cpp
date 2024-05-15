@@ -25,7 +25,7 @@ const Loss mse(
         }
         return result;
     },
-    [](const Tensor& a, const Tensor& b) {
+    [](const Tensor& a, const Tensor& b) -> Tensor {
         Tensor result(a.shape, a.device);
         for (int i = 0; i < a.data_size[0]; i++) {
             result.data[i] = 2 * (b.data[i] - a.data[i]);
