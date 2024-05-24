@@ -8,7 +8,7 @@ namespace FJML {
 
 namespace MLP {
 
-Metric::Metric(std::string name, std::function<double(const Tensor&, const Tensor&)> compute)
+Metric::Metric(std::string name, std::function<float(const Tensor&, const Tensor&)> compute)
     : name{name}, compute{compute} {}
 
 /**
@@ -16,7 +16,7 @@ Metric::Metric(std::string name, std::function<double(const Tensor&, const Tenso
  *
  * The accuracy metric is defined as the percentage of correct predictions.
  */
-Metric accuracy{"accuracy", [](const Tensor& label, const Tensor& output) -> double {
+Metric accuracy{"accuracy", [](const Tensor& label, const Tensor& output) -> float {
                     Tensor label_argmax = LinAlg::argmax(label, 1);
                     Tensor output_argmax = LinAlg::argmax(output, 1);
                     return LinAlg::mean(LinAlg::equal(label_argmax, output_argmax));
@@ -27,7 +27,7 @@ Metric accuracy{"accuracy", [](const Tensor& label, const Tensor& output) -> dou
  *
  * The mean squared error metric is defined as the mean of the squared difference between the label and the output.
  */
-Metric mean_squared_error{"mean_squared_error", [](const Tensor& label, const Tensor& output) -> double {
+Metric mean_squared_error{"mean_squared_error", [](const Tensor& label, const Tensor& output) -> float {
                               return LinAlg::mean(LinAlg::pow(label - output, 2));
                           }};
 
@@ -39,7 +39,7 @@ Metric mean_squared_error{"mean_squared_error", [](const Tensor& label, const Te
  * Here each label is an integer representing the class.
  */
 Metric sparse_categorical_accuracy{"sparse_categorical_accuracy",
-                                   [](const Tensor& label, const Tensor& output) -> double {
+                                   [](const Tensor& label, const Tensor& output) -> float {
                                        Tensor output_argmax = LinAlg::argmax(output, 1);
                                        int correct = 0;
                                        for (int i = 0; i < label.shape[0]; i++) {
@@ -47,7 +47,7 @@ Metric sparse_categorical_accuracy{"sparse_categorical_accuracy",
                                                correct++;
                                            }
                                        }
-                                       return (double)correct / ((double)label.shape[0]);
+                                       return (float)correct / ((float)label.shape[0]);
                                    }};
 
 } // namespace MLP

@@ -12,7 +12,7 @@
 
 // TODO: Refactor everything
 
-static void progress_bar(int curr, int tot, int bar_width = 69, double time_elapsed = -1) {
+static void progress_bar(int curr, int tot, int bar_width = 69, float time_elapsed = -1) {
     float progress = (float)curr / tot;
     std::cout << "[";
     int pos = bar_width * progress;
@@ -108,9 +108,9 @@ void MLP::train(const Tensor& x_train, const Tensor& y_train, const Tensor& x_te
             Tensor y_batch(batch_shape_y, y_train.device);
             for (int k = j; k < batch_end; k++) {
                 memcpy(x_batch.data + (k - j) * x_train.data_size[1], x_train.data + indices[k] * x_train.data_size[1],
-                       x_train.data_size[1] * sizeof(double));
+                       x_train.data_size[1] * sizeof(float));
                 memcpy(y_batch.data + (k - j) * y_train.data_size[1], y_train.data + indices[k] * y_train.data_size[1],
-                       y_train.data_size[1] * sizeof(double));
+                       y_train.data_size[1] * sizeof(float));
             }
             grad_descent(x_batch, y_batch);
         }

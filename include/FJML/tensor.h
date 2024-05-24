@@ -28,7 +28,7 @@ extern bool handle_initialized;
 enum Device { DEVICE_CPU, DEVICE_CUDA };
 
 /**
- * This class represents an N dimensional tensor of doubles.
+ * This class represents an N dimensional tensor of floats.
  * The tensor is stored as a vector, and also has a shape property.
  */
 class Tensor {
@@ -36,7 +36,7 @@ class Tensor {
     /**
      * A linear array containing the data
      */
-    double* data;
+    float* data;
     /**
      * The shape of the tensor
      */
@@ -61,7 +61,7 @@ class Tensor {
      * @param init the initial value of the tensor, default is 0
      * @param device the device this tensor lives on
      */
-    Tensor(const std::vector<int>& shape, double init = 0, Device device = DEVICE_CPU);
+    Tensor(const std::vector<int>& shape, float init = 0, Device device = DEVICE_CPU);
 
     /**
      * Creates a tensor with the given shape
@@ -124,7 +124,7 @@ class Tensor {
      * @param device the device this tensor lives on
      * @return a tensor with the given vector as its data
      */
-    static Tensor array(const std::vector<double>& vec, Device device = DEVICE_CPU);
+    static Tensor array(const std::vector<float>& vec, Device device = DEVICE_CPU);
 
     /**
      * Create a tensor from a given vector
@@ -178,42 +178,42 @@ class Tensor {
      * @param index the index of the element
      * @return the element at the given index
      */
-    double& operator[](const std::vector<int>& index);
+    float& operator[](const std::vector<int>& index);
 
     /**
      * Returns the element at the given index
      * @param index the index of the element
      * @return the element at the given index
      */
-    const double& operator[](const std::vector<int>& index) const;
+    const float& operator[](const std::vector<int>& index) const;
 
     /**
      * Returns the element at the given index
      * @param index the index of the element
      * @return the element at the given index
      */
-    double& at(const std::vector<int>& index);
+    float& at(const std::vector<int>& index);
 
     /**
      * Returns the element at the given index
      * @param index the index of the element
      * @return the element at the given index
      */
-    const double& at(const std::vector<int>& index) const;
+    const float& at(const std::vector<int>& index) const;
 
     /**
      * Returns the element at the given index
      * @param index the index of the element
      * @return the element at the given index
      */
-    double& at(int index...);
+    float& at(int index...);
 
     /**
      * Returns the element at the given index
      * @param index the index of the element
      * @return the element at the given index
      */
-    const double& at(int index...) const;
+    const float& at(int index...) const;
 
     /**
      * This class is used to iterate over the elements of a tensor
@@ -245,13 +245,13 @@ class Tensor {
          * Returns the element at the current position
          * @return the element at the current position
          */
-        double& operator*();
+        float& operator*();
 
         /**
          * Returns the element at the current position
          * @return the element at the current position
          */
-        const double& operator*() const;
+        const float& operator*() const;
 
         /**
          * Increments the iterator
@@ -405,56 +405,56 @@ class Tensor {
      * @param other the scalar
      * @return the sum of the tensor and the scalar
      */
-    Tensor operator+(double other) const;
+    Tensor operator+(float other) const;
 
     /**
      * Overloads the += operator
      * @param other the scalar
      * @return the sum of the tensor and the scalar
      */
-    Tensor& operator+=(double other);
+    Tensor& operator+=(float other);
 
     /**
      * Overloads the - operator
      * @param other the scalar
      * @return the difference of the tensor and the scalar
      */
-    Tensor operator-(double other) const;
+    Tensor operator-(float other) const;
 
     /**
      * Overloads the -= operator
      * @param other the scalar
      * @return the difference of the tensor and the scalar
      */
-    Tensor& operator-=(double other);
+    Tensor& operator-=(float other);
 
     /**
      * Overloads the * operator
      * @param other the scalar
      * @return the product of the tensor and the scalar
      */
-    Tensor operator*(double other) const;
+    Tensor operator*(float other) const;
 
     /**
      * Overloads the *= operator
      * @param other the scalar
      * @return the product of the tensor and the scalar
      */
-    Tensor& operator*=(double other);
+    Tensor& operator*=(float other);
 
     /**
      * Overloads the / operator
      * @param other the scalar
      * @return the quotient of the tensor and the scalar
      */
-    Tensor operator/(double other) const;
+    Tensor operator/(float other) const;
 
     /**
      * Overloads the /= operator
      * @param other the scalar
      * @return the quotient of the tensor and the scalar
      */
-    Tensor& operator/=(double other);
+    Tensor& operator/=(float other);
 
     /**
      * Overloads the + operator
@@ -462,7 +462,7 @@ class Tensor {
      * @param tensor the tensor
      * @return the sum of the tensor and the scalar
      */
-    friend Tensor operator+(double other, const Tensor& tensor);
+    friend Tensor operator+(float other, const Tensor& tensor);
 
     /**
      * Overloads the - operator
@@ -470,7 +470,7 @@ class Tensor {
      * @param tensor the tensor
      * @return the difference of the tensor and the scalar
      */
-    friend Tensor operator-(double other, const Tensor& tensor);
+    friend Tensor operator-(float other, const Tensor& tensor);
 
     /**
      * Scalar times the tensor
@@ -478,7 +478,7 @@ class Tensor {
      * @param tensor the tensor
      * @return the product of the tensor and the scalar
      */
-    friend Tensor operator*(double other, const Tensor& tensor);
+    friend Tensor operator*(float other, const Tensor& tensor);
 
     /**
      * Overloads the / operator
@@ -486,7 +486,7 @@ class Tensor {
      * @param tensor the tensor
      * @return the quotient of the tensor and the scalar
      */
-    friend Tensor operator/(double other, const Tensor& tensor);
+    friend Tensor operator/(float other, const Tensor& tensor);
 
     /**
      * Negation of the tensor
@@ -534,7 +534,7 @@ class Tensor {
      * @param f the function
      * @return the tensor with the function applied to each element
      */
-    Tensor& apply_function(std::function<double(double)> f);
+    Tensor& apply_function(std::function<float(float)> f);
 
     /**
      * Applies a function to each element of the tensor
@@ -544,7 +544,7 @@ class Tensor {
      * @param f the function
      * @return the tensor with the function applied to each element
      */
-    Tensor calc_function(std::function<double(double)> f) const;
+    Tensor calc_function(std::function<float(float)> f) const;
 
     /**
      * Applies a function to each element of two tensors
@@ -555,7 +555,7 @@ class Tensor {
      * @param other the other tensor
      * @return the tensor with the function applied to each element
      */
-    Tensor& apply_function(std::function<double(double, double)> f, const Tensor& other);
+    Tensor& apply_function(std::function<float(float, float)> f, const Tensor& other);
 
     /**
      * Applies a function to each element of two tensors
@@ -566,7 +566,7 @@ class Tensor {
      * @param other the other tensor
      * @return the tensor with the function applied to each element
      */
-    Tensor calc_function(std::function<double(double, double)> f, const Tensor& other) const;
+    Tensor calc_function(std::function<float(float, float)> f, const Tensor& other) const;
 };
 
 } // namespace FJML

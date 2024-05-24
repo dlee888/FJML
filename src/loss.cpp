@@ -9,7 +9,7 @@ namespace FJML {
 
 namespace Loss {
 
-double Loss::calc_loss(const Tensor& obs, const Tensor& pred) const { return function(obs, pred); }
+float Loss::calc_loss(const Tensor& obs, const Tensor& pred) const { return function(obs, pred); }
 
 Tensor Loss::calc_derivative(const Tensor& obs, const Tensor& pred) const { return derivative(obs, pred); }
 
@@ -18,8 +18,8 @@ Tensor Loss::calc_derivative(const Tensor& obs, const Tensor& pred) const { retu
  */
 const Loss mse(
     "mse",
-    [](const Tensor& a, const Tensor& b) -> double {
-        double result = 0;
+    [](const Tensor& a, const Tensor& b) -> float {
+        float result = 0;
         for (int i = 0; i < a.data_size[0]; i++) {
             result += (a.data[i] - b.data[i]) * (a.data[i] - b.data[i]);
         }
@@ -37,10 +37,10 @@ const Loss mse(
  */
 const Loss huber(
     "huber",
-    [](const Tensor& a, const Tensor& b) -> double {
-        double result = 0;
+    [](const Tensor& a, const Tensor& b) -> float {
+        float result = 0;
         for (int i = 0; i < a.data_size[0]; i++) {
-            double diff = b.data[i] - a.data[i];
+            float diff = b.data[i] - a.data[i];
             if (diff < -1) {
                 result += -2 * diff - 1;
             } else if (diff > 1) {
@@ -54,7 +54,7 @@ const Loss huber(
     [](const Tensor& a, const Tensor& b) -> Tensor {
         Tensor result(a.shape, a.device);
         for (int i = 0; i < a.data_size[0]; i++) {
-            double diff = b.data[i] - a.data[i];
+            float diff = b.data[i] - a.data[i];
             if (diff < -1) {
                 result.data[i] = -2;
             } else if (diff > 1) {
@@ -74,8 +74,8 @@ Loss crossentropy(bool from_logits) {
     if (!from_logits) {
         return Loss(
             "crossentropy",
-            [](const Tensor& a, const Tensor& b) -> double {
-                double result = 0;
+            [](const Tensor& a, const Tensor& b) -> float {
+                float result = 0;
                 for (int i = 0; i < a.data_size[0]; i++) {
                     result += a.data[i] * std::log(b.data[i]) + (1 - a.data[i]) * std::log(1 - b.data[i]);
                 }
@@ -91,8 +91,8 @@ Loss crossentropy(bool from_logits) {
     }
     return Loss(
         "crossentropy",
-        [](const Tensor& a, const Tensor& b) -> double {
-            double result = 0;
+        [](const Tensor& a, const Tensor& b) -> float {
+            float result = 0;
             for (int i = 0; i < a.data_size[0]; i++) {
                 result += a.data[i] * b.data[i];
             }
@@ -116,7 +116,7 @@ Loss sparse_categorical_crossentropy(bool from_logits) {
     if (!from_logits) {
         return Loss(
             "sparse_categorical_crossentropy",
-            [](const Tensor& a, const Tensor& b) -> double { return -std::log(b.data[static_cast<int>(a.data[0])]); },
+            [](const Tensor& a, const Tensor& b) -> float { return -std::log(b.data[static_cast<int>(a.data[0])]); },
             [](const Tensor& a, const Tensor& b) -> Tensor {
                 Tensor result(b.shape, b.device);
                 result.data[static_cast<int>(a.data[0])] = -1 / b.data[static_cast<int>(a.data[0])];
@@ -125,7 +125,7 @@ Loss sparse_categorical_crossentropy(bool from_logits) {
     }
     return Loss(
         "sparse_categorical_crossentropy",
-        [](const Tensor& a, const Tensor& b) -> double { return -b.data[static_cast<int>(a.data[0])]; },
+        [](const Tensor& a, const Tensor& b) -> float { return -b.data[static_cast<int>(a.data[0])]; },
         [](const Tensor& a, const Tensor& b) -> Tensor {
             Tensor result(b.shape, b.device);
             result.data[static_cast<int>(a.data[0])] = -1;

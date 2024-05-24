@@ -6,7 +6,7 @@ using namespace FJML;
 using namespace Catch;
 
 TEST_CASE("Testing loss functions", "[loss]") {
-    Tensor y = Tensor::array(std::vector<double>{1, 2, 3}), yhat = Tensor::array(std::vector<double>{3, 2, 1});
+    Tensor y = Tensor::array(std::vector<float>{1, 2, 3}), yhat = Tensor::array(std::vector<float>{3, 2, 1});
 
     SECTION("Testing MSE") {
         REQUIRE(Loss::mse.calc_loss(y, yhat) == 8);

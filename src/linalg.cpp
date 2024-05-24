@@ -18,11 +18,11 @@ namespace FJML {
 
 namespace LinAlg {
 
-double dot_product(const Tensor& a, const Tensor& b) {
+float dot_product(const Tensor& a, const Tensor& b) {
     if (a.data_size[0] != b.data_size[0]) {
         throw std::invalid_argument("The two vectors must have the same size.");
     }
-    double res = 0;
+    float res = 0;
     for (int i = 0; i < (int)a.data_size[0]; i++) {
         res += a.data[i] * b.data[i];
     }
@@ -45,12 +45,12 @@ Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
             Tensor result({a.shape[0], b.shape[0]}, 0.0, DEVICE_CUDA);
             cublasStatus_t status = CUBLAS_STATUS_SUCCESS;
 
-            double *d_a, *d_b, *d_result;
+            float *d_a, *d_b, *d_result;
             cudaHostGetDevicePointer(&d_a, a.data, 0);
             cudaHostGetDevicePointer(&d_b, b.data, 0);
             cudaHostGetDevicePointer(&d_result, result.data, 0);
 
-            const double alpha = 1, beta = 0;
+            const float alpha = 1, beta = 0;
             status = cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, b.shape[0], a.shape[0], 1, &alpha, d_b, b.shape[0],
                                  d_a, 1, &beta, d_result, b.shape[0]);
             if (status != CUBLAS_STATUS_SUCCESS) {
@@ -76,12 +76,12 @@ Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
             Tensor result({b.shape[1]}, 0.0, DEVICE_CUDA);
             cublasStatus_t status = CUBLAS_STATUS_SUCCESS;
 
-            double *d_a, *d_b, *d_result;
+            float *d_a, *d_b, *d_result;
             cudaHostGetDevicePointer(&d_a, a.data, 0);
             cudaHostGetDevicePointer(&d_b, b.data, 0);
             cudaHostGetDevicePointer(&d_result, result.data, 0);
 
-            const double alpha = 1, beta = 0;
+            const float alpha = 1, beta = 0;
             status = cublasDgemv(handle, CUBLAS_OP_N, b.shape[1], b.shape[0], &alpha, d_b, b.shape[1], d_a, 1, &beta,
                                  d_result, 1);
             if (status != CUBLAS_STATUS_SUCCESS) {
@@ -106,12 +106,12 @@ Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
             Tensor result({a.shape[0]}, 0.0, DEVICE_CUDA);
             cublasStatus_t status = CUBLAS_STATUS_SUCCESS;
 
-            double *d_a, *d_b, *d_result;
+            float *d_a, *d_b, *d_result;
             cudaHostGetDevicePointer(&d_a, a.data, 0);
             cudaHostGetDevicePointer(&d_b, b.data, 0);
             cudaHostGetDevicePointer(&d_result, result.data, 0);
 
-            const double alpha = 1, beta = 0;
+            const float alpha = 1, beta = 0;
             status = cublasDgemv(handle, CUBLAS_OP_T, a.shape[1], a.shape[0], &alpha, d_a, a.shape[1], d_b, 1, &beta,
                                  d_result, 1);
             if (status != CUBLAS_STATUS_SUCCESS) {
@@ -135,12 +135,12 @@ Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
         Tensor result({a.shape[0], b.shape[1]}, 0.0, DEVICE_CUDA);
         cublasStatus_t status = CUBLAS_STATUS_SUCCESS;
 
-        double *d_a, *d_b, *d_result;
+        float *d_a, *d_b, *d_result;
         cudaHostGetDevicePointer(&d_a, a.data, 0);
         cudaHostGetDevicePointer(&d_b, b.data, 0);
         cudaHostGetDevicePointer(&d_result, result.data, 0);
 
-        const double alpha = 1, beta = 0;
+        const float alpha = 1, beta = 0;
         status = cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, b.shape[1], a.shape[0], a.shape[1], &alpha, d_b,
                              b.shape[1], d_a, a.shape[1], &beta, d_result, b.shape[1]);
         if (status != CUBLAS_STATUS_SUCCESS) {
@@ -174,17 +174,17 @@ Tensor transpose(const Tensor& a) {
     return result;
 }
 
-double sum(const Tensor& a) {
-    double res = 0;
+float sum(const Tensor& a) {
+    float res = 0;
     for (int i = 0; i < a.data_size[0]; i++) {
         res += a.data[i];
     }
     return res;
 }
 
-double mean(const Tensor& a) { return sum(a) / a.data_size[0]; }
+float mean(const Tensor& a) { return sum(a) / a.data_size[0]; }
 
-Tensor pow(const Tensor& a, double b) {
+Tensor pow(const Tensor& a, float b) {
     Tensor result(a.shape, a.device);
     for (int i = 0; i < a.data_size[0]; i++) {
         result.data[i] = std::pow(a.data[i], b);
@@ -193,7 +193,7 @@ Tensor pow(const Tensor& a, double b) {
 }
 
 int random_choice(const Tensor& a) {
-    double rand_num = (double)rand() / (double)RAND_MAX;
+    float rand_num = (float)rand() / (float)RAND_MAX;
     for (int i = 0; i < a.data_size[0]; i++) {
         if (rand_num < a.data[i]) {
             return i;
@@ -219,7 +219,7 @@ Tensor argmax(const Tensor& a, int axis) {
     Tensor result(result_shape);
     for (int i = 0; i < result.data_size[0]; i++) {
         int max_index = 0;
-        double max_value = -INFINITY;
+        float max_value = -INFINITY;
         for (int j = 0; j < a.shape[axis]; j++) {
             int index = i % a.data_size[axis + 1] + j * a.data_size[axis + 1] +
                         i / a.data_size[axis + 1] * a.data_size[axis];
@@ -244,8 +244,8 @@ Tensor equal(const Tensor& a, const Tensor& b) {
     return result;
 }
 
-double max(const Tensor& a) {
-    double result = a.data[0];
+float max(const Tensor& a) {
+    float result = a.data[0];
     for (int i = 1; i < a.data_size[0]; i++) {
         if (a.data[i] > result) {
             result = a.data[i];
@@ -270,7 +270,7 @@ Tensor dense_forward(const Tensor& input, const Tensor& weights, const Tensor& b
             }
         }
         Tensor result({input.shape[0], weights.shape[1]}, 0.0, DEVICE_CUDA);
-        double *d_input, *d_weights, *d_result, *d_bias;
+        float *d_input, *d_weights, *d_result, *d_bias;
         cudaHostGetDevicePointer(&d_input, input.data, 0);
         cudaHostGetDevicePointer(&d_weights, weights.data, 0);
         cudaHostGetDevicePointer(&d_result, result.data, 0);
@@ -280,7 +280,7 @@ Tensor dense_forward(const Tensor& input, const Tensor& weights, const Tensor& b
             cublasDcopy(handle, bias.shape[0], d_bias, 1, d_result + i * bias.shape[0], 1);
         }
 
-        const double alpha = 1, beta = 1;
+        const float alpha = 1, beta = 1;
         cublasStatus_t status = cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, weights.shape[1], input.shape[0],
                                             weights.shape[0], &alpha, d_weights, weights.shape[1], d_input,
                                             input.shape[1], &beta, d_result, weights.shape[1]);

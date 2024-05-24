@@ -28,7 +28,7 @@ namespace LinAlg {
  * @param b The second vector.
  * @return The dot product of the two vectors.
  */
-double dot_product(const Tensor& a, const Tensor& b);
+float dot_product(const Tensor& a, const Tensor& b);
 
 /**
  * @brief Multiplies two matrices.
@@ -58,7 +58,7 @@ Tensor transpose(const Tensor& a);
  * @param a The tensor.
  * @return The sum of all the elements in the tensor.
  */
-double sum(const Tensor& a);
+float sum(const Tensor& a);
 
 /**
  * Computes the mean of all the elements in a tensor.
@@ -66,7 +66,7 @@ double sum(const Tensor& a);
  * @param a The tensor.
  * @return The mean of all the elements in the tensor.
  */
-double mean(const Tensor& a);
+float mean(const Tensor& a);
 
 /**
  * Raises all the elements in a tensor to a power.
@@ -74,7 +74,7 @@ double mean(const Tensor& a);
  * @param b The power.
  * @return The tensor with all the elements raised to the power.
  */
-Tensor pow(const Tensor& a, double b);
+Tensor pow(const Tensor& a, float b);
 
 /**
  * Randomly chooses an index using tensor values as probabilities
@@ -111,7 +111,7 @@ Tensor equal(const Tensor& a, const Tensor& b);
  * @param a The tensor.
  * @return The maximum value in the tensor.
  */
-double max(const Tensor& a);
+float max(const Tensor& a);
 
 /**
  * Forward pass of a dense layer.

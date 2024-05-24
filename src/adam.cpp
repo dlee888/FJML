@@ -28,7 +28,7 @@ void Adam::apply_grad(Tensor& params, const Tensor& grads) {
     Tensor v_hat = v / (1 - pow(beta2, t));
 
     // Update parameters
-    params -= alpha * m_hat / (v_hat.apply_function([](double x) { return std::sqrt(x); }) + epsilon);
+    params -= alpha * m_hat / (v_hat.apply_function([](float x) { return std::sqrt(x); }) + epsilon);
 
     // Increment time step
     t++;

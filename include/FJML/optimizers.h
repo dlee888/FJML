@@ -71,12 +71,12 @@ class SGD : public Optimizer {
     /**
      * @brief The learning rate
      */
-    double alpha;
+    float alpha;
 
     /**
      * @brief Default constructor
      */
-    SGD(double learning_rate = 0.01) : Optimizer{"SGD"}, alpha{learning_rate} {}
+    SGD(float learning_rate = 0.01) : Optimizer{"SGD"}, alpha{learning_rate} {}
     /**
      * @brief Destructor
      */
@@ -124,20 +124,20 @@ class Adam : public Optimizer {
     /**
      * @brief The epsilon value
      */
-    static constexpr double epsilon = 1e-8;
+    static constexpr float epsilon = 1e-8;
 
     /**
      * @brief The learning rate
      */
-    double alpha;
+    float alpha;
     /**
      * @brief The first momentum
      */
-    double beta1;
+    float beta1;
     /**
      * @brief The second momentum
      */
-    double beta2;
+    float beta2;
 
     /**
      * Constructor
@@ -145,7 +145,7 @@ class Adam : public Optimizer {
      * @param b1 The first momentum
      * @param b2 The second momentum
      */
-    Adam(double a = 0.001, double b1 = 0.9, double b2 = 0.999)
+    Adam(float a = 0.001, float b1 = 0.9, float b2 = 0.999)
         : Optimizer{"Adam"}, t{1}, alpha{a}, beta1{b1}, beta2{b2} {}
     /**
      * @brief Destructor

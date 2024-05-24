@@ -4,7 +4,6 @@
 #include <chrono>
 #include <cmath>
 #include <cstring>
-#include <iostream>
 #include <random>
 
 #include "../include/FJML/layers.h"
@@ -28,7 +27,7 @@ Layers::Dense::Dense(int input, int output, Activations::Activation activ, Devic
 
 Layers::Dense::Dense(std::ifstream& file)
     : Layer{"Dense"}, weights{{0}}, bias{{0}}, activ{Activations::Activation(
-                                                   "", [](double x) { return x; }, [](double x) { return 1; })} {
+                                                   "", [](float x) { return x; }, [](float x) { return 1; })} {
     std::string activation;
     file >> activation;
     for (Activations::Activation a : Activations::activations) {

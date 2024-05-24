@@ -32,7 +32,7 @@ class Metric {
      *
      * Note: the arguments are assumed to be a batch of data.
      */
-    std::function<double(const Tensor&, const Tensor&)> compute;
+    std::function<float(const Tensor&, const Tensor&)> compute;
 
     /**
      * Default constructor
@@ -42,7 +42,7 @@ class Metric {
     /**
      * Constructor
      */
-    Metric(std::string name, std::function<double(const Tensor&, const Tensor&)> compute);
+    Metric(std::string name, std::function<float(const Tensor&, const Tensor&)> compute);
 };
 
 extern Metric accuracy, mean_squared_error, sparse_categorical_accuracy;

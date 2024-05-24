@@ -28,7 +28,7 @@ TEST_CASE("Test mlp", "[mlp]") {
     SECTION("Test run") {
         ((Layers::Dense*)mlp.layers.at(0))->weights.at(0, 0) = 2;
         ((Layers::Dense*)mlp.layers.at(0))->bias.at(0) = -1;
-        Tensor input = Tensor::array(std::vector<double>{6.9});
+        Tensor input = Tensor::array(std::vector<float>{6.9});
         input.reshape(std::vector<int>{1, 1});
         Tensor output = mlp.run(input);
         REQUIRE(output.shape == std::vector<int>{1, 1});
@@ -41,9 +41,9 @@ TEST_CASE("Test mlp", "[mlp]") {
         ((Layers::Dense*)mlp.layers.at(0))->weights.at(0, 0) = 2;
         ((Layers::Dense*)mlp.layers.at(0))->bias.at(0) = -1;
 
-        Tensor input = Tensor::array(std::vector<double>{6.9});
+        Tensor input = Tensor::array(std::vector<float>{6.9});
         input.reshape(std::vector<int>{1, 1});
-        Tensor output = Tensor::array(std::vector<double>{12.8});
+        Tensor output = Tensor::array(std::vector<float>{12.8});
         output.reshape(std::vector<int>{1, 1});
 
         mlp.grad_descent(input, output);
@@ -58,11 +58,11 @@ TEST_CASE("Test mlp", "[mlp]") {
 
     SECTION("Test linear regression") {
         mlp.set_loss(Loss::huber);
-        double learning_rate = 0.005;
+        float learning_rate = 0.005;
         std::vector<Tensor> x_train_v, y_train_v;
         for (int i = -32; i < 33; i++) {
-            x_train_v.push_back(Tensor::array(std::vector<double>{(double)i}));
-            y_train_v.push_back(Tensor::array(std::vector<double>{2.0 * i - 1}));
+            x_train_v.push_back(Tensor::array(std::vector<float>{(float)i}));
+            y_train_v.push_back(Tensor::array(std::vector<float>{2.0f * i - 1}));
         }
         Tensor x_train = Tensor::array(x_train_v);
         Tensor y_train = Tensor::array(y_train_v);
@@ -80,11 +80,17 @@ TEST_CASE("Test mlp", "[mlp]") {
     SECTION("Test logistic regression") {
         MLP::MLP mlp2({new Layers::Dense(1, 2), new Layers::Softmax()}, Loss::crossentropy(false),
                       new Optimizers::Adam());
+        // std::cerr << ((Layers::Dense*)mlp2.layers.at(0))->weights << " " << ((Layers::Dense*)mlp2.layers.at(0))->bias
+        //           << std::endl;
+        ((Layers::Dense*)mlp2.layers.at(0))->weights.at(0, 0) = 0;
+        ((Layers::Dense*)mlp2.layers.at(0))->bias.at(0) = 0;
+        ((Layers::Dense*)mlp2.layers.at(0))->weights.at(0, 1) = 0;
+        ((Layers::Dense*)mlp2.layers.at(0))->bias.at(1) = 0;
 
         std::vector<Tensor> x_train_v, y_train_v;
         for (int i = -32; i < 33; i++) {
-            x_train_v.push_back(Tensor::array(std::vector<double>{(double)i}));
-            y_train_v.push_back(Tensor::array(std::vector<double>{i < 0 ? 1.0 : 0.0, i >= 0 ? 1.0 : 0.0}));
+            x_train_v.push_back(Tensor::array(std::vector<float>{(float)i}));
+            y_train_v.push_back(Tensor::array(std::vector<float>{i < 0 ? 1.0f : 0.0f, i >= 0 ? 1.0f : 0.0f}));
         }
         Tensor x_train = Tensor::array(x_train_v);
         Tensor y_train = Tensor::array(y_train_v);

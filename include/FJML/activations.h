@@ -31,11 +31,11 @@ class Activation {
     /**
      * The function to apply to a layer
      */
-    std::function<double(double)> func;
+    std::function<float(float)> func;
     /**
      * The derivative of the function
      */
-    std::function<double(double)> derivative;
+    std::function<float(float)> derivative;
 
     /**
      * Constructor with given name and functions
@@ -43,7 +43,7 @@ class Activation {
      * @param func The function to apply to a layer
      * @param derivative The derivative of the function
      */
-    Activation(std::string name, std::function<double(double)> func, std::function<double(double)> derivative);
+    Activation(std::string name, std::function<float(float)> func, std::function<float(float)> derivative);
 
     /**
      * @brief apply the function to a layer

@@ -9,7 +9,7 @@ namespace FJML {
 
 namespace Activations {
 
-Activation::Activation(std::string name, std::function<double(double)> func, std::function<double(double)> derivative)
+Activation::Activation(std::string name, std::function<float(float)> func, std::function<float(float)> derivative)
     : name{name}, func{func}, derivative{derivative} {}
 
 Tensor Activation::apply(Tensor& layer) const { return layer.apply_function(func); }
@@ -29,8 +29,8 @@ Tensor Activation::backward(const Tensor& layer) const { return layer.calc_funct
  * \f]
  */
 const Activation sigmoid = Activation(
-    "sigmoid", [](double x) { return 1 / (1 + std::exp(-x)); },
-    [](double x) { return std::exp(-x) / std::pow(1 + std::exp(-x), 2); });
+    "sigmoid", [](float x) { return 1 / (1 + std::exp(-x)); },
+    [](float x) { return std::exp(-x) / std::pow(1 + std::exp(-x), 2); });
 
 /**
  * The hyperbolic tangent function.
@@ -41,7 +41,7 @@ const Activation sigmoid = Activation(
  * \f]
  */
 const Activation tanh = Activation(
-    "tanh", [](double x) { return std::tanh(x); }, [](double x) { return 1 - std::pow(std::tanh(x), 2); });
+    "tanh", [](float x) { return std::tanh(x); }, [](float x) { return 1 - std::pow(std::tanh(x), 2); });
 
 /**
  * The rectified linear unit function.
@@ -55,7 +55,7 @@ const Activation tanh = Activation(
  *  \f]
  */
 const Activation relu = Activation(
-    "relu", [](double x) { return x > 0 ? x : 0; }, [](double x) { return x > 0 ? 1 : 0; });
+    "relu", [](float x) { return x > 0 ? x : 0; }, [](float x) { return x > 0 ? 1 : 0; });
 
 /**
  * The leaky rectified linear unit function.
@@ -69,7 +69,7 @@ const Activation relu = Activation(
  * \f]
  */
 const Activation leaky_relu = Activation(
-    "leaky relu", [](double x) { return x > 0 ? x : 0.01 * x; }, [](double x) { return x > 0 ? 1 : 0.01; });
+    "leaky relu", [](float x) { return x > 0 ? x : 0.01 * x; }, [](float x) { return x > 0 ? 1 : 0.01; });
 
 /**
  * The linear function.
@@ -80,7 +80,7 @@ const Activation leaky_relu = Activation(
  * \f]
  */
 const Activation linear = Activation(
-    "linear", [](double x) { return x; }, [](double x) { return 1; });
+    "linear", [](float x) { return x; }, [](float x) { return 1; });
 
 /**
  * The swish function.
@@ -91,10 +91,10 @@ const Activation linear = Activation(
  * \f]
  */
 const Activation swish = Activation(
-    "swish", [](double x) { return x / (1 + std::exp(-x)); },
-    [](double x) {
-        double exp = std::exp(x);
-        double exp_plus_one = 1 + exp;
+    "swish", [](float x) { return x / (1 + std::exp(-x)); },
+    [](float x) {
+        float exp = std::exp(x);
+        float exp_plus_one = 1 + exp;
         return 1 + (x - 1) / exp_plus_one - x / exp_plus_one / exp_plus_one;
     });
 

@@ -4,7 +4,7 @@ CC = g++
 CFLAGS = -O3 -std=c++17 -march=native -Wall -pedantic -fopenmp
 
 ifeq ($(debug), true)
-	CFLAGS += -g
+	CFLAGS += -g --coverage
 else
 	CFLAGS += -DNDEBUG
 endif

@@ -6,8 +6,18 @@ using namespace FJML;
 using namespace Catch;
 
 TEST_CASE("Test layers", "[layers]") {
-    Tensor input = Tensor::array(std::vector<double>{1, 2, -1});
+    Tensor input = Tensor::array(std::vector<float>{1, 2, -1});
     input.reshape({1, 3});
+
+    SECTION("Test dummy layer") {
+        Layers::Layer layer;
+
+        layer.apply(input);
+        layer.backward(input, input);
+        std::ofstream file("/tmp/dummy.fjml");
+        layer.save(file);
+        layer.summary();
+    }
 
     SECTION("Test Dense layer") {
         Layers::Dense dense{3, 2, Activations::linear};
@@ -32,7 +42,7 @@ TEST_CASE("Test layers", "[layers]") {
             REQUIRE(output.at(0, 0) == Approx(-2.2).margin(0.00001));
             REQUIRE(output.at(0, 1) == Approx(10.9).margin(0.00001));
 
-            Tensor vector_input = Tensor::array(std::vector<std::vector<double>>{{1, 2, -1}, {1, 2, -1}, {1, 2, -1}});
+            Tensor vector_input = Tensor::array(std::vector<std::vector<float>>{{1, 2, -1}, {1, 2, -1}, {1, 2, -1}});
 
             Tensor vector_output = dense.apply(vector_input);
             REQUIRE(vector_output.shape[0] == 3);
@@ -47,7 +57,7 @@ TEST_CASE("Test layers", "[layers]") {
 
         SECTION("Test backward") {
             Tensor output = dense.apply(input);
-            Tensor grad = Tensor::array(std::vector<double>{1, 2});
+            Tensor grad = Tensor::array(std::vector<float>{1, 2});
             grad.reshape({1, 2});
 
             Tensor input_grad = dense.backward(input, grad);
@@ -67,6 +77,31 @@ TEST_CASE("Test layers", "[layers]") {
             REQUIRE(dense.weights.at(2, 0) == Approx(5.1));
             REQUIRE(dense.weights.at(2, 1) == Approx(6.2));
         }
+
+        SECTION("Test save and load") {
+            std::ofstream file("/tmp/dense.fjml");
+            dense.save(file);
+
+            std::ifstream file2("/tmp/dense.fjml");
+            Layers::Layer* new_layer = Layers::load(file2);
+            REQUIRE(new_layer->name == "Dense");
+            Layers::Dense new_dense = (Layers::Dense&)*new_layer;
+
+            REQUIRE(new_dense.weights.shape == std::vector<int>{3, 2});
+            REQUIRE(new_dense.bias.shape == std::vector<int>{2});
+
+            REQUIRE(new_dense.weights.at(0, 0) == Approx(1));
+            REQUIRE(new_dense.weights.at(0, 1) == Approx(2));
+            REQUIRE(new_dense.weights.at(1, 0) == Approx(3));
+            REQUIRE(new_dense.weights.at(1, 1) == Approx(4));
+            REQUIRE(new_dense.weights.at(2, 0) == Approx(5));
+            REQUIRE(new_dense.weights.at(2, 1) == Approx(6));
+
+            REQUIRE(new_dense.bias.at(0) == Approx(-4.20));
+            REQUIRE(new_dense.bias.at(1) == Approx(6.9));
+        }
+
+        SECTION("Test summary") { dense.summary(); }
     }
 
     SECTION("Test softmax layer") {
@@ -81,7 +116,7 @@ TEST_CASE("Test layers", "[layers]") {
         }
 
         SECTION("Test backward") {
-            Tensor grad = Tensor::array(std::vector<double>{1, 2, 3});
+            Tensor grad = Tensor::array(std::vector<float>{1, 2, 3});
             grad.reshape({1, 3});
 
             Tensor input_grad = softmax.backward({input}, grad);
@@ -90,5 +125,16 @@ TEST_CASE("Test layers", "[layers]") {
             REQUIRE(input_grad.at(0, 1) == Approx(0.1583).margin(0.001));
             REQUIRE(input_grad.at(0, 2) == Approx(0.0430).margin(0.001));
         }
+
+        SECTION("Test save and load") {
+            std::ofstream file("/tmp/softmax.fjml");
+            softmax.save(file);
+
+            std::ifstream file2("/tmp/softmax.fjml");
+            Layers::Layer* new_layer = Layers::load(file2);
+            REQUIRE(new_layer->name == "Softmax");
+        }
+
+        SECTION("Test summary") { softmax.summary(); }
     }
 }

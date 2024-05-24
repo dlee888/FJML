@@ -22,20 +22,20 @@ bool handle_initialized = false;
 
 Tensor::Tensor() : data{nullptr}, shape(0), data_size{1}, device{DEVICE_CPU} {}
 
-Tensor::Tensor(const std::vector<int>& shape, double init, Device device) : shape{shape}, device{device} {
+Tensor::Tensor(const std::vector<int>& shape, float init, Device device) : shape{shape}, device{device} {
     data_size = shape;
     for (int i = (int)shape.size() - 2; i >= 0; i--) {
         data_size[i] *= data_size[i + 1];
     }
     data_size.push_back(1);
     if (device == DEVICE_CPU) {
-        data = (double*)malloc(data_size[0] * sizeof(double));
+        data = (float*)malloc(data_size[0] * sizeof(float));
         for (int i = 0; i < data_size[0]; i++) {
             data[i] = init;
         }
     } else if (device == DEVICE_CUDA) {
 #ifdef CUDA
-        cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
+        cudaHostAlloc(&data, data_size[0] * sizeof(float), cudaHostAllocMapped);
         for (int i = 0; i < data_size[0]; i++) {
             data[i] = init;
         }
@@ -57,7 +57,7 @@ Tensor::Tensor(const Tensor& other) : device{other.device} {
             data = nullptr;
             return;
         }
-        data = (double*)malloc(data_size[0] * sizeof(double));
+        data = (float*)malloc(data_size[0] * sizeof(float));
         for (int i = 0; i < data_size[0]; i++) {
             data[i] = other.data[i];
         }
@@ -67,8 +67,8 @@ Tensor::Tensor(const Tensor& other) : device{other.device} {
             data = nullptr;
             return;
         }
-        cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
-        memcpy(data, other.data, data_size[0] * sizeof(double));
+        cudaHostAlloc(&data, data_size[0] * sizeof(float), cudaHostAllocMapped);
+        memcpy(data, other.data, data_size[0] * sizeof(float));
 #else
         throw std::runtime_error("The library was not compiled with CUDA support");
 #endif
@@ -107,8 +107,8 @@ Tensor& Tensor::operator=(const Tensor& other) {
         if (data != nullptr) {
             cudaFreeHost(data);
         }
-        cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
-        std::memcpy(data, other.data, data_size[0] * sizeof(double));
+        cudaHostAlloc(&data, data_size[0] * sizeof(float), cudaHostAllocMapped);
+        std::memcpy(data, other.data, data_size[0] * sizeof(float));
 #else
         throw std::runtime_error("The library was not compiled with CUDA support");
 #endif
@@ -121,12 +121,12 @@ Tensor& Tensor::operator=(const Tensor& other) {
         return *this;
     }
     if (device == DEVICE_CPU) {
-        data = (double*)malloc(data_size[0] * sizeof(double));
-        memcpy(data, other.data, data_size[0] * sizeof(double));
+        data = (float*)malloc(data_size[0] * sizeof(float));
+        memcpy(data, other.data, data_size[0] * sizeof(float));
     } else {
 #ifdef CUDA
-        cudaHostAlloc(&data, data_size[0] * sizeof(double), cudaHostAllocMapped);
-        memcpy(data, other.data, data_size[0] * sizeof(double));
+        cudaHostAlloc(&data, data_size[0] * sizeof(float), cudaHostAllocMapped);
+        memcpy(data, other.data, data_size[0] * sizeof(float));
 #else
         throw std::runtime_error("The library was not compiled with CUDA support");
 #endif
@@ -141,12 +141,12 @@ Tensor Tensor::ones(const std::vector<int>& shape, Device device) { return Tenso
 Tensor Tensor::rand(const std::vector<int>& shape, Device device) {
     Tensor tensor(shape, 0, device);
     for (int i = 0; i < tensor.data_size[0]; i++) {
-        tensor.data[i] = double(std::rand()) / double(RAND_MAX);
+        tensor.data[i] = float(std::rand()) / float(RAND_MAX);
     }
     return tensor;
 }
 
-Tensor Tensor::array(const std::vector<double>& vec, Device device) {
+Tensor Tensor::array(const std::vector<float>& vec, Device device) {
     Tensor tensor({(int)vec.size()}, 0.0, device);
     for (int i = 0; i < (int)vec.size(); i++) {
         tensor.data[i] = vec[i];
@@ -160,7 +160,7 @@ Tensor Tensor::array(const std::vector<Tensor>& vec, Device device) {
     shape.insert(shape.end(), vec[0].shape.begin(), vec[0].shape.end());
     Tensor tensor(shape, 0.0, device);
     for (int i = 0; i < (int)vec.size(); i++) {
-        memcpy(tensor.data + i * vec[i].data_size[0], vec[i].data, vec[i].data_size[0] * sizeof(double));
+        memcpy(tensor.data + i * vec[i].data_size[0], vec[i].data, vec[i].data_size[0] * sizeof(float));
     }
     return tensor;
 }
@@ -174,8 +174,8 @@ Tensor Tensor::to_device(Device device) const {
     } else if (device == DEVICE_CUDA) {
 #ifdef CUDA
         cudaFreeHost(tensor.data);
-        cudaHostAlloc(&tensor.data, data_size[0] * sizeof(double), cudaHostAllocMapped);
-        memcpy(tensor.data, data, data_size[0] * sizeof(double));
+        cudaHostAlloc(&tensor.data, data_size[0] * sizeof(float), cudaHostAllocMapped);
+        memcpy(tensor.data, data, data_size[0] * sizeof(float));
 #else
         throw std::runtime_error("The library was not compiled with CUDA support");
 #endif
@@ -202,7 +202,7 @@ void Tensor::reshape(const std::vector<int>& shape) {
     data_size.push_back(1);
 }
 
-double& Tensor::operator[](const std::vector<int>& index) {
+float& Tensor::operator[](const std::vector<int>& index) {
     if (index.size() != shape.size()) {
         throw std::invalid_argument("Index has " + std::to_string(index.size()) + " dimensions, but tensor has " +
                                     std::to_string(shape.size()));
@@ -218,7 +218,7 @@ double& Tensor::operator[](const std::vector<int>& index) {
     return data[i];
 }
 
-const double& Tensor::operator[](const std::vector<int>& index) const {
+const float& Tensor::operator[](const std::vector<int>& index) const {
     if (index.size() != shape.size()) {
         throw std::invalid_argument("Index has " + std::to_string(index.size()) + " dimensions, but tensor has " +
                                     std::to_string(shape.size()));
@@ -234,7 +234,7 @@ const double& Tensor::operator[](const std::vector<int>& index) const {
     return data[i];
 }
 
-double& Tensor::at(const std::vector<int>& index) {
+float& Tensor::at(const std::vector<int>& index) {
     if (index.size() != shape.size()) {
         throw std::invalid_argument("Index has " + std::to_string(index.size()) + " dimensions, but tensor has " +
                                     std::to_string(shape.size()));
@@ -250,7 +250,7 @@ double& Tensor::at(const std::vector<int>& index) {
     return data[i];
 }
 
-const double& Tensor::at(const std::vector<int>& index) const {
+const float& Tensor::at(const std::vector<int>& index) const {
     if (index.size() != shape.size()) {
         throw std::invalid_argument("Index has " + std::to_string(index.size()) + " dimensions, but tensor has " +
                                     std::to_string(shape.size()));
@@ -266,7 +266,7 @@ const double& Tensor::at(const std::vector<int>& index) const {
     return data[i];
 }
 
-double& Tensor::at(int index...) {
+float& Tensor::at(int index...) {
     va_list args;
     va_start(args, index);
 
@@ -284,7 +284,7 @@ double& Tensor::at(int index...) {
     return data[i];
 }
 
-const double& Tensor::at(int index...) const {
+const float& Tensor::at(int index...) const {
     va_list args;
     va_start(args, index);
 
@@ -306,9 +306,9 @@ Tensor::iterator::iterator(Tensor& tensor, int index) : tensor{tensor}, index{in
 
 Tensor::iterator::iterator(const iterator& itr) : tensor{itr.tensor}, index{itr.index} {}
 
-double& Tensor::iterator::operator*() { return tensor.data[index]; }
+float& Tensor::iterator::operator*() { return tensor.data[index]; }
 
-const double& Tensor::iterator::operator*() const { return tensor.data[index]; }
+const float& Tensor::iterator::operator*() const { return tensor.data[index]; }
 
 Tensor::iterator& Tensor::iterator::operator++() {
     index++;
@@ -373,8 +373,8 @@ Tensor Tensor::operator+(const Tensor& other) const {
             cublasCreate(&handle);
             handle_initialized = true;
         }
-        const double alpha = 1;
-        double *d_data, *d_other_data, *d_result_data;
+        const float alpha = 1;
+        float *d_data, *d_other_data, *d_result_data;
         cudaHostGetDevicePointer(&d_data, data, 0);
         cudaHostGetDevicePointer(&d_other_data, other.data, 0);
         cudaHostGetDevicePointer(&d_result_data, result.data, 0);
@@ -400,8 +400,8 @@ Tensor& Tensor::operator+=(const Tensor& other) {
             cublasCreate(&handle);
             handle_initialized = true;
         }
-        const double alpha = 1;
-        double *d_data = data, *d_other_data = other.data;
+        const float alpha = 1;
+        float *d_data = data, *d_other_data = other.data;
         cudaHostGetDevicePointer(&d_data, data, 0);
         cudaHostGetDevicePointer(&d_other_data, other.data, 0);
         cublasStatus_t status = cublasDaxpy(handle, data_size[0], &alpha, d_other_data, 1, d_data, 1);
@@ -480,7 +480,7 @@ Tensor& Tensor::operator/=(const Tensor& other) {
     return *this;
 }
 
-Tensor Tensor::operator+(double other) const {
+Tensor Tensor::operator+(float other) const {
     Tensor result(shape);
     for (int i = 0; i < data_size[0]; i++) {
         result.data[i] = data[i] + other;
@@ -488,14 +488,14 @@ Tensor Tensor::operator+(double other) const {
     return result;
 }
 
-Tensor& Tensor::operator+=(double other) {
+Tensor& Tensor::operator+=(float other) {
     for (int i = 0; i < data_size[0]; i++) {
         data[i] += other;
     }
     return *this;
 }
 
-Tensor Tensor::operator-(double other) const {
+Tensor Tensor::operator-(float other) const {
     Tensor result(shape);
     for (int i = 0; i < data_size[0]; i++) {
         result.data[i] = data[i] - other;
@@ -503,14 +503,14 @@ Tensor Tensor::operator-(double other) const {
     return result;
 }
 
-Tensor& Tensor::operator-=(double other) {
+Tensor& Tensor::operator-=(float other) {
     for (int i = 0; i < data_size[0]; i++) {
         data[i] -= other;
     }
     return *this;
 }
 
-Tensor Tensor::operator*(double other) const {
+Tensor Tensor::operator*(float other) const {
 #ifdef CUDA
     if (device == DEVICE_CUDA) {
         Tensor result(shape, 0.0, DEVICE_CUDA);
@@ -518,8 +518,8 @@ Tensor Tensor::operator*(double other) const {
             cublasCreate(&handle);
             handle_initialized = true;
         }
-        const double alpha = other;
-        double *d_data = data, *d_result_data = result.data;
+        const float alpha = other;
+        float *d_data = data, *d_result_data = result.data;
         cudaHostGetDevicePointer(&d_data, data, 0);
         cudaHostGetDevicePointer(&d_result_data, result.data, 0);
         cublasDcopy(handle, data_size[0], d_data, 1, d_result_data, 1);
@@ -537,15 +537,15 @@ Tensor Tensor::operator*(double other) const {
     return result;
 }
 
-Tensor& Tensor::operator*=(double other) {
+Tensor& Tensor::operator*=(float other) {
 #ifdef CUDA
     if (device == DEVICE_CUDA) {
         if (!handle_initialized) {
             cublasCreate(&handle);
             handle_initialized = true;
         }
-        const double alpha = other;
-        double* d_data = data;
+        const float alpha = other;
+        float* d_data = data;
         cudaHostGetDevicePointer(&d_data, data, 0);
         cublasStatus_t status = cublasDscal(handle, data_size[0], &alpha, d_data, 1);
         if (status != CUBLAS_STATUS_SUCCESS) {
@@ -560,16 +560,16 @@ Tensor& Tensor::operator*=(double other) {
     return *this;
 }
 
-Tensor Tensor::operator/(double other) const {
+Tensor Tensor::operator/(float other) const {
 #ifdef CUDA
     if (device == DEVICE_CUDA) {
         if (!handle_initialized) {
             cublasCreate(&handle);
             handle_initialized = true;
         }
-        const double alpha = 1.0 / other;
+        const float alpha = 1.0 / other;
         Tensor result(shape, 0.0, DEVICE_CUDA);
-        double *d_data = data, *d_result_data = result.data;
+        float *d_data = data, *d_result_data = result.data;
         cudaHostGetDevicePointer(&d_data, data, 0);
         cudaHostGetDevicePointer(&d_result_data, result.data, 0);
         cublasDcopy(handle, data_size[0], d_data, 1, d_result_data, 1);
@@ -587,15 +587,15 @@ Tensor Tensor::operator/(double other) const {
     return result;
 }
 
-Tensor& Tensor::operator/=(double other) {
+Tensor& Tensor::operator/=(float other) {
 #ifdef CUDA
     if (device == DEVICE_CUDA) {
         if (!handle_initialized) {
             cublasCreate(&handle);
             handle_initialized = true;
         }
-        const double alpha = 1.0 / other;
-        double* d_data = data;
+        const float alpha = 1.0 / other;
+        float* d_data = data;
         cudaHostGetDevicePointer(&d_data, data, 0);
         cublasStatus_t status = cublasDscal(handle, data_size[0], &alpha, d_data, 1);
         if (status != CUBLAS_STATUS_SUCCESS) {
@@ -610,9 +610,9 @@ Tensor& Tensor::operator/=(double other) {
     return *this;
 }
 
-Tensor operator+(double other, const Tensor& tensor) { return tensor + other; }
+Tensor operator+(float other, const Tensor& tensor) { return tensor + other; }
 
-Tensor operator-(double other, const Tensor& tensor) {
+Tensor operator-(float other, const Tensor& tensor) {
     Tensor result(tensor.shape);
     for (int i = 0; i < tensor.data_size[0]; i++) {
         result.data[i] = other - tensor.data[i];
@@ -620,9 +620,9 @@ Tensor operator-(double other, const Tensor& tensor) {
     return result;
 }
 
-Tensor operator*(double other, const Tensor& tensor) { return tensor * other; }
+Tensor operator*(float other, const Tensor& tensor) { return tensor * other; }
 
-Tensor operator/(double other, const Tensor& tensor) {
+Tensor operator/(float other, const Tensor& tensor) {
     Tensor result(tensor.shape);
     for (int i = 0; i < tensor.data_size[0]; i++) {
         result.data[i] = other / tensor.data[i];
@@ -679,7 +679,7 @@ bool Tensor::operator==(const Tensor& other) const {
 
 bool Tensor::operator!=(const Tensor& other) const { return !(*this == other); }
 
-Tensor& Tensor::apply_function(std::function<double(double)> f) {
+Tensor& Tensor::apply_function(std::function<float(float)> f) {
     // std::cerr << "apply_function " << data_size[0] << " " << this << " " << data << std::endl;
     for (int i = 0; i < data_size[0]; i++) {
         data[i] = f(data[i]);
@@ -687,7 +687,7 @@ Tensor& Tensor::apply_function(std::function<double(double)> f) {
     return *this;
 }
 
-Tensor Tensor::calc_function(std::function<double(double)> f) const {
+Tensor Tensor::calc_function(std::function<float(float)> f) const {
     Tensor result(shape);
     for (int i = 0; i < data_size[0]; i++) {
         result.data[i] = f(data[i]);
@@ -695,7 +695,7 @@ Tensor Tensor::calc_function(std::function<double(double)> f) const {
     return result;
 }
 
-Tensor& Tensor::apply_function(std::function<double(double, double)> f, const Tensor& other) {
+Tensor& Tensor::apply_function(std::function<float(float, float)> f, const Tensor& other) {
     if (data_size[0] != other.data_size[0]) {
         throw std::invalid_argument("Tensors must have the same shape");
     }
@@ -705,7 +705,7 @@ Tensor& Tensor::apply_function(std::function<double(double, double)> f, const Te
     return *this;
 }
 
-Tensor Tensor::calc_function(std::function<double(double, double)> f, const Tensor& other) const {
+Tensor Tensor::calc_function(std::function<float(float, float)> f, const Tensor& other) const {
     if (data_size[0] != other.data_size[0]) {
         throw std::invalid_argument("Tensors must have the same shape");
     }

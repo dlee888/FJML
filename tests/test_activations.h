@@ -6,7 +6,7 @@ using namespace Catch;
 using namespace FJML;
 
 TEST_CASE("Test activations", "[activations]") {
-    Tensor x = Tensor::array(std::vector<double>{1.0, 2.0, -1.0});
+    Tensor x = Tensor::array(std::vector<float>{1.0, 2.0, -1.0});
 
     SECTION("Test sigmoid") {
         Tensor y = Activations::sigmoid.forward(x);
@@ -90,5 +90,12 @@ TEST_CASE("Test activations", "[activations]") {
         REQUIRE(dy.at(0) == Approx(0.9276705384254456));
         REQUIRE(dy.at(1) == Approx(1.0907841920852661));
         REQUIRE(dy.at(2) == Approx(0.07232949137687683));
+    }
+
+    SECTION("Test apply_derivative") {
+        Activations::swish.apply_derivative(x);
+        REQUIRE(x.at(0) == Approx(0.9276705384254456));
+        REQUIRE(x.at(1) == Approx(1.0907841920852661));
+        REQUIRE(x.at(2) == Approx(0.07232949137687683));
     }
 }

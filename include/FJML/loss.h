@@ -19,7 +19,7 @@ namespace Loss {
 /**
  * @brief The clip value for the derivative of the loss function
  */
-const double clip = 1e6;
+const float clip = 1e6;
 
 /**
  * @brief Loss function class
@@ -36,7 +36,7 @@ class Loss {
     /**
      * @brief The loss function
      */
-    std::function<double(const Tensor&, const Tensor&)> function;
+    std::function<float(const Tensor&, const Tensor&)> function;
     /**
      * @brief The derivative of the loss function
      */
@@ -56,7 +56,7 @@ class Loss {
      * @param function The loss function
      * @param derivative The derivative of the loss function
      */
-    Loss(std::string name, std::function<double(const Tensor&, const Tensor&)> function,
+    Loss(std::string name, std::function<float(const Tensor&, const Tensor&)> function,
          std::function<Tensor(const Tensor&, const Tensor&)> derivative)
         : name{name}, function{function}, derivative{derivative} {}
 
@@ -69,7 +69,7 @@ class Loss {
      * @param pred The predicted value (function output)
      * @return The loss
      */
-    double calc_loss(const Tensor& obs, const Tensor& pred) const;
+    float calc_loss(const Tensor& obs, const Tensor& pred) const;
 
     /**
      * @brief Calculates the derivative of the loss
