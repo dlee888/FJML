@@ -93,7 +93,7 @@ class MLP {
     Tensor run(const Tensor& input) const;
 
     /**
-     * Applies gradients in a backwards pass
+     * @brief Applies gradients in a backwards pass
      *
      * @param input the input
      * @param grads the gradients of the output

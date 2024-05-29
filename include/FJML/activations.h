@@ -25,20 +25,20 @@ namespace Activations {
 class Activation {
   public:
     /**
-     * The name of this activation function
+     * @brief The name of this activation function
      */
     std::string name;
     /**
-     * The function to apply to a layer
+     * @brief The function to apply to a layer
      */
     std::function<float(float)> func;
     /**
-     * The derivative of the function
+     * @brief The derivative of the function
      */
     std::function<float(float)> derivative;
 
     /**
-     * Constructor with given name and functions
+     * @brief Constructor with given name and functions
      * @param name The name of the activation function
      * @param func The function to apply to a layer
      * @param derivative The derivative of the function

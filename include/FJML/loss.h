@@ -43,12 +43,12 @@ class Loss {
     std::function<Tensor(const Tensor&, const Tensor&)> derivative;
 
     /**
-     * Default constructor
+     * @brief Default constructor
      */
     Loss() = default;
 
     /**
-     * Constructor
+     * @brief Constructor for the Loss class
      *
      * Each function should take two arguments, the first is the label and the second is the prediction.
      *
@@ -65,28 +65,45 @@ class Loss {
      *
      * Returns the sum of the loss function applied to each element of the tensors.
      *
-     * @param obs The observed value (label)
+     * @param label The label
      * @param pred The predicted value (function output)
      * @return The loss
      */
-    float calc_loss(const Tensor& obs, const Tensor& pred) const;
+    float calc_loss(const Tensor& label, const Tensor& pred) const;
 
     /**
      * @brief Calculates the derivative of the loss
      *
      * Returns the sum of the derivative of the loss function applied to each element of the tensors.
      *
-     * @param obs The observed value (label)
+     * @param label The label
      * @param pred The predicted value (function output)
      * @return The derivative of the loss
      */
-    Tensor calc_derivative(const Tensor& obs, const Tensor& pred) const;
+    Tensor calc_derivative(const Tensor& label, const Tensor& pred) const;
 };
 
 extern const Loss mse, huber;
 
+/**
+ * @brief The binary cross entropy loss function
+ * @param from_logits Whether the input is from logits (i.e. not sigmoided)
+ * @return The binary cross entropy loss function
+ */
+Loss binary_crossentropy(bool from_logits = false);
+
+/**
+ * @brief The cross entropy loss function
+ * @param from_logits Whether the input is from logits (i.e. not softmaxed)
+ * @return The cross entropy loss function
+ */
 Loss crossentropy(bool from_logits = false);
 
+/**
+ * @brief The sparse categorical cross entropy loss function
+ *
+ * The label is expected to be a single integer representing the class index.
+ */
 Loss sparse_categorical_crossentropy(bool from_logits = false);
 
 } // namespace Loss

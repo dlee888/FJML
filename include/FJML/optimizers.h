@@ -90,7 +90,10 @@ class SGD : public Optimizer {
     void apply_grad(Tensor& params, const Tensor& grads) override;
 
     /**
-     * Clone the optimizer
+     * @brief Clone the optimizer
+     *
+     * Note: this should clone the hyperparameters but not the state
+     *
      * @return A pointer to a copy of the optimizer
      */
     Optimizer* clone() const override { return new SGD(this->alpha); }
@@ -115,7 +118,7 @@ class Adam : public Optimizer {
     int t = 1;
 
     /**
-     * Helper function to initialize the first and second momentums
+     * @brief Helper function to initialize the first and second momentums
      * @param params The parameters to be updated
      */
     void init(const Tensor& params);
@@ -140,7 +143,7 @@ class Adam : public Optimizer {
     float beta2;
 
     /**
-     * Constructor
+     * @brief Constructor for Adam
      * @param a The learning rate
      * @param b1 The first momentum
      * @param b2 The second momentum
@@ -161,7 +164,7 @@ class Adam : public Optimizer {
     void apply_grad(Tensor& params, const Tensor& grads) override;
 
     /**
-     * Clone the optimizer
+     * @brief Clone the optimizer
      * @return A pointer to a copy of the optimizer
      */
     Optimizer* clone() const override { return new Adam(this->alpha, this->beta1, this->beta2); }

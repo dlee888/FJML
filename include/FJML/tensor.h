@@ -23,40 +23,40 @@ extern bool handle_initialized;
 #endif
 
 /**
- * An enum for what device a tensor lives on.
+ * @brief An enum for what device a tensor lives on.
  */
 enum Device { DEVICE_CPU, DEVICE_CUDA };
 
 /**
- * This class represents an N dimensional tensor of floats.
+ * @brief This class represents an N dimensional tensor of floats.
  * The tensor is stored as a vector, and also has a shape property.
  */
 class Tensor {
   public:
     /**
-     * A linear array containing the data
+     * @brief A linear array containing the data
      */
     float* data;
     /**
-     * The shape of the tensor
+     * @brief The shape of the tensor
      */
     std::vector<int> shape;
     /**
-     * Element i contains the number of elements in the ith dimension
+     * @brief Element i contains the number of elements in the ith dimension
      */
     std::vector<int> data_size;
     /**
-     * The device this tensor lives on.
+     * @brief The device this tensor lives on.
      */
     Device device;
 
     /**
-     * Default constructor
+     * @brief Default constructor
      */
     Tensor();
 
     /**
-     * Creates a tensor with the given shape
+     * @brief Creates a tensor with the given shape
      * @param shape the shape of the tensor
      * @param init the initial value of the tensor, default is 0
      * @param device the device this tensor lives on
@@ -64,38 +64,38 @@ class Tensor {
     Tensor(const std::vector<int>& shape, float init = 0, Device device = DEVICE_CPU);
 
     /**
-     * Creates a tensor with the given shape
+     * @brief Creates a tensor with the given shape
      * @param shape the shape of the tensor
      * @param device the device this tensor lives on
      */
     Tensor(const std::vector<int>& shape, Device device);
 
     /**
-     * Copy constructor
+     * @brief Copy constructor
      * @param other the tensor to copy
      */
     Tensor(const Tensor& other);
 
     /**
-     * Move constructor
+     * @brief Move constructor
      * @param other the tensor to move
      */
     Tensor(Tensor&& other);
 
     /**
-     * Copy assignment operator
+     * @brief Copy assignment operator
      * @param other the tensor to copy
      * @return a reference to this tensor
      */
     Tensor& operator=(const Tensor& other);
 
     /**
-     * Destructor
+     * @brief Destructor
      */
     ~Tensor();
 
     /**
-     * Creates a tensor with the given shape, filled with zeros
+     * @brief Creates a tensor with the given shape, filled with zeros
      * @param shape the shape of the tensor
      * @param device the device this tensor lives on
      * @return a tensor with the given shape, filled with zeros
@@ -103,7 +103,7 @@ class Tensor {
     static Tensor zeros(const std::vector<int>& shape, Device device = DEVICE_CPU);
 
     /**
-     * Creates a tensor with the given shape, filled with ones
+     * @brief Creates a tensor with the given shape, filled with ones
      * @param shape the shape of the tensor
      * @param device the device this tensor lives on
      * @return a tensor with the given shape, filled with ones
@@ -111,7 +111,7 @@ class Tensor {
     static Tensor ones(const std::vector<int>& shape, Device device = DEVICE_CPU);
 
     /**
-     * Creates a tensor with the given shape, filled with random values
+     * @brief Creates a tensor with the given shape, filled with random values
      * @param shape the shape of the tensor
      * @param device the device this tensor lives on
      * @return a tensor with the given shape, filled with random values
@@ -119,7 +119,7 @@ class Tensor {
     static Tensor rand(const std::vector<int>& shape, Device device = DEVICE_CPU);
 
     /**
-     * Create a tensor from a given vector
+     * @brief Create a tensor from a given vector
      * @param vec the vector to create the tensor from
      * @param device the device this tensor lives on
      * @return a tensor with the given vector as its data
@@ -127,7 +127,7 @@ class Tensor {
     static Tensor array(const std::vector<float>& vec, Device device = DEVICE_CPU);
 
     /**
-     * Create a tensor from a given vector
+     * @brief Create a tensor from a given vector
      * @param vec the vector to create the tensor from
      * @param device the device this tensor lives on
      * @return a tensor with the given vector as its data
@@ -135,7 +135,7 @@ class Tensor {
     static Tensor array(const std::vector<Tensor>& vec, Device device = DEVICE_CPU);
 
     /**
-     * Create a tensor from a given vector
+     * @brief Create a tensor from a given vector
      * @param vec the vector to create the tensor from
      * @param device the device this tensor lives on
      * @return a tensor with the given vector as its data
@@ -149,171 +149,172 @@ class Tensor {
     }
 
     /**
-     * Convert the tensor to a different device
+     * @brief Convert the tensor to a different device
      * @param device the device to convert to
      * @return a tensor with the same data, but on a different device
      */
     Tensor to_device(Device device) const;
 
     /**
-     * Returns the number of dimensions of the tensor
+     * @brief Returns the number of dimensions of the tensor
      * @return the number of dimensions of the tensor
      */
     int ndim() const;
 
     /**
-     * Returns the number of dimensions of the tensor
+     * @brief Returns the number of dimensions of the tensor
      * @return the number of dimensions of the tensor
      */
     int dim() const;
 
     /**
-     * Reshapes the tensor
+     * @brief Reshapes the tensor
      * @param shape the new shape of the tensor
+     * @return the reshaped tensor
      */
-    void reshape(const std::vector<int>& shape);
+    Tensor& reshape(const std::vector<int>& shape);
 
     /**
-     * Returns the element at the given index
+     * @brief Returns the element at the given index
      * @param index the index of the element
      * @return the element at the given index
      */
     float& operator[](const std::vector<int>& index);
 
     /**
-     * Returns the element at the given index
+     * @brief Returns the element at the given index
      * @param index the index of the element
      * @return the element at the given index
      */
     const float& operator[](const std::vector<int>& index) const;
 
     /**
-     * Returns the element at the given index
+     * @brief Returns the element at the given index
      * @param index the index of the element
      * @return the element at the given index
      */
     float& at(const std::vector<int>& index);
 
     /**
-     * Returns the element at the given index
+     * @brief Returns the element at the given index
      * @param index the index of the element
      * @return the element at the given index
      */
     const float& at(const std::vector<int>& index) const;
 
     /**
-     * Returns the element at the given index
+     * @brief Returns the element at the given index
      * @param index the index of the element
      * @return the element at the given index
      */
     float& at(int index...);
 
     /**
-     * Returns the element at the given index
+     * @brief Returns the element at the given index
      * @param index the index of the element
      * @return the element at the given index
      */
     const float& at(int index...) const;
 
     /**
-     * This class is used to iterate over the elements of a tensor
+     * @brief This class is used to iterate over the elements of a tensor
      */
     class iterator {
       public:
         /**
-         * The tensor being iterated over
+         * @brief The tensor being iterated over
          */
         Tensor& tensor;
         /**
-         * The index of the current element
+         * @brief The index of the current element
          */
         int index;
 
         /**
-         * Constructs an iterator
+         * @brief Constructs an iterator
          * @param tensor the tensor to iterate over
          * @param index the index of the first element
          */
         iterator(Tensor& tensor, int index);
         /**
-         * Constructs an iterator
+         * @brief Constructs an iterator
          * @param itr the iterator to copy
          */
         iterator(const iterator& itr);
 
         /**
-         * Returns the element at the current position
+         * @brief Returns the element at the current position
          * @return the element at the current position
          */
         float& operator*();
 
         /**
-         * Returns the element at the current position
+         * @brief Returns the element at the current position
          * @return the element at the current position
          */
         const float& operator*() const;
 
         /**
-         * Increments the iterator
+         * @brief Increments the iterator
          * @return the incremented iterator
          */
         iterator& operator++();
 
         /**
-         * Increments the iterator
+         * @brief Increments the iterator
          * @return the incremented iterator
          */
         iterator operator++(int);
 
         /**
-         * Decrements the iterator
+         * @brief Decrements the iterator
          * @return the decremented iterator
          */
         iterator& operator--();
 
         /**
-         * Decrements the iterator
+         * @brief Decrements the iterator
          * @return the decremented iterator
          */
         iterator operator--(int);
 
         /**
-         * Increments the iterator by the given amount
+         * @brief Increments the iterator by the given amount
          * @param amount the amount to increment by
          * @return the incremented iterator
          */
         iterator& operator+=(int amount);
 
         /**
-         * Decrements the iterator by the given amount
+         * @brief Decrements the iterator by the given amount
          * @param amount the amount to decrement by
          * @return the decremented iterator
          */
         iterator& operator-=(int amount);
 
         /**
-         * Add the given amount to the iterator
+         * @brief Add the given amount to the iterator
          * @param amount the amount to add
          * @return the incremented iterator
          */
         iterator operator+(int amount) const;
 
         /**
-         * Subtract the given amount from the iterator
+         * @brief Subtract the given amount from the iterator
          * @param amount the amount to subtract
          * @return the decremented iterator
          */
         iterator operator-(int amount) const;
 
         /**
-         * Checks if two iterators are equal
+         * @brief Checks if two iterators are equal
          * @param other the other iterator
          * @return true if the iterators are equal, false otherwise
          */
         bool operator==(const iterator& other) const;
 
         /**
-         * Checks if two iterators are not equal
+         * @brief Checks if two iterators are not equal
          * @param other the other iterator
          * @return true if the iterators are not equal, false otherwise
          */
@@ -321,47 +322,47 @@ class Tensor {
     };
 
     /**
-     * Iterates over the elements of the tensor
+     * @brief Iterates over the elements of the tensor
      * @return an iterator to the first element
      */
     iterator begin();
 
     /**
-     * Iterates over the elements of the tensor
+     * @brief Iterates over the elements of the tensor
      * @return an iterator to the last element
      */
     iterator end();
 
     /**
-     * Overloads the + operator
+     * @brief Overloads the + operator
      * @param other the other tensor
      * @return the sum of the two tensors
      */
     Tensor operator+(const Tensor& other) const;
 
     /**
-     * Overloads the += operator
+     * @brief Overloads the += operator
      * @param other the other tensor
      * @return the sum of the two tensors
      */
     Tensor& operator+=(const Tensor& other);
 
     /**
-     * Overloads the - operator
+     * @brief Overloads the - operator
      * @param other the other tensor
      * @return the difference of the two tensors
      */
     Tensor operator-(const Tensor& other) const;
 
     /**
-     * Overloads the -= operator
+     * @brief Overloads the -= operator
      * @param other the other tensor
      * @return the difference of the two tensors
      */
     Tensor& operator-=(const Tensor& other);
 
     /**
-     * Overloads the * operator
+     * @brief Overloads the * operator
      *
      * Note: this is element-wise multiplication, not matrix multiplication
      *
@@ -371,7 +372,7 @@ class Tensor {
     Tensor operator*(const Tensor& other) const;
 
     /**
-     * Overloads the *= operator
+     * @brief Overloads the *= operator
      *
      * Note: this is element-wise multiplication, not matrix multiplication
      *
@@ -381,7 +382,7 @@ class Tensor {
     Tensor& operator*=(const Tensor& other);
 
     /**
-     * Overloads the / operator
+     * @brief Overloads the / operator
      *
      * Note: this is element-wise division, not matrix division
      *
@@ -391,7 +392,7 @@ class Tensor {
     Tensor operator/(const Tensor& other) const;
 
     /**
-     * Overloads the /= operator
+     * @brief Overloads the /= operator
      *
      * Note: this is element-wise division, not matrix division
      *
@@ -401,63 +402,63 @@ class Tensor {
     Tensor& operator/=(const Tensor& other);
 
     /**
-     * Addition of a scalar to the tensor
+     * @brief Addition of a scalar to the tensor
      * @param other the scalar
      * @return the sum of the tensor and the scalar
      */
     Tensor operator+(float other) const;
 
     /**
-     * Overloads the += operator
+     * @brief Overloads the += operator
      * @param other the scalar
      * @return the sum of the tensor and the scalar
      */
     Tensor& operator+=(float other);
 
     /**
-     * Overloads the - operator
+     * @brief Overloads the - operator
      * @param other the scalar
      * @return the difference of the tensor and the scalar
      */
     Tensor operator-(float other) const;
 
     /**
-     * Overloads the -= operator
+     * @brief Overloads the -= operator
      * @param other the scalar
      * @return the difference of the tensor and the scalar
      */
     Tensor& operator-=(float other);
 
     /**
-     * Overloads the * operator
+     * @brief Overloads the * operator
      * @param other the scalar
      * @return the product of the tensor and the scalar
      */
     Tensor operator*(float other) const;
 
     /**
-     * Overloads the *= operator
+     * @brief Overloads the *= operator
      * @param other the scalar
      * @return the product of the tensor and the scalar
      */
     Tensor& operator*=(float other);
 
     /**
-     * Overloads the / operator
+     * @brief Overloads the / operator
      * @param other the scalar
      * @return the quotient of the tensor and the scalar
      */
     Tensor operator/(float other) const;
 
     /**
-     * Overloads the /= operator
+     * @brief Overloads the /= operator
      * @param other the scalar
      * @return the quotient of the tensor and the scalar
      */
     Tensor& operator/=(float other);
 
     /**
-     * Overloads the + operator
+     * @brief Overloads the + operator
      * @param other the scalar
      * @param tensor the tensor
      * @return the sum of the tensor and the scalar
@@ -465,7 +466,7 @@ class Tensor {
     friend Tensor operator+(float other, const Tensor& tensor);
 
     /**
-     * Overloads the - operator
+     * @brief Overloads the - operator
      * @param other the scalar
      * @param tensor the tensor
      * @return the difference of the tensor and the scalar
@@ -473,7 +474,7 @@ class Tensor {
     friend Tensor operator-(float other, const Tensor& tensor);
 
     /**
-     * Scalar times the tensor
+     * @brief Scalar times the tensor
      * @param other the scalar
      * @param tensor the tensor
      * @return the product of the tensor and the scalar
@@ -481,7 +482,7 @@ class Tensor {
     friend Tensor operator*(float other, const Tensor& tensor);
 
     /**
-     * Overloads the / operator
+     * @brief Overloads the / operator
      * @param other the scalar
      * @param tensor the tensor
      * @return the quotient of the tensor and the scalar
@@ -489,13 +490,13 @@ class Tensor {
     friend Tensor operator/(float other, const Tensor& tensor);
 
     /**
-     * Negation of the tensor
+     * @brief Negation of the tensor
      * @return the negation of the tensor
      */
     Tensor operator-() const;
 
     /**
-     * Overloads the << operator
+     * @brief Overloads the << operator
      * @param os the output stream
      * @param tensor the tensor
      * @return the output stream
@@ -504,7 +505,7 @@ class Tensor {
 
   private:
     /**
-     * Helper method to print the tensor
+     * @brief Helper method to print the tensor
      * @param os the output stream
      * @param dim the current dimension
      * @param index the current index
@@ -513,21 +514,21 @@ class Tensor {
 
   public:
     /**
-     * Overloads the == operator
+     * @brief Overloads the == operator
      * @param other the other tensor
      * @return true if the two tensors are equal, false otherwise
      */
     bool operator==(const Tensor& other) const;
 
     /**
-     * Overloads the != operator
+     * @brief Overloads the != operator
      * @param other the other tensor
      * @return true if the two tensors are not equal, false otherwise
      */
     bool operator!=(const Tensor& other) const;
 
     /**
-     * Applies a function to each element of the tensor
+     * @brief Applies a function to each element of the tensor
      *
      * Note: modifies the tensor in place
      *
@@ -537,7 +538,7 @@ class Tensor {
     Tensor& apply_function(std::function<float(float)> f);
 
     /**
-     * Applies a function to each element of the tensor
+     * @brief Applies a function to each element of the tensor
      *
      * Note: does not modify the tensor in place
      *
@@ -547,7 +548,7 @@ class Tensor {
     Tensor calc_function(std::function<float(float)> f) const;
 
     /**
-     * Applies a function to each element of two tensors
+     * @brief Applies a function to each element of two tensors
      *
      * Note: modifies the tensor in place
      *
@@ -558,7 +559,7 @@ class Tensor {
     Tensor& apply_function(std::function<float(float, float)> f, const Tensor& other);
 
     /**
-     * Applies a function to each element of two tensors
+     * @brief Applies a function to each element of two tensors
      *
      * Note: does not modify the tensor in place
      *

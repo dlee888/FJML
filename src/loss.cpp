@@ -2,6 +2,7 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <cmath>
+#include <iostream>
 
 #include "../include/FJML/loss.h"
 
@@ -18,29 +19,39 @@ Tensor Loss::calc_derivative(const Tensor& obs, const Tensor& pred) const { retu
  */
 const Loss mse(
     "mse",
-    [](const Tensor& a, const Tensor& b) -> float {
+    [](const Tensor& label, const Tensor& pred) -> float {
+        if (label.data_size[0] != pred.data_size[0]) {
+            throw std::invalid_argument("The two tensors must have the same size");
+        }
         float result = 0;
-        for (int i = 0; i < a.data_size[0]; i++) {
-            result += (a.data[i] - b.data[i]) * (a.data[i] - b.data[i]);
+        for (int i = 0; i < label.data_size[0]; i++) {
+            result += (label.data[i] - pred.data[i]) * (label.data[i] - pred.data[i]);
         }
         return result;
     },
-    [](const Tensor& a, const Tensor& b) -> Tensor {
-        Tensor result(a.shape, a.device);
-        for (int i = 0; i < a.data_size[0]; i++) {
-            result.data[i] = 2 * (b.data[i] - a.data[i]);
+    [](const Tensor& label, const Tensor& pred) -> Tensor {
+        if (label.data_size[0] != pred.data_size[0]) {
+            throw std::invalid_argument("The two tensors must have the same size");
+        }
+        Tensor result(label.shape, label.device);
+        for (int i = 0; i < label.data_size[0]; i++) {
+            result.data[i] = 2 * (pred.data[i] - label.data[i]);
         }
         return result;
     });
+
 /**
  * @brief The huber loss function
  */
 const Loss huber(
     "huber",
-    [](const Tensor& a, const Tensor& b) -> float {
+    [](const Tensor& label, const Tensor& pred) -> float {
+        if (label.data_size[0] != pred.data_size[0]) {
+            throw std::invalid_argument("The two tensors must have the same size");
+        }
         float result = 0;
-        for (int i = 0; i < a.data_size[0]; i++) {
-            float diff = b.data[i] - a.data[i];
+        for (int i = 0; i < label.data_size[0]; i++) {
+            float diff = pred.data[i] - label.data[i];
             if (diff < -1) {
                 result += -2 * diff - 1;
             } else if (diff > 1) {
@@ -51,10 +62,13 @@ const Loss huber(
         }
         return result;
     },
-    [](const Tensor& a, const Tensor& b) -> Tensor {
-        Tensor result(a.shape, a.device);
-        for (int i = 0; i < a.data_size[0]; i++) {
-            float diff = b.data[i] - a.data[i];
+    [](const Tensor& label, const Tensor& pred) -> Tensor {
+        if (label.data_size[0] != pred.data_size[0]) {
+            throw std::invalid_argument("The two tensors must have the same size");
+        }
+        Tensor result(label.shape, label.device);
+        for (int i = 0; i < label.data_size[0]; i++) {
+            float diff = pred.data[i] - label.data[i];
             if (diff < -1) {
                 result.data[i] = -2;
             } else if (diff > 1) {
@@ -65,70 +79,195 @@ const Loss huber(
         }
         return result;
     });
-/**
- * @brief The cross entropy loss function
- * @param from_logits Whether the input is from logits (i.e. not softmaxed)
- * @return The cross entropy loss function
- */
+
+Loss binary_crossentropy(bool from_logits) {
+    if (!from_logits) {
+        return Loss(
+            "binary_crossentropy",
+            [](const Tensor& label, const Tensor& pred) -> float {
+                if (label.data_size[0] != pred.data_size[0]) {
+                    throw std::invalid_argument("The two tensors must have the same size");
+                }
+                float result = 0;
+                for (int i = 0; i < label.data_size[0]; i++) {
+                    result += -label.data[i] * std::log(pred.data[i]) -
+                              (1 - label.data[i]) * std::log(1 - pred.data[i]);
+                }
+                return result;
+            },
+            [](const Tensor& label, const Tensor& pred) -> Tensor {
+                if (label.data_size[0] != pred.data_size[0]) {
+                    throw std::invalid_argument("The two tensors must have the same size");
+                }
+                Tensor result(label.shape, label.device);
+                for (int i = 0; i < label.data_size[0]; i++) {
+                    result.data[i] = -label.data[i] / pred.data[i] + (1 - label.data[i]) / (1 - pred.data[i]);
+                }
+                return result;
+            });
+    }
+    return Loss(
+        "binary_crossentropy",
+        [](const Tensor& label, const Tensor& pred) -> float {
+            float result = 0;
+            for (int i = 0; i < label.data_size[0]; i++) {
+                result += -label.data[i] * pred.data[i] + std::log(1 + std::exp(pred.data[i]));
+            }
+            return result;
+        },
+        [](const Tensor& label, const Tensor& pred) -> Tensor {
+            Tensor result(label.shape, label.device);
+            for (int i = 0; i < label.data_size[0]; i++) {
+                float exp_b = std::exp(pred.data[i]);
+                result.data[i] = -label.data[i] + exp_b / (1 + exp_b);
+            }
+            return result;
+        });
+}
+
 Loss crossentropy(bool from_logits) {
     if (!from_logits) {
         return Loss(
             "crossentropy",
-            [](const Tensor& a, const Tensor& b) -> float {
-                float result = 0;
-                for (int i = 0; i < a.data_size[0]; i++) {
-                    result += a.data[i] * std::log(b.data[i]) + (1 - a.data[i]) * std::log(1 - b.data[i]);
+            [](const Tensor& label, const Tensor& pred) -> float {
+                if (label.data_size[0] != pred.data_size[0]) {
+                    throw std::invalid_argument("The two tensors must have the same size");
                 }
-                return -result;
+                float result = 0;
+                for (int i = 0; i < label.data_size[0]; i++) {
+                    result += -label.data[i] * std::log(pred.data[i]);
+                }
+                return result;
             },
-            [](const Tensor& a, const Tensor& b) -> Tensor {
-                Tensor result(a.shape, a.device);
-                for (int i = 0; i < a.data_size[0]; i++) {
-                    result.data[i] = (b.data[i] - a.data[i]) / (b.data[i] * (1 - b.data[i]));
+            [](const Tensor& label, const Tensor& pred) -> Tensor {
+                if (label.data_size[0] != pred.data_size[0]) {
+                    throw std::invalid_argument("The two tensors must have the same size");
+                }
+                Tensor result(label.shape, label.device);
+                for (int i = 0; i < label.data_size[0]; i++) {
+                    result.data[i] = -label.data[i] / pred.data[i];
                 }
                 return result;
             });
     }
     return Loss(
         "crossentropy",
-        [](const Tensor& a, const Tensor& b) -> float {
-            float result = 0;
-            for (int i = 0; i < a.data_size[0]; i++) {
-                result += a.data[i] * b.data[i];
+        [](const Tensor& label, const Tensor& pred) -> float {
+            if (label.data_size[0] != pred.data_size[0] || label.shape[0] != pred.shape[0]) {
+                throw std::invalid_argument("The two tensors must have the same size");
             }
-            return -result;
+            float result = 0;
+            for (int datapoint = 0; datapoint < label.shape[0]; datapoint++) {
+                int offset = datapoint * label.data_size[1];
+                float denom = 0, max = pred.data[offset];
+                for (int i = 1; i < label.data_size[1]; i++) {
+                    if (pred.data[offset + i] > max) {
+                        max = pred.data[offset + i];
+                    }
+                }
+                for (int i = 0; i < label.data_size[1]; i++) {
+                    denom += std::exp(pred.data[offset + i] - max);
+                }
+                for (int i = 0; i < label.data_size[1]; i++) {
+                    result += -label.data[offset + i] * (pred.data[offset + i] - max) +
+                              label.data[offset + i] * std::log(denom);
+                }
+            }
+            return result;
         },
-        [](const Tensor& a, const Tensor& b) -> Tensor {
-            Tensor result(a.shape, a.device);
-            for (int i = 0; i < a.data_size[0]; i++) {
-                result.data[i] = -a.data[i];
+        [](const Tensor& label, const Tensor& pred) -> Tensor {
+            if (label.data_size[0] != pred.data_size[0] || label.shape[0] != pred.shape[0]) {
+                throw std::invalid_argument("The two tensors must have the same size");
+            }
+            Tensor result(label.shape, label.device);
+            for (int datapoint = 0; datapoint < label.shape[0]; datapoint++) {
+                int offset = datapoint * label.data_size[1];
+                float denom = 0, max = pred.data[offset];
+                for (int i = 1; i < label.data_size[1]; i++) {
+                    if (pred.data[offset + i] > max) {
+                        max = pred.data[offset + i];
+                    }
+                }
+                for (int i = 0; i < label.data_size[1]; i++) {
+                    denom += std::exp(pred.data[offset + i] - max);
+                }
+                for (int i = 0; i < label.data_size[1]; i++) {
+                    result.data[offset + i] = -label.data[offset + i] + std::exp(pred.data[offset + i] - max) / denom;
+                }
             }
             return result;
         });
 }
 
-/**
- * @brief The sparse categorical cross entropy loss function
- *
- * The label is expected to be a single integer representing the class index.
- */
 Loss sparse_categorical_crossentropy(bool from_logits) {
     if (!from_logits) {
         return Loss(
             "sparse_categorical_crossentropy",
-            [](const Tensor& a, const Tensor& b) -> float { return -std::log(b.data[static_cast<int>(a.data[0])]); },
-            [](const Tensor& a, const Tensor& b) -> Tensor {
-                Tensor result(b.shape, b.device);
-                result.data[static_cast<int>(a.data[0])] = -1 / b.data[static_cast<int>(a.data[0])];
+            [](const Tensor& label, const Tensor& pred) -> float {
+                if (label.shape[0] != pred.shape[0]) {
+                    throw std::invalid_argument("The two tensors must have the same number of samples");
+                }
+                float result = 0;
+                for (int i = 0; i < label.shape[0]; i++) {
+                    result += -std::log(pred.data[static_cast<int>(label.data[i])]);
+                }
+                return result;
+            },
+            [](const Tensor& label, const Tensor& pred) -> Tensor {
+                if (label.shape[0] != pred.shape[0]) {
+                    throw std::invalid_argument("The two tensors must have the same number of samples");
+                }
+                Tensor result(pred.shape, pred.device);
+                for (int i = 0; i < label.shape[0]; i++) {
+                    int ind = static_cast<int>(label.data[i]), offset = i * pred.data_size[1];
+                    result.data[offset + ind] = -1 / pred.data[offset + ind];
+                }
                 return result;
             });
     }
     return Loss(
         "sparse_categorical_crossentropy",
-        [](const Tensor& a, const Tensor& b) -> float { return -b.data[static_cast<int>(a.data[0])]; },
-        [](const Tensor& a, const Tensor& b) -> Tensor {
-            Tensor result(b.shape, b.device);
-            result.data[static_cast<int>(a.data[0])] = -1;
+        [](const Tensor& label, const Tensor& pred) -> float {
+            if (label.shape[0] != pred.shape[0]) {
+                throw std::invalid_argument("The two tensors must have the same number of samples");
+            }
+            float result = 0;
+            for (int i = 0; i < label.shape[0]; i++) {
+                int offset = i * pred.data_size[1];
+                float denom = 0, max = pred.data[offset];
+                for (int i = 1; i < label.data_size[1]; i++) {
+                    if (pred.data[offset + i] > max) {
+                        max = pred.data[offset + i];
+                    }
+                }
+                for (int i = 0; i < pred.data_size[1]; i++) {
+                    denom += std::exp(pred.data[offset + i] - max);
+                }
+                result += -(pred.data[offset + static_cast<int>(label.data[i])] - max) + std::log(denom);
+            }
+            return result;
+        },
+        [](const Tensor& label, const Tensor& pred) -> Tensor {
+            if (label.shape[0] != pred.shape[0]) {
+                throw std::invalid_argument("The two tensors must have the same number of samples");
+            }
+            Tensor result(pred.shape, pred.device);
+            for (int i = 0; i < label.shape[0]; i++) {
+                int ind = static_cast<int>(label.data[i]), offset = i * pred.data_size[1];
+                float denom = 0, max = pred.data[offset];
+                for (int i = 1; i < label.data_size[1]; i++) {
+                    if (pred.data[offset + i] > max) {
+                        max = pred.data[offset + i];
+                    }
+                }
+                for (int i = 0; i < pred.data_size[1]; i++) {
+                    denom += std::exp(pred.data[offset + i] - max);
+                }
+                for (int i = 0; i < pred.data_size[1]; i++) {
+                    result.data[offset + i] = std::exp(pred.data[offset + i] - max) / denom;
+                }
+                result.data[offset + ind] -= 1;
+            }
             return result;
         });
 }

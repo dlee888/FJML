@@ -40,6 +40,9 @@ Layers::Dense::Dense(std::ifstream& file)
         throw std::runtime_error("Unknown activation function");
     }
     file >> input_size >> output_size;
+    if (input_size <= 0 || output_size <= 0) {
+        throw std::runtime_error("Invalid input or output size for Dense layer");
+    }
     weights = Tensor({input_size, output_size});
     bias = Tensor({output_size});
     for (int i = 0; i < input_size; i++) {

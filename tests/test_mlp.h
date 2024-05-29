@@ -56,6 +56,24 @@ TEST_CASE("Test mlp", "[mlp]") {
         REQUIRE(((Layers::Dense*)mlp.layers.at(0))->bias.at(0) == Approx(-0.998).margin(0.000001));
     }
 
+    SECTION("Test backwards pass") {
+        mlp.set_optimizer(new Optimizers::SGD(0.01));
+
+        ((Layers::Dense*)mlp.layers.at(0))->weights.at(0, 0) = 2;
+        ((Layers::Dense*)mlp.layers.at(0))->bias.at(0) = -1;
+
+        Tensor input = Tensor::array(std::vector<float>{6.9});
+        input.reshape(std::vector<int>{1, 1});
+        Tensor grads = Tensor::array(std::vector<float>{-0.2});
+        grads.reshape(std::vector<int>{1, 1});
+
+        mlp.backwards_pass(input, grads);
+        REQUIRE(((Layers::Dense*)mlp.layers.at(0))->weights.at(0, 0) == Approx(2.0138).margin(0.000001));
+        REQUIRE(((Layers::Dense*)mlp.layers.at(0))->bias.at(0) == Approx(-0.998).margin(0.000001));
+    }
+
+    SECTION("Test summary") { REQUIRE_NOTHROW(mlp.summary()); }
+
     SECTION("Test linear regression") {
         mlp.set_loss(Loss::huber);
         float learning_rate = 0.005;

@@ -12,11 +12,16 @@ TEST_CASE("Test layers", "[layers]") {
     SECTION("Test dummy layer") {
         Layers::Layer layer;
 
-        layer.apply(input);
-        layer.backward(input, input);
+        REQUIRE_NOTHROW(layer.apply(input));
+        REQUIRE_NOTHROW(layer.backward(input, input));
         std::ofstream file("/tmp/dummy.fjml");
-        layer.save(file);
-        layer.summary();
+        REQUIRE_NOTHROW(layer.save(file));
+        REQUIRE_NOTHROW(layer.summary());
+
+        std::ofstream file2("/tmp/dummy2.fjml");
+        file2 << "Dummy" << std::endl;
+        std::ifstream file3("/tmp/dummy2.fjml");
+        REQUIRE_THROWS(Layers::load(file3));
     }
 
     SECTION("Test Dense layer") {
@@ -99,6 +104,16 @@ TEST_CASE("Test layers", "[layers]") {
 
             REQUIRE(new_dense.bias.at(0) == Approx(-4.20));
             REQUIRE(new_dense.bias.at(1) == Approx(6.9));
+
+            std::ofstream file3("/tmp/dense2.fjml");
+            file3 << "Dense\nunknown_activation\n3 2\n1 2\n3 4\n5 6\n-4.2 6.9" << std::endl;
+            std::ifstream file4("/tmp/dense2.fjml");
+            REQUIRE_THROWS(Layers::load(file4));
+
+            std::ofstream file5("/tmp/dense3.fjml");
+            file5 << "Dense\nlinear\n3 -2\n1 2\n3 4\n5 6\n-4.2" << std::endl;
+            std::ifstream file6("/tmp/dense3.fjml");
+            REQUIRE_THROWS(Layers::load(file6));
         }
 
         SECTION("Test summary") { dense.summary(); }

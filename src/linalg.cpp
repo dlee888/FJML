@@ -203,9 +203,27 @@ int random_choice(const Tensor& a) {
     return a.data_size[0] - 1;
 }
 
+float max(const Tensor& a) {
+    float result = a.data[0];
+    for (int i = 1; i < a.data_size[0]; i++) {
+        if (a.data[i] > result) {
+            result = a.data[i];
+        }
+    }
+    return result;
+}
+
 Tensor argmax(const Tensor& a, int axis) {
     if (axis == -1) {
-        axis = a.dim() - 1;
+        Tensor result(std::vector<int>{1});
+        float max_value = -INFINITY;
+        for (int i = 0; i < a.data_size[0]; i++) {
+            if (a.data[i] > max_value) {
+                max_value = a.data[i];
+                result.data[0] = i;
+            }
+        }
+        return result;
     }
     if (axis < 0 || axis >= a.dim()) {
         throw std::invalid_argument("Invalid axis");
@@ -240,16 +258,6 @@ Tensor equal(const Tensor& a, const Tensor& b) {
     Tensor result(a.shape);
     for (int i = 0; i < a.data_size[0]; i++) {
         result.data[i] = a.data[i] == b.data[i];
-    }
-    return result;
-}
-
-float max(const Tensor& a) {
-    float result = a.data[0];
-    for (int i = 1; i < a.data_size[0]; i++) {
-        if (a.data[i] > result) {
-            result = a.data[i];
-        }
     }
     return result;
 }

@@ -18,7 +18,7 @@
 namespace FJML {
 
 /**
- * This namespace contains some linear algebra helper functions
+ * @brief This namespace contains some linear algebra helper functions
  */
 namespace LinAlg {
 
@@ -46,14 +46,14 @@ float dot_product(const Tensor& a, const Tensor& b);
 Tensor matrix_multiply(const Tensor& a, const Tensor& b);
 
 /**
- * Transposes a matrix.
+ * @brief Transposes a matrix.
  * @param a The matrix.
  * @return The transpose of the matrix.
  */
 Tensor transpose(const Tensor& a);
 
 /**
- * Sums all the elements in a tensor.
+ * @brief Sums all the elements in a tensor.
  *
  * @param a The tensor.
  * @return The sum of all the elements in the tensor.
@@ -61,7 +61,7 @@ Tensor transpose(const Tensor& a);
 float sum(const Tensor& a);
 
 /**
- * Computes the mean of all the elements in a tensor.
+ * @brief Computes the mean of all the elements in a tensor.
  *
  * @param a The tensor.
  * @return The mean of all the elements in the tensor.
@@ -69,7 +69,7 @@ float sum(const Tensor& a);
 float mean(const Tensor& a);
 
 /**
- * Raises all the elements in a tensor to a power.
+ * @brief Raises all the elements in a tensor to a power.
  * @param a The tensor.
  * @param b The power.
  * @return The tensor with all the elements raised to the power.
@@ -77,7 +77,7 @@ float mean(const Tensor& a);
 Tensor pow(const Tensor& a, float b);
 
 /**
- * Randomly chooses an index using tensor values as probabilities
+ * @brief Randomly chooses an index using tensor values as probabilities
  *
  * @param a the probabilities
  * @return a randomly chosen index
@@ -85,7 +85,14 @@ Tensor pow(const Tensor& a, float b);
 int random_choice(const Tensor& a);
 
 /**
- * Computes the index of the maximum value in a tensor, given an axis to compute along.
+ * @brief Computes the maximum value in a tensor.
+ * @param a The tensor.
+ * @return The maximum value in the tensor.
+ */
+float max(const Tensor& a);
+
+/**
+ * @brief Computes the index of the maximum value in a tensor, given an axis to compute along.
  *
  * For example, if the input is a matrix and the axis is 0, the output will be a vector containing the maximum of each
  * column. If the input is a matrix and the axis is 1, the output will be a vector containing the maximum of each row.
@@ -99,7 +106,7 @@ int random_choice(const Tensor& a);
 Tensor argmax(const Tensor& a, int axis = -1);
 
 /**
- * Returns a tensor containing one where the two tensors are equal, and zero otherwise.
+ * @brief Returns a tensor containing one where the two tensors are equal, and zero otherwise.
  * @param a The first tensor.
  * @param b The second tensor.
  * @return A tensor containing one where the two tensors are equal, and zero otherwise.
@@ -107,14 +114,7 @@ Tensor argmax(const Tensor& a, int axis = -1);
 Tensor equal(const Tensor& a, const Tensor& b);
 
 /**
- * Computes the maximum value in a tensor.
- * @param a The tensor.
- * @return The maximum value in the tensor.
- */
-float max(const Tensor& a);
-
-/**
- * Forward pass of a dense layer.
+ * @brief Forward pass of a dense layer.
  * @param input The input tensor.
  * @param weights The weights tensor.
  * @param bias The bias tensor.

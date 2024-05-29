@@ -20,6 +20,23 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
     }
 
     SECTION("Testing matrix multiply") {
+        SECTION("Testing vector times vector") {
+            Tensor a = Tensor::array(std::vector<float>{1, 2, 3});
+            Tensor b = Tensor::array(std::vector<float>{4, 5, 6});
+
+            Tensor c = LinAlg::matrix_multiply(a, b);
+            REQUIRE(c.shape == std::vector<int>({3, 3}));
+            REQUIRE(c.at({0, 0}) == 4);
+            REQUIRE(c.at({0, 1}) == 5);
+            REQUIRE(c.at({0, 2}) == 6);
+            REQUIRE(c.at({1, 0}) == 8);
+            REQUIRE(c.at({1, 1}) == 10);
+            REQUIRE(c.at({1, 2}) == 12);
+            REQUIRE(c.at({2, 0}) == 12);
+            REQUIRE(c.at({2, 1}) == 15);
+            REQUIRE(c.at({2, 2}) == 18);
+        }
+
         SECTION("Testing vector times matrix") {
             Tensor a = Tensor::array(std::vector<float>{1, 2, 3});
             Tensor b = Tensor::array(std::vector<std::vector<float>>{{4, 5}, {6, 7}, {8, 9}});
@@ -122,6 +139,21 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         // }
     }
 
+    SECTION("Testing transpose") {
+        Tensor a = Tensor::array(std::vector<std::vector<float>>{{1, 2}, {3, 4}, {5, 6}});
+        Tensor b = LinAlg::transpose(a);
+        REQUIRE(b.shape == std::vector<int>({2, 3}));
+        REQUIRE(b.at({0, 0}) == 1);
+        REQUIRE(b.at({0, 1}) == 3);
+        REQUIRE(b.at({0, 2}) == 5);
+        REQUIRE(b.at({1, 0}) == 2);
+        REQUIRE(b.at({1, 1}) == 4);
+        REQUIRE(b.at({1, 2}) == 6);
+
+        Tensor c = Tensor::array(std::vector<float>{1, 2, 3, 4, 5});
+        REQUIRE_THROWS(LinAlg::transpose(c));
+    }
+
     SECTION("Testing sum and mean") {
         SECTION("Testing sum of vector") {
             Tensor a = Tensor::array(std::vector<float>{1, 2, 3, 4, 5});
@@ -137,7 +169,7 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
 
         SECTION("Testing sum of array of matrices") {
             Tensor a = Tensor::array(std::vector<std::vector<std::vector<float>>>{{{1, 2}, {3, 4}, {5, 6}},
-                                                                                   {{7, 8}, {9, 10}, {11, 12}}});
+                                                                                  {{7, 8}, {9, 10}, {11, 12}}});
             REQUIRE(LinAlg::sum(a) == 78);
             REQUIRE(LinAlg::mean(a) == 6.5);
         }
@@ -148,6 +180,11 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         int choice = LinAlg::random_choice(probs);
         REQUIRE(choice >= 0);
         REQUIRE(choice < 4);
+    }
+
+    SECTION("Testing max") {
+        Tensor a = Tensor::array(std::vector<float>{0.1, 0.2, 0.3, 0.6, 0.5, 0.4});
+        REQUIRE(LinAlg::max(a) == Approx(0.6));
     }
 
     SECTION("Testing argmax") {
@@ -164,6 +201,10 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         REQUIRE(c.shape == std::vector<int>({2}));
         REQUIRE(c.at(0) == 2);
         REQUIRE(c.at(1) == 0);
+
+        Tensor d = LinAlg::argmax(a);
+        REQUIRE(d.shape == std::vector<int>({1}));
+        REQUIRE(d.at(0) == 3);
     }
 
     SECTION("Testing pow") {
@@ -198,6 +239,9 @@ TEST_CASE("Testing linalg functions", "[linalg]") {
         REQUIRE(c.at(2) == 0);
         REQUIRE(c.at(3) == 1);
         REQUIRE(c.at(4) == 0);
+
+        Tensor d = Tensor::array(std::vector<std::vector<float>>{{1, 2}, {3, 4}, {5, 6}, {7, 8}});
+        REQUIRE_THROWS(LinAlg::equal(a, d));
     }
 
     SECTION("Testing dense forward") {

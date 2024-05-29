@@ -162,7 +162,7 @@ class Dense : public Layer {
     void summary() const override;
 
     /**
-     * Set the optimizer for the layer
+     * @brief Set the optimizer for the layer
      * @param opt The optimizer to use for the weights and bias
      */
     void set_optimizer(const Optimizers::Optimizer* opt);

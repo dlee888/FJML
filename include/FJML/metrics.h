@@ -35,12 +35,12 @@ class Metric {
     std::function<float(const Tensor&, const Tensor&)> compute;
 
     /**
-     * Default constructor
+     * @brief Default constructor
      */
     Metric() = default;
 
     /**
-     * Constructor
+     * @brief Constructor for the Metric class
      */
     Metric(std::string name, std::function<float(const Tensor&, const Tensor&)> compute);
 };

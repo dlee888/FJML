@@ -2,9 +2,9 @@
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <cstdarg>
+#include <cstring>
 #include <iostream>
 #include <numeric>
-#include <cstring>
 
 #ifdef CUDA
 #include <cublas_v2.h>
@@ -189,7 +189,7 @@ int Tensor::ndim() const { return shape.size(); }
 
 int Tensor::dim() const { return shape.size(); }
 
-void Tensor::reshape(const std::vector<int>& shape) {
+Tensor& Tensor::reshape(const std::vector<int>& shape) {
     if (data_size[0] != std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>())) {
         throw std::invalid_argument("Cannot reshape tensor with size " + std::to_string(data_size[0]) + " to shape " +
                                     std::to_string(shape[0]));
@@ -200,6 +200,7 @@ void Tensor::reshape(const std::vector<int>& shape) {
         data_size[i] *= data_size[i + 1];
     }
     data_size.push_back(1);
+    return *this;
 }
 
 float& Tensor::operator[](const std::vector<int>& index) {
