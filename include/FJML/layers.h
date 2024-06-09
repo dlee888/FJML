@@ -182,12 +182,123 @@ class Softmax : public Layer {
      * @brief Constructor for a softmax layer
      */
     Softmax() { name = "Softmax"; }
+
+    /**
+     * @brief Destructor for a softmax layer
+     */
     ~Softmax() {}
 
     /**
      * @brief Apply the layer to an input
      *
      * The softmax layer applies the softmax function to the input.
+     * @param input The input to apply the layer to
+     * @return The output of the layer
+     */
+    Tensor apply(const Tensor& input) const override;
+
+    /**
+     * @brief Apply the gradient of the layer to a batch of inputs
+     * @param input_vals The batch of inputs to apply the layer to
+     * @param output_grad The batch of gradients of the loss with respect to the output of the layer
+     * @return The batch of gradients of the loss with respect to the input of the layer
+     */
+    Tensor backward(const Tensor& input_vals, const Tensor& output_grad) override;
+
+    /**
+     * @brief Save the layer to a file
+     * @param file The file to save the layer to
+     */
+    void save(std::ofstream& file) const override;
+
+    /**
+     * @brief Print a summary of the layer
+     */
+    void summary() const override;
+};
+
+class ConvND : public Layer {
+  public:
+    /**
+     * @brief The shape of the filter
+     */
+    std::vector<int> shape;
+    /**
+     * @brief The number of input channels
+     */
+    int channels_in;
+    /**
+     * @brief The number of output channels
+     */
+    int channels_out;
+    /**
+     * @brief The stride to use when applying the filter
+     *
+     * Note: this can be different for each dimension, so it is a vector.
+     */
+    std::vector<int> stride;
+    /**
+     * @brief A tensor containing the filters
+     */
+    Tensor filters;
+    /**
+     * @brief A tensor containing the bias
+     */
+    Tensor bias;
+    /**
+     * @brief The activation function of the layer
+     */
+    Activations::Activation activ;
+    /**
+     * @brief The type of padding to use
+     */
+    enum Padding { ZERO_PADDING } padding;
+    /**
+     * @brief The amount of padding to use for each dimension
+     *
+     * Note: This applies to both sides and just one dimension. For example, a 10x10 image with padding_size {1, 2} will
+     * be padded to 12x14
+     */
+    std::vector<int> padding_size;
+    /**
+     * @brief The optimizer for the weights of the layer
+     */
+    Optimizers::Optimizer* w_opt;
+    /**
+     * @brief The optimizer for the bias of the layer
+     */
+    Optimizers::Optimizer* b_opt;
+
+    /**
+     * @brief Constructor for a convolutional layer
+     *
+     * @param shape The shape for each filter
+     * @param channels_in The number of input channels
+     * @param channels_out The number of output channels
+     * @param stride The stride to use for each dimension. If not given/an empty vector is inputted, will default to 1
+     * for each dimension
+     * @param activ The activation function to use
+     * @param padding The type of padding to use
+     * @param padding_size The amount of padding to use for each dimension. If not given/an empty vector is inputted,
+     * will default to 0 for each dimension.
+     */
+    ConvND(std::vector<int> shape, int channels_in, int channels_out, std::vector<int> stride = std::vector<int>{},
+           Activations::Activation activ = Activations::sigmoid, Padding padding = ZERO_PADDING,
+           std::vector<int> padding_size = std::vector<int>{});
+
+    /**
+     * @brief Load a fully connected layer from a file
+     * @param file The file to load the layer from
+     */
+    ConvND(std::ifstream& file);
+
+    /**
+     * @brief Destructor
+     */
+    ~ConvND();
+
+    /**
+     * @brief Apply the layer to an input
      * @param input The input to apply the layer to
      * @return The output of the layer
      */

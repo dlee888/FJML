@@ -503,6 +503,8 @@ class Tensor {
      */
     friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
 
+    std::string print_shape() const;
+
   private:
     /**
      * @brief Helper method to print the tensor

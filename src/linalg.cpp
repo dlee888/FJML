@@ -3,17 +3,6 @@
 
 #include "../include/FJML/linalg.h"
 
-static std::string print_shape(const FJML::Tensor& a) {
-    std::string res = "(";
-    for (int i = 0; i < a.dim(); i++) {
-        res += std::to_string(a.shape[i]) + ", ";
-    }
-    res.pop_back();
-    res.pop_back();
-    res += ")";
-    return res;
-}
-
 namespace FJML {
 
 namespace LinAlg {
@@ -69,7 +58,7 @@ Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
         }
     } else if (a.dim() == 1 && b.dim() == 2) {
         if (a.shape[0] != b.shape[0]) {
-            throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
+            throw std::invalid_argument("Invalid matrix dimensions: " + a.print_shape() + " and " + b.print_shape());
         }
 #ifdef CUDA
         if (a.device == DEVICE_CUDA && b.device == DEVICE_CUDA) {
@@ -99,7 +88,7 @@ Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
         return result;
     } else if (a.dim() == 2 && b.dim() == 1) {
         if (a.shape[1] != b.shape[0]) {
-            throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
+            throw std::invalid_argument("Invalid matrix dimensions: " + a.print_shape() + " and " + b.print_shape());
         }
 #ifdef CUDA
         if (a.device == DEVICE_CUDA && b.device == DEVICE_CUDA) {
@@ -128,7 +117,7 @@ Tensor matrix_multiply(const Tensor& a, const Tensor& b) {
         }
         return result;
     } else if (a.dim() != 2 || b.dim() != 2 || a.shape[1] != b.shape[0]) {
-        throw std::invalid_argument("Invalid matrix dimensions: " + print_shape(a) + " and " + print_shape(b));
+        throw std::invalid_argument("Invalid matrix dimensions: " + a.print_shape() + " and " + b.print_shape());
     }
 #ifdef CUDA
     if (a.device == DEVICE_CUDA && b.device == DEVICE_CUDA) {

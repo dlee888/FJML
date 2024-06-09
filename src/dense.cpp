@@ -1,4 +1,4 @@
-// Copyright (c) 2022 David Lee
+// Copyright (c) 2024 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <chrono>
@@ -73,9 +73,6 @@ Tensor Layers::Dense::backward(const Tensor& input_vals, const Tensor& output_gr
     int n = input_vals.shape[0];
 
     Tensor activ_grad = activ.backward(LinAlg::dense_forward(input_vals, weights, bias)) * output_grad;
-    // Tensor activ_grad = LinAlg::dense_forward(input_vals, weights, bias);
-    // activ.apply_derivative(activ_grad);
-    // activ_grad *= output_grad;
 
     Tensor w_grad = LinAlg::matrix_multiply(LinAlg::transpose(input_vals), activ_grad);
     Tensor b_grad = Tensor({output_size}, activ_grad.device);

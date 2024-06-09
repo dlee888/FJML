@@ -1,2 +1,4 @@
 CompileFlags:
   # Add: [-DCUDA, -I/usr/local/cuda/include, -lcublas]
+  # Bruh
+  Add: [-I/usr/include/c++/11/]

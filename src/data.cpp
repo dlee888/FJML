@@ -1,4 +1,4 @@
-// Copyright (c) 2023 David Lee
+// Copyright (c) 2024 David Lee
 // This code is licensed under MIT license (see LICENSE for details)
 
 #include <cstring>

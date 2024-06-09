@@ -666,6 +666,17 @@ void Tensor::print(std::ostream& os, int dim, int index) const {
     }
 }
 
+std::string Tensor::print_shape() const {
+    std::string res = "(";
+    for (int i = 0; i < a.dim(); i++) {
+        res += std::to_string(a.shape[i]) + ", ";
+    }
+    res.pop_back();
+    res.pop_back();
+    res += ")";
+    return res;
+}
+
 bool Tensor::operator==(const Tensor& other) const {
     if (data_size[0] != other.data_size[0]) {
         return false;
@@ -681,7 +692,6 @@ bool Tensor::operator==(const Tensor& other) const {
 bool Tensor::operator!=(const Tensor& other) const { return !(*this == other); }
 
 Tensor& Tensor::apply_function(std::function<float(float)> f) {
-    // std::cerr << "apply_function " << data_size[0] << " " << this << " " << data << std::endl;
     for (int i = 0; i < data_size[0]; i++) {
         data[i] = f(data[i]);
     }
